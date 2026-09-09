@@ -116,7 +116,7 @@ st.markdown("""
 # --- DEFINIZIONE VARIABILI ---
 SUPPORTED_FORMATS = {
     "CAD 2D": {"extensions": [".dxf"], "icon": "📐", "description": "File CAD (DXF)"},
-    "CAD 3D & Mesh": {"extensions": [".stl", ".obj", ".ply", ".glb", ".gltf"], "icon": "🧊", "description": "Mesh 3D (STL, OBJ, PLY, GLB, GLTF)"},
+    "CAD 3D & Mesh": {"extensions": [".stl", ".obj", ".ply", ".glb", ".gltf", ".fbx", ".3mf", ".dae", ".wrl", ".off", ".u3d"], "icon": "🧊", "description": "Mesh 3D (STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, U3D)"},
     "BIM": {"extensions": [".ifc"], "icon": "🏗️", "description": "Building Information Modeling (IFC)"},
     "Geospaziale": {"extensions": [".shp", ".geojson", ".kml", ".gpx"], "icon": "🌍", "description": "Dati geografici e GIS"},
     "Vettoriale": {"extensions": [".svg"], "icon": "✏️", "description": "Grafica vettoriale (SVG)"},
@@ -128,12 +128,17 @@ for info in SUPPORTED_FORMATS.values():
     ALL_EXTENSIONS.extend(info["extensions"])
 
 CONVERSION_MATRIX = {
-    'stl': ['obj', 'ply', 'glb', 'gltf', 'dxf', 'pdf'],
-    'obj': ['stl', 'ply', 'glb', 'gltf', 'dxf', 'pdf'],
-    'ply': ['stl', 'obj', 'glb', 'gltf', 'dxf', 'pdf'],
-    'glb': ['stl', 'obj', 'ply', 'gltf', 'dxf', 'pdf'],
-    'gltf': ['stl', 'obj', 'ply', 'glb', 'dxf', 'pdf'],
-    'dxf': ['stl', 'obj', 'glb', 'gltf', 'pdf'],
+    'stl': ['obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'obj': ['stl', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'ply': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'glb': ['stl', 'obj', 'ply', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'gltf': ['stl', 'obj', 'ply', 'glb', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'fbx': ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'dae': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
+    'wrl': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'off', 'dxf', 'pdf'],
+    'off': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'dxf', 'pdf'],
+    'dxf': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'pdf'],
 }
 
 FORMAT_NAMES = {
@@ -142,6 +147,12 @@ FORMAT_NAMES = {
     'ply': 'PLY (.ply)',
     'glb': 'GLB (.glb)',
     'gltf': 'GLTF (.gltf)',
+    'fbx': 'FBX (.fbx)',
+    '3mf': '3MF (.3mf)',
+    'dae': 'DAE (.dae)',
+    'wrl': 'WRL (.wrl)',
+    'off': 'OFF (.off)',
+    'u3d': 'U3D (.u3d)',
     'dxf': 'DXF (.dxf)',
     'pdf': '3D PDF (.pdf)'
 }
@@ -158,14 +169,24 @@ def load_3d_file(file_bytes, file_extension):
     try:
         file_extension = file_extension.lower().replace('.', '')
         format_map = {
-            'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'dxf':'dxf'
+            'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'fbx':'fbx', '3mf':'3mf', 'dae':'dae', 'wrl':'wrl', 'off':'off', 'u3d':'u3d'
         }
         file_type = format_map.get(file_extension, file_extension)
         
-        mesh = trimesh.load(io.BytesIO(file_bytes), file_type=file_type)
-        if mesh is not None and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-            return mesh
-        return None
+        if file_extension in ['obj', 'dae']:
+            for method in [file_type, None]:
+                try:
+                    mesh = trimesh.load(io.BytesIO(file_bytes), file_type=method, force='mesh') if method else trimesh.load(io.BytesIO(file_bytes))
+                    if mesh is not None and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+                        return mesh
+                except:
+                    continue
+            return None
+        else:
+            mesh = trimesh.load(io.BytesIO(file_bytes), file_type=file_type)
+            if mesh is not None and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+                return mesh
+            return None
     except Exception:
         return None
 
@@ -205,6 +226,16 @@ def convert_mesh(mesh, target_format):
             return trimesh.exchange.gltf.export_glb(mesh)
         elif target_format == 'gltf':
             return trimesh.exchange.gltf.export_gltf(mesh)
+        elif target_format == 'fbx':
+            return trimesh.exchange.fbx.export_fbx(mesh)
+        elif target_format == '3mf':
+            return trimesh.exchange.threeMF.export_3mf(mesh)
+        elif target_format == 'dae':
+            return trimesh.exchange.dae.export_dae(mesh)
+        elif target_format == 'wrl':
+            return trimesh.exchange.vrml.export_vrml(mesh)
+        elif target_format == 'off':
+            return trimesh.exchange.off.export_off(mesh)
         elif target_format == 'dxf':
             if mesh.vertices is not None and len(mesh.vertices) > 0:
                 vertices_2d = mesh.vertices[:, :2]
@@ -245,7 +276,7 @@ def process_file(file_bytes, file_name):
             result["message"] = f"✅ DXF: {entities} entità, {len(layers)} layer"
             result["info"] = {"entities": entities, "layers": list(layers)[:10]}
         
-        elif file_extension in ['stl','obj','ply','glb','gltf']:
+        elif file_extension in ['stl','obj','ply','glb','gltf','fbx','3mf','dae','wrl','off','u3d']:
             mesh = load_3d_file(file_bytes, file_extension)
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 result["success"] = True
@@ -419,7 +450,7 @@ elif page == "Ripara File":
 # --- VIEWER 3D ---
 elif page == "Viewer 3D":
     st.header("🖥️ Viewer 3D")
-    viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","pdf"], key="viewer")
+    viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
     if viewer_file:
         try:
             mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
@@ -508,14 +539,19 @@ elif page == "Converti Formati":
     
     with st.expander("📋 Matrice delle conversioni disponibili"):
         st.markdown("""
-        | Da → A | STL | OBJ | PLY | GLB | GLTF | DXF | PDF |
-        |--------|-----|-----|-----|-----|------|-----|-----|
-        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ |
-        | **GLB** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
-        | **GLTF** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
-        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+        | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |
+        |--------|-----|-----|-----|-----|------|-----|------|-----|-----|-----|-----|-----|
+        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **GLB** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **GLTF** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **3MF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **DAE** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ |
+        | **WRL** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
+        | **OFF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
         """)
         st.caption("✅ = Conversione supportata | ❌ = Conversione non supportata")
     
@@ -529,11 +565,11 @@ elif page == "Converti Formati":
         
         st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">Tipo: {file_type} | Estensione: .{file_extension}</div></div></div></div>', unsafe_allow_html=True)
         
-        convertibili = ["stl", "obj", "ply", "glb", "gltf", "dxf", "pdf"]
+        convertibili = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off", "dxf", "pdf"]
         
         if file_extension not in convertibili:
             st.warning(f"⚠️ Il formato **.{file_extension.upper()}** non può essere convertito in altri formati.")
-            st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, GLB, GLTF, DXF, PDF**.")
+            st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF**.")
         else:
             target_formats = CONVERSION_MATRIX.get(file_extension, [])
             target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
@@ -543,6 +579,74 @@ elif page == "Converti Formati":
             else:
                 target_selected = st.selectbox("Formato di destinazione", target_options)
                 target_ext = target_selected.split(".")[1].replace(")", "").strip()
+                
+                # Mostra l'anteprima interattiva 360° (se il file è una mesh valida)
+                st.markdown("### 🖥️ Anteprima interattiva (ruota con il mouse)")
+                mesh_preview = load_3d_file(file_bytes, file_extension)
+                if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
+                    bounds = mesh_preview.bounds
+                    min_y = bounds[0][1]
+                    vertices = mesh_preview.vertices.copy()
+                    vertices[:, 1] -= min_y
+                    vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
+                    vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
+                    
+                    mesh_data = {"vertices": vertices.tolist(), "faces": mesh_preview.faces.tolist()}
+                    mesh_json = json.dumps(mesh_data)
+                    
+                    viewer_html = """
+                    <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:400px;}</style>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+                    </head><body>
+                    <div id="c"></div>
+                    <script>
+                    const data = """ + mesh_json + """;
+                    const container = document.getElementById('c');
+                    const scene = new THREE.Scene();
+                    scene.background = new THREE.Color(0xf0f2f6);
+                    const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
+                    camera.position.set(10,5,10);
+                    camera.lookAt(0,0,0);
+                    const renderer = new THREE.WebGLRenderer({antialias:true});
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                    container.appendChild(renderer.domElement);
+                    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                    controls.enableDamping = true;
+                    controls.dampingFactor = 0.05;
+                    controls.target.set(0,0,0);
+                    controls.update();
+                    scene.add(new THREE.AmbientLight(0x404040,0.6));
+                    const dl = new THREE.DirectionalLight(0xffffff,1);
+                    dl.position.set(10,20,10);
+                    dl.castShadow=true;
+                    scene.add(dl);
+                    scene.add(new THREE.DirectionalLight(0xffffff,0.5).position.set(-10,0,-10));
+                    if(data.vertices && data.vertices.length>0){
+                        const geo = new THREE.BufferGeometry();
+                        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
+                        if(data.faces && data.faces.length>0){
+                            geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
+                            geo.computeVertexNormals();
+                        }
+                        const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:false, side:THREE.DoubleSide});
+                        const mesh = new THREE.Mesh(geo, mat);
+                        mesh.castShadow = true;
+                        mesh.receiveShadow = true;
+                        const box = new THREE.Box3().setFromObject(mesh);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x,size.y,size.z);
+                        if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
+                        scene.add(mesh);
+                    }
+                    function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
+                    animate();
+                    window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+                    </script></body></html>
+                    """
+                    st.components.v1.html(viewer_html, height=400)
+                else:
+                    st.warning("⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.")
                 
                 if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
                     with st.spinner(f"Conversione in {target_selected.split(' ')[0]} in corso..."):
@@ -560,6 +664,11 @@ elif page == "Converti Formati":
                                         'ply': 'application/octet-stream',
                                         'glb': 'application/octet-stream',
                                         'gltf': 'application/octet-stream',
+                                        'fbx': 'application/octet-stream',
+                                        '3mf': 'application/octet-stream',
+                                        'dae': 'application/octet-stream',
+                                        'wrl': 'application/octet-stream',
+                                        'off': 'application/octet-stream',
                                         'dxf': 'application/dxf',
                                         'pdf': 'application/pdf'
                                     }
