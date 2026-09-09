@@ -1,4 +1,4 @@
-﻿altair==6.2.2
+altair==6.2.2
 anyio==4.15.1
 attrs==26.1.0
 certifi==2026.7.22
@@ -42,14 +42,5 @@ websockets==16.1.1
 streamlit-cookies-controller
 trimesh[all]
 aspose-cad
-streamlit
-ezdxf
-trimesh
-numpy
-pillow
-pandas
-aspose-cad
-streamlit-cookies-controller
 PyPDF2
 pymeshlab
-pyassimp
