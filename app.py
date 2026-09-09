@@ -70,7 +70,7 @@ try:
 except ImportError:
     SVG_AVAILABLE = False
 
-# --- PROVA A IMPORTARE ASPOSE.CAD (PER LA CONVERSIONE 3D PDF) ---
+# --- PROVA A IMPORTARE ASPOSE.CAD (PER LA CONVERSIONE CAD 2D/3D) ---
 try:
     import aspose.cad as cad
     import aspose.cad.imageoptions as aspose_image_options
@@ -211,21 +211,16 @@ def convert_mesh(mesh, target_format):
         if target_format == 'pdf':
             if ASPOSE_AVAILABLE:
                 try:
-                    # Crea un file temporaneo in formato STL
                     temp_path = "temp_model.stl"
                     mesh.export(temp_path)
                     
-                    # Carica il file con Aspose.CAD
                     cad_image = cad.Image.load(temp_path)
                     
-                    # Imposta le opzioni di output PDF
                     pdf_options = aspose_image_options.PdfOptions()
                     
-                    # Esporta in PDF
                     output_pdf = "converted_3d.pdf"
                     cad_image.save(output_pdf, pdf_options)
                     
-                    # Leggi il file PDF
                     with open(output_pdf, "rb") as f:
                         return f.read()
                 except Exception as e:
@@ -603,7 +598,8 @@ elif page == "Converti Formati":
                 if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
                     with st.spinner(f"Conversione in {target_selected.split(' ')[0]} in corso..."):
                         try:
-                            if file_extension in ['dwg', 'dxf', 'step', 'iges', 'u3d'] and target_ext == 'pdf' and ASPOSE_AVAILABLE:
+                            # Se la destinazione è PDF, usa ASPOSE per qualsiasi file di input
+                            if target_ext == 'pdf' and ASPOSE_AVAILABLE:
                                 import aspose.cad as cad
                                 import aspose.cad.imageoptions as aspose_image_options
                                 
@@ -631,12 +627,11 @@ elif page == "Converti Formati":
                                 else:
                                     st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita.")
                             
-                            else:
+                            # Altrimenti usa TRIMESH per le conversioni standard mesh
+                            elif target_ext in ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf']:
                                 mesh = load_3d_file(file_bytes, file_extension)
-                                
                                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                                     result_bytes = convert_mesh(mesh, target_ext)
-                                    
                                     if result_bytes:
                                         st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
                                         mime_types = {
@@ -646,8 +641,7 @@ elif page == "Converti Formati":
                                             '3mf': 'application/octet-stream',
                                             'glb': 'application/octet-stream',
                                             'gltf': 'application/octet-stream',
-                                            'dxf': 'application/dxf',
-                                            'pdf': 'application/pdf'
+                                            'dxf': 'application/dxf'
                                         }
                                         st.download_button(
                                             label=f"📥 Scarica .{target_ext}",
@@ -660,6 +654,10 @@ elif page == "Converti Formati":
                                         st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita. Riprova con un altro formato.")
                                 else:
                                     st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
+                            
+                            # Se non è supportato da nessuna libreria
+                            else:
+                                st.error(f"❌ La conversione in {target_selected.split(' ')[0]} non è supportata da nessuna libreria installata.")
                         except Exception as e:
                             st.error(f"❌ Errore durante la conversione: {e}")
 
