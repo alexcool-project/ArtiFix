@@ -96,17 +96,23 @@ else:
         initial_sidebar_state="expanded"
     )
 
-# --- CSS MINIMALE E PULITO ---
+# --- CSS IN VERSIONE CHIARA (LIGHT MODE) ---
 st.markdown("""
 <style>
+    /* Imposta il tema chiaro per tutta la pagina */
+    .stApp {
+        background-color: #ffffff;
+        color: #333333;
+    }
+    
     .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
     .logo-container { text-align: center; padding: 1rem 0; }
     .logo-container img { max-width: 400px; height: auto; }
-    .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
+    .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #e0e0e0; margin-bottom: 1rem; }
     .sidebar-logo img { max-width: 180px; height: auto; }
     .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
     .stButton>button[kind="primary"] { background-color: #1f77b4; color: white; }
-    .metric-card { background-color: #f0f2f6; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .metric-card { background-color: #f8f9fa; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
     .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
     .metric-label { font-size: 0.85rem; color: #555; }
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
@@ -330,7 +336,6 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("## Navigazione")
     
-    # PAGINE PRINCIPALI (Privacy Policy NON è nel menu radio)
     if st.session_state.page_attuale == "Cookie Policy" or st.session_state.page_attuale == "Privacy Policy":
         st.session_state.navigation = "Dashboard"
         st.markdown(f"📍 **Sei nella pagina: {st.session_state.page_attuale}**")
@@ -340,19 +345,17 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Pulsante dedicato alla Privacy Policy
     if st.button("🔒 Privacy Policy", key="privacy_link", use_container_width=True):
         st.session_state.page_attuale = "Privacy Policy"
         st.rerun()
     
-    # Pulsante dedicato alla Cookie Policy
     if st.button("🍪 Cookie Policy", key="cookie_link", use_container_width=True):
         st.session_state.page_attuale = "Cookie Policy"
         st.rerun()
     
     st.markdown(
         f"""
-        <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
+        <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#e0e0e0; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
             💙 Dona con PayPal
         </a>
         """,
@@ -367,12 +370,12 @@ elif st.session_state.page_attuale == "Cookie Policy":
 else:
     page = st.session_state.page_attuale
 
-# --- POPUP COOKIE E PRIVACY ---
+# --- POPUP COOKIE E PRIVACY (VERSIONE LIGHT) ---
 if st.session_state.cookie_consent is None:
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("""
-        <h3 style="color: #6ab0e6; text-align: center; margin-bottom: 15px;">🍪 Cookie Policy</h3>
+        <h3 style="color: #1f77b4; text-align: center; margin-bottom: 15px;">🍪 Cookie Policy</h3>
         <p style="font-size: 15px; line-height: 1.8;">
             Noi e terze parti selezionate utilizziamo cookie o tecnologie simili per finalità tecniche e, con il tuo consenso, anche per altre finalità come specificato nella cookie policy. 
             Il rifiuto del consenso può rendere non disponibili le relative funzioni. Usa il pulsante “Accetta tutti i cookie” per acconsentire. 
