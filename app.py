@@ -54,6 +54,40 @@ st.markdown("""
 </script>
 """, unsafe_allow_html=True)
 
+# --- CSS MINIMALE E PULITO (CON FOOTER FISSO) ---
+st.markdown("""
+<style>
+    .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
+    .logo-container { text-align: center; padding: 1rem 0; }
+    .logo-container img { max-width: 400px; height: auto; }
+    .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
+    .sidebar-logo img { max-width: 180px; height: auto; }
+    .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
+    .stButton>button[kind="primary"] { background-color: #1f77b4; color: white; }
+    .metric-card { background-color: #f0f2f6; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
+    .metric-label { font-size: 0.85rem; color: #555; }
+    .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
+    
+    /* FOOTER FISSO */
+    footer {visibility: hidden;}
+    .footer-artifix {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #f8f9fa;
+        padding: 10px;
+        text-align: center;
+        font-size: 12px;
+        color: #666;
+        border-top: 1px solid #ddd;
+        z-index: 9999;
+    }
+</style>
+<div class="footer-artifix">© 2026 ArtiFix | Tutti i diritti riservati</div>
+""", unsafe_allow_html=True)
+
 # --- TENTATIVO IMPORT LIBRERIE ---
 try:
     import ifcopenshell
@@ -122,23 +156,6 @@ else:
         layout="wide",
         initial_sidebar_state="expanded"
     )
-
-# --- CSS MINIMALE E PULITO ---
-st.markdown("""
-<style>
-    .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
-    .logo-container { text-align: center; padding: 1rem 0; }
-    .logo-container img { max-width: 400px; height: auto; }
-    .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
-    .sidebar-logo img { max-width: 180px; height: auto; }
-    .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
-    .stButton>button[kind="primary"] { background-color: #1f77b4; color: white; }
-    .metric-card { background-color: #f0f2f6; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-    .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
-    .metric-label { font-size: 0.85rem; color: #555; }
-    .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
-</style>
-""", unsafe_allow_html=True)
 
 # --- DEFINIZIONE VARIABILI ---
 SUPPORTED_FORMATS = {
@@ -671,7 +688,7 @@ elif page == "Converti Formati":
                 target_selected = st.selectbox("Formato di destinazione", target_options)
                 target_ext = target_selected.split(".")[1].replace(")", "").strip()
                 
-                # PULSANTE DI CONVERSIONE (PRIMA DELL'ANTEPRIMA)
+                # PULSANTE DI CONVERSIONE
                 if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
                     progress_bar = st.progress(0)
                     status_text = st.empty()
@@ -710,6 +727,9 @@ elif page == "Converti Formati":
                                 'dxf': 'application/dxf',
                                 'pdf': 'application/pdf'
                             }
+                            # AVVISO PRIMA DEL DOWNLOAD
+                            st.info("📥 Il file è pronto! Stiamo preparando il download, attendi qualche secondo...")
+                            time.sleep(1)
                             st.download_button(
                                 label=f"📥 Scarica .{target_ext}",
                                 data=result_bytes,
@@ -722,13 +742,13 @@ elif page == "Converti Formati":
                     else:
                         st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
                 
-                # ANTEPRIMA OPZIONALE (SE L'UTENTE LA RICHIEDE)
+                # ANTEPRIMA OPZIONALE
                 st.markdown("---")
                 if st.button("🖥️ Mostra anteprima interattiva (ruota con il mouse)"):
                     st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
                     mesh_preview = load_3d_file(file_bytes, file_extension)
                     if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
-                        # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (evita il crash con modelli pesanti)
+                        # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER
                         if len(mesh_preview.faces) > 15000:
                             mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=15000)
                         
