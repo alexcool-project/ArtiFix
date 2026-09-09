@@ -70,21 +70,6 @@ try:
 except ImportError:
     SVG_AVAILABLE = False
 
-# --- PROVA A IMPORTARE ASPOSE.CAD (PER LA CONVERSIONE CAD 2D/3D) ---
-try:
-    import aspose.cad as cad
-    import aspose.cad.imageoptions as aspose_image_options
-    ASPOSE_AVAILABLE = True
-except ImportError:
-    ASPOSE_AVAILABLE = False
-
-# --- PROVA A IMPORTARE PYMESHLAB (PER LA CONVERSIONE 3D PDF E U3D) ---
-try:
-    import pymeshlab as ml
-    PYMESHLAB_AVAILABLE = True
-except ImportError:
-    PYMESHLAB_AVAILABLE = False
-
 # --- STATO PAGINE E COOKIE (INIZIALIZZATO SUBITO) ---
 if 'page_attuale' not in st.session_state:
     st.session_state.page_attuale = "Dashboard"
@@ -130,13 +115,12 @@ st.markdown("""
 
 # --- DEFINIZIONE VARIABILI ---
 SUPPORTED_FORMATS = {
-    "CAD 2D": {"extensions": [".dwg", ".dxf", ".dgn", ".dwt"], "icon": "📐", "description": "File CAD (DWG, DXF, DGN, DWT)"},
-    "CAD 3D & Mesh": {"extensions": [".stl", ".obj", ".3mf", ".ply", ".fbx", ".glb", ".gltf", ".step", ".iges", ".u3d", ".skp"], "icon": "🧊", "description": "Mesh 3D, modelli e SketchUp"},
-    "BIM": {"extensions": [".ifc", ".rvt", ".rfa", ".rte"], "icon": "🏗️", "description": "Building Information Modeling (IFC, RVT)"},
-    "Elettronica & PCB": {"extensions": [".brd", ".sch", ".pcb", ".gbr", ".gerber"], "icon": "⚡", "description": "PCB, schemi elettronici, Gerber"},
+    "CAD 2D": {"extensions": [".dxf"], "icon": "📐", "description": "File CAD (DXF)"},
+    "CAD 3D & Mesh": {"extensions": [".stl", ".obj", ".ply", ".glb", ".gltf"], "icon": "🧊", "description": "Mesh 3D (STL, OBJ, PLY, GLB, GLTF)"},
+    "BIM": {"extensions": [".ifc"], "icon": "🏗️", "description": "Building Information Modeling (IFC)"},
     "Geospaziale": {"extensions": [".shp", ".geojson", ".kml", ".gpx"], "icon": "🌍", "description": "Dati geografici e GIS"},
-    "Vettoriale": {"extensions": [".svg", ".eps", ".ai", ".cdr"], "icon": "✏️", "description": "Grafica vettoriale (SVG, EPS, AI, CDR)"},
-    "Documenti": {"extensions": [".pdf", ".p7m", ".docx", ".xlsx"], "icon": "📄", "description": "Documenti, fogli di calcolo e 3D PDF"}
+    "Vettoriale": {"extensions": [".svg"], "icon": "✏️", "description": "Grafica vettoriale (SVG)"},
+    "Documenti": {"extensions": [".pdf", ".docx", ".xlsx"], "icon": "📄", "description": "Documenti, fogli di calcolo"}
 }
 
 ALL_EXTENSIONS = []
@@ -144,35 +128,21 @@ for info in SUPPORTED_FORMATS.values():
     ALL_EXTENSIONS.extend(info["extensions"])
 
 CONVERSION_MATRIX = {
-    'stl': ['obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
-    'obj': ['stl', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
-    'ply': ['stl', 'obj', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
-    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
-    'glb': ['stl', 'obj', 'ply', '3mf', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
-    'gltf': ['stl', 'obj', 'ply', '3mf', 'glb', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
-    'fbx': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
-    'step': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
-    'iges': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'u3d', 'skp', 'dxf', 'pdf'],
-    'u3d': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'skp', 'dxf', 'pdf'],
-    'skp': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'dxf', 'pdf'],
-    'dxf': ['stl', 'obj', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'pdf'],
-    'dwg': ['stl', 'obj', 'dxf', 'glb', 'gltf', 'pdf'],
+    'stl': ['obj', 'ply', 'glb', 'gltf', 'dxf', 'pdf'],
+    'obj': ['stl', 'ply', 'glb', 'gltf', 'dxf', 'pdf'],
+    'ply': ['stl', 'obj', 'glb', 'gltf', 'dxf', 'pdf'],
+    'glb': ['stl', 'obj', 'ply', 'gltf', 'dxf', 'pdf'],
+    'gltf': ['stl', 'obj', 'ply', 'glb', 'dxf', 'pdf'],
+    'dxf': ['stl', 'obj', 'glb', 'gltf', 'pdf'],
 }
 
 FORMAT_NAMES = {
     'stl': 'STL (.stl)',
     'obj': 'OBJ (.obj)',
     'ply': 'PLY (.ply)',
-    '3mf': '3MF (.3mf)',
     'glb': 'GLB (.glb)',
     'gltf': 'GLTF (.gltf)',
     'dxf': 'DXF (.dxf)',
-    'dwg': 'DWG (.dwg)',
-    'fbx': 'FBX (.fbx)',
-    'step': 'STEP (.step)',
-    'iges': 'IGES (.iges)',
-    'u3d': 'U3D (.u3d)',
-    'skp': 'SKP (.skp)',
     'pdf': '3D PDF (.pdf)'
 }
 
@@ -188,26 +158,14 @@ def load_3d_file(file_bytes, file_extension):
     try:
         file_extension = file_extension.lower().replace('.', '')
         format_map = {
-            'stl':'stl', 'obj':'obj', 'ply':'ply', '3mf':'3mf',
-            'fbx':'fbx', 'glb':'glb', 'gltf':'gltf',
-            'step':'step', 'iges':'iges', 'u3d':'u3d', 'skp':'skp'
+            'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'dxf':'dxf'
         }
         file_type = format_map.get(file_extension, file_extension)
         
-        if file_extension in ['obj', 'skp']:
-            for method in [file_type, None]:
-                try:
-                    mesh = trimesh.load(io.BytesIO(file_bytes), file_type=method, force='mesh') if method else trimesh.load(io.BytesIO(file_bytes))
-                    if mesh is not None and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                        return mesh
-                except:
-                    continue
-            return None
-        else:
-            mesh = trimesh.load(io.BytesIO(file_bytes), file_type=file_type)
-            if mesh is not None and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                return mesh
-            return None
+        mesh = trimesh.load(io.BytesIO(file_bytes), file_type=file_type)
+        if mesh is not None and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+            return mesh
+        return None
     except Exception:
         return None
 
@@ -243,8 +201,6 @@ def convert_mesh(mesh, target_format):
             return trimesh.exchange.obj.export_obj(mesh)
         elif target_format == 'ply':
             return trimesh.exchange.ply.export_ply(mesh)
-        elif target_format == '3mf':
-            return trimesh.exchange.threeMF.export_3mf(mesh)
         elif target_format == 'glb':
             return trimesh.exchange.gltf.export_glb(mesh)
         elif target_format == 'gltf':
@@ -262,11 +218,7 @@ def convert_mesh(mesh, target_format):
                 return dxf_doc.write()
             return None
         else:
-            try:
-                export_func = getattr(trimesh.exchange, f"export_{target_format}")
-                return export_func(mesh)
-            except AttributeError:
-                return None
+            return None
     except Exception:
         return None
 
@@ -285,7 +237,7 @@ def process_file(file_bytes, file_name):
             else:
                 result["message"] = "Libreria PDF non disponibile."
         
-        elif file_extension in ['dxf', 'dgn', 'dwt']:
+        elif file_extension == 'dxf':
             dxf_doc = ezdxf.read(io.BytesIO(file_bytes))
             entities = len(dxf_doc.entities)
             layers = set(e.dxf.layer for e in dxf_doc.entities if hasattr(e.dxf, 'layer'))
@@ -293,7 +245,7 @@ def process_file(file_bytes, file_name):
             result["message"] = f"✅ DXF: {entities} entità, {len(layers)} layer"
             result["info"] = {"entities": entities, "layers": list(layers)[:10]}
         
-        elif file_extension in ['stl','obj','ply','3mf','fbx','glb','gltf','step','iges','u3d','skp']:
+        elif file_extension in ['stl','obj','ply','glb','gltf']:
             mesh = load_3d_file(file_bytes, file_extension)
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 result["success"] = True
@@ -301,11 +253,6 @@ def process_file(file_bytes, file_name):
                 result["info"] = {"vertices": len(mesh.vertices), "faces": len(mesh.faces), "mesh": mesh}
             else:
                 result["message"] = "⚠️ File 3D non valido o formato non supportato."
-        
-        elif file_extension == 'dwg':
-            result["success"] = True
-            result["message"] = "⚠️ Formato DWG identificato. Per visualizzarlo, convertilo in DXF o STL."
-            result["info"] = {"format": "DWG", "note": "Formato proprietario Autodesk"}
         
         elif file_extension == 'ifc' and IFC_AVAILABLE:
             ifc_file = ifcopenshell.open(io.BytesIO(file_bytes))
@@ -472,7 +419,7 @@ elif page == "Ripara File":
 # --- VIEWER 3D ---
 elif page == "Viewer 3D":
     st.header("🖥️ Viewer 3D")
-    viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","3mf","fbx","glb","gltf","step","iges","u3d","skp","pdf"], key="viewer")
+    viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","pdf"], key="viewer")
     if viewer_file:
         try:
             mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
@@ -561,21 +508,14 @@ elif page == "Converti Formati":
     
     with st.expander("📋 Matrice delle conversioni disponibili"):
         st.markdown("""
-        | Da → A | STL | OBJ | PLY | 3MF | GLB | GLTF | FBX | STEP | IGES | U3D | SKP | DXF | DWG | PDF |
-        |--------|-----|-----|-----|-----|-----|------|-----|------|------|-----|-----|-----|-----|-----|
-        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-        | **3MF** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-        | **GLB** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-        | **GLTF** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-        | **STEP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-        | **IGES** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ❌ | ✅ |
-        | **U3D** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ❌ | ✅ |
-        | **SKP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❌ | ✅ |
-        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ❌ | ✅ |
-        | **DWG** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+        | Da → A | STL | OBJ | PLY | GLB | GLTF | DXF | PDF |
+        |--------|-----|-----|-----|-----|------|-----|-----|
+        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ |
+        | **GLB** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
+        | **GLTF** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
         """)
         st.caption("✅ = Conversione supportata | ❌ = Conversione non supportata")
     
@@ -589,11 +529,11 @@ elif page == "Converti Formati":
         
         st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">Tipo: {file_type} | Estensione: .{file_extension}</div></div></div></div>', unsafe_allow_html=True)
         
-        convertibili = ["stl", "obj", "ply", "3mf", "glb", "gltf", "fbx", "step", "iges", "u3d", "skp", "dxf", "dwg", "pdf"]
+        convertibili = ["stl", "obj", "ply", "glb", "gltf", "dxf", "pdf"]
         
         if file_extension not in convertibili:
             st.warning(f"⚠️ Il formato **.{file_extension.upper()}** non può essere convertito in altri formati.")
-            st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, 3MF, GLB, GLTF, FBX, STEP, IGES, U3D, SKP, DXF, DWG, PDF**.")
+            st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, GLB, GLTF, DXF, PDF**.")
         else:
             target_formats = CONVERSION_MATRIX.get(file_extension, [])
             target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
@@ -607,135 +547,33 @@ elif page == "Converti Formati":
                 if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
                     with st.spinner(f"Conversione in {target_selected.split(' ')[0]} in corso..."):
                         try:
-                            # 1. STRATEGIA PER FILE CAD (DWG, DXF, STEP, IGES, U3D): usa ASPOSE.CAD
-                            if target_ext == 'pdf' and file_extension in ['dwg', 'dxf', 'step', 'iges', 'u3d'] and ASPOSE_AVAILABLE:
-                                import aspose.cad as cad
-                                import aspose.cad.imageoptions as aspose_image_options
-                                
-                                temp_input = f"temp_input.{file_extension}"
-                                with open(temp_input, "wb") as f:
-                                    f.write(file_bytes)
-                                
-                                cad_image = cad.Image.load(temp_input)
-                                pdf_options = aspose_image_options.PdfOptions()
-                                output_pdf = "converted_3d.pdf"
-                                cad_image.save(output_pdf, pdf_options)
-                                
-                                with open(output_pdf, "rb") as f:
-                                    result_bytes = f.read()
+                            mesh = load_3d_file(file_bytes, file_extension)
+                            
+                            if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+                                result_bytes = convert_mesh(mesh, target_ext)
                                 
                                 if result_bytes:
                                     st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
+                                    mime_types = {
+                                        'stl': 'application/octet-stream',
+                                        'obj': 'text/plain',
+                                        'ply': 'application/octet-stream',
+                                        'glb': 'application/octet-stream',
+                                        'gltf': 'application/octet-stream',
+                                        'dxf': 'application/dxf',
+                                        'pdf': 'application/pdf'
+                                    }
                                     st.download_button(
                                         label=f"📥 Scarica .{target_ext}",
                                         data=result_bytes,
                                         file_name=f"converted.{target_ext}",
-                                        mime='application/pdf',
+                                        mime=mime_types.get(target_ext, 'application/octet-stream'),
                                         use_container_width=True
                                     )
                                 else:
-                                    st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita.")
-                            
-                            # 2. STRATEGIA PER MESH (OBJ, STL, PLY, GLB, ecc): usa MATPLOTLIB
-                            elif target_ext == 'pdf' and file_extension in ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'skp']:
-                                mesh = load_3d_file(file_bytes, file_extension)
-                                if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                                    import matplotlib
-                                    matplotlib.use('Agg')
-                                    import matplotlib.pyplot as plt
-                                    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-                                    
-                                    fig = plt.figure()
-                                    ax = fig.add_subplot(111, projection='3d')
-                                    tri_arrays = mesh.vertices[mesh.faces]
-                                    poly3d = Poly3DCollection(tri_arrays, alpha=0.1, edgecolor='k', facecolor='#1f77b4')
-                                    ax.add_collection3d(poly3d)
-                                    
-                                    scale = mesh.vertices.flatten()
-                                    ax.auto_scale_xyz(scale, scale, scale)
-                                    
-                                    plt.savefig("converted_3d.pdf", format='pdf', bbox_inches='tight')
-                                    plt.close()
-                                    
-                                    with open("converted_3d.pdf", "rb") as f:
-                                        result_bytes = f.read()
-                                    
-                                    if result_bytes:
-                                        st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
-                                        st.download_button(
-                                            label=f"📥 Scarica .{target_ext}",
-                                            data=result_bytes,
-                                            file_name=f"converted.{target_ext}",
-                                            mime='application/pdf',
-                                            use_container_width=True
-                                        )
-                                    else:
-                                        st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita.")
-                                else:
-                                    st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
-                            
-                            # 3. STRATEGIA PER U3D: usa PYMESHLAB
-                            elif target_ext == 'u3d':
-                                if PYMESHLAB_AVAILABLE:
-                                    try:
-                                        temp_input = f"temp_input.{file_extension}"
-                                        with open(temp_input, "wb") as f:
-                                            f.write(file_bytes)
-                                        
-                                        ms = ml.MeshSet()
-                                        ms.load_new_mesh(temp_input)
-                                        ms.save_current_mesh("converted.u3d")
-                                        
-                                        with open("converted.u3d", "rb") as f:
-                                            result_bytes = f.read()
-                                        
-                                        if result_bytes:
-                                            st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
-                                            st.download_button(
-                                                label=f"📥 Scarica .{target_ext}",
-                                                data=result_bytes,
-                                                file_name=f"converted.{target_ext}",
-                                                mime='application/octet-stream',
-                                                use_container_width=True
-                                            )
-                                        else:
-                                            st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita.")
-                                    except Exception as e:
-                                        st.error(f"❌ Errore durante la conversione U3D: {str(e)}")
-                                else:
-                                    st.error("❌ La libreria 'pymeshlab' non è installata. Aggiungila a requirements.txt.")
-                            
-                            # 4. STRATEGIA STANDARD PER ALTRI FORMATI (STL, OBJ, GLB -> DXF, GLTF, ecc.)
-                            elif target_ext in ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf']:
-                                mesh = load_3d_file(file_bytes, file_extension)
-                                if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                                    result_bytes = convert_mesh(mesh, target_ext)
-                                    if result_bytes:
-                                        st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
-                                        mime_types = {
-                                            'stl': 'application/octet-stream',
-                                            'obj': 'text/plain',
-                                            'ply': 'application/octet-stream',
-                                            '3mf': 'application/octet-stream',
-                                            'glb': 'application/octet-stream',
-                                            'gltf': 'application/octet-stream',
-                                            'dxf': 'application/dxf'
-                                        }
-                                        st.download_button(
-                                            label=f"📥 Scarica .{target_ext}",
-                                            data=result_bytes,
-                                            file_name=f"converted.{target_ext}",
-                                            mime=mime_types.get(target_ext, 'application/octet-stream'),
-                                            use_container_width=True
-                                        )
-                                    else:
-                                        st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita. Riprova con un altro formato.")
-                                else:
-                                    st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
-                            
-                            # 5. FALLBACK: nessuna conversione possibile
+                                    st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita. Riprova con un altro formato.")
                             else:
-                                st.error(f"❌ La conversione in {target_selected.split(' ')[0]} non è supportata da nessuna libreria installata.")
+                                st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
                         except Exception as e:
                             st.error(f"❌ Errore durante la conversione: {e}")
 
