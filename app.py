@@ -121,6 +121,7 @@ ALL_EXTENSIONS = []
 for info in SUPPORTED_FORMATS.values():
     ALL_EXTENSIONS.extend(info["extensions"])
 
+# --- MATRICE DI CONVERSIONE COMPLETA (AGGIORNATA) ---
 CONVERSION_MATRIX = {
     'stl': ['obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
     'obj': ['stl', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
@@ -133,8 +134,8 @@ CONVERSION_MATRIX = {
     'iges': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
     'u3d': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
     'skp': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
-    'dxf': ['stl', 'obj'],
-    'dwg': ['stl', 'obj', 'dxf'],
+    'dxf': ['stl', 'obj', '3mf', 'glb', 'gltf', 'dxf'],
+    'dwg': ['stl', 'obj', 'dxf', 'glb', 'gltf'],
 }
 
 FORMAT_NAMES = {
@@ -467,16 +468,21 @@ elif page == "Converti Formati":
     
     with st.expander("📋 Matrice delle conversioni disponibili"):
         st.markdown("""
-        | Da → A | STL | OBJ | PLY | 3MF | GLB | GLTF | DXF | DWG |
-        |--------|-----|-----|-----|-----|-----|------|-----|-----|
-        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **3MF** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ❌ |
-        | **GLB** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ❌ |
-        | **GLTF** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❌ |
-        | **DXF** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | - | ❌ |
-        | **DWG** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | - |
+        | Da → A | STL | OBJ | PLY | 3MF | GLB | GLTF | FBX | STEP | IGES | U3D | SKP | DXF | DWG |
+        |--------|-----|-----|-----|-----|-----|------|-----|------|------|-----|-----|-----|-----|
+        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+        | **3MF** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+        | **GLB** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+        | **GLTF** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+        | **STEP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ❌ |
+        | **IGES** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ❌ |
+        | **U3D** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ❌ |
+        | **SKP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❌ |
+        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | - | ❌ |
+        | **DWG** | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | - |
         """)
         st.caption("✅ = Conversione supportata | ❌ = Conversione non supportata")
     
