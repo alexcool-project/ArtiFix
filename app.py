@@ -330,15 +330,22 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("## Navigazione")
     
-    if st.session_state.page_attuale == "Cookie Policy":
+    # PAGINE PRINCIPALI (Privacy Policy NON è nel menu radio)
+    if st.session_state.page_attuale == "Cookie Policy" or st.session_state.page_attuale == "Privacy Policy":
         st.session_state.navigation = "Dashboard"
-        st.markdown("📍 **Sei nella pagina: Cookie Policy**")
+        st.markdown(f"📍 **Sei nella pagina: {st.session_state.page_attuale}**")
     else:
         page = st.radio("Vai a:", ["Dashboard", "Ripara File", "Viewer 3D", "Converti Formati", "Progetto ArtiFix"], key="navigation", label_visibility="collapsed")
         st.session_state.page_attuale = page
     
     st.markdown("---")
     
+    # Pulsante dedicato alla Privacy Policy
+    if st.button("🔒 Privacy Policy", key="privacy_link", use_container_width=True):
+        st.session_state.page_attuale = "Privacy Policy"
+        st.rerun()
+    
+    # Pulsante dedicato alla Cookie Policy
     if st.button("🍪 Cookie Policy", key="cookie_link", use_container_width=True):
         st.session_state.page_attuale = "Cookie Policy"
         st.rerun()
@@ -353,12 +360,14 @@ with st.sidebar:
     )
 
 # --- LOGICA PAGINE ---
-if st.session_state.page_attuale == "Cookie Policy":
+if st.session_state.page_attuale == "Privacy Policy":
+    page = "Privacy Policy"
+elif st.session_state.page_attuale == "Cookie Policy":
     page = "Cookie Policy"
 else:
     page = st.session_state.page_attuale
 
-# --- POPUP COOKIE (DISEGNATO SUBITO, SENZA SFOCATURA) ---
+# --- POPUP COOKIE E PRIVACY ---
 if st.session_state.cookie_consent is None:
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     with st.container(border=True):
@@ -373,9 +382,7 @@ if st.session_state.cookie_consent is None:
         
         st.markdown("""
         <div style="text-align: center; margin-bottom: 15px;">
-            <a href="#" style="color: #1f77b4; margin-right: 15px;">Termini</a>
-            <a href="#" style="color: #1f77b4; margin-right: 15px;">Privacy Policy</a>
-            <a href="#" style="color: #1f77b4;">Cookie Policy</a>
+            <strong style="color: #333;">Consulta la Privacy Policy tramite il pulsante apposito</strong>
         </div>
         """, unsafe_allow_html=True)
         
@@ -622,6 +629,53 @@ elif page == "Progetto ArtiFix":
                     st.error(f"Errore: {risultato}")
             else:
                 st.warning("Compila tutti i campi prima di inviare.")
+
+# --- PAGINA PRIVACY POLICY ---
+elif page == "Privacy Policy":
+    st.header("🔒 Privacy Policy")
+    st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
+    st.caption("Ultimo aggiornamento: 9 settembre 2026")
+    
+    if st.button("← Torna alla Dashboard", key="torna_dashboard_privacy"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
+    
+    st.markdown("---")
+    
+    st.markdown("""
+    La presente Privacy Policy è resa ai sensi dell'Art. 13 del Regolamento (UE) 2016/679 (GDPR), relativo alla protezione delle persone fisiche con riguardo al trattamento dei dati personali.
+
+    ### 1. Titolare del Trattamento
+    Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
+
+    ### 2. Dati raccolti e finalità
+    **Dati forniti volontariamente dall'utente**: Attraverso il form "Contattaci" vengono raccolti nome, indirizzo email e messaggio, al fine di rispondere alle richieste pervenute.
+    **Dati di navigazione**: Il sito utilizza cookie tecnici (per il funzionamento) e cookie di analytics (facoltativi) come descritto nella Cookie Policy.
+
+    ### 3. Base giuridica
+    Il trattamento si basa sul consenso dell'utente (Art. 6, par. 1, lett. a GDPR) e sull'esecuzione di misure precontrattuali richieste dall'utente (Art. 6, par. 1, lett. b GDPR).
+
+    ### 4. Diritti dell'interessato
+    Ai sensi degli Artt. 15-22 del GDPR, l'utente ha il diritto di:
+    *   Accesso, rettifica e cancellazione dei propri dati.
+    *   Limitazione e opposizione al trattamento.
+    *   Portabilità dei dati.
+    *   Revoca del consenso in qualsiasi momento.
+    
+    Per esercitare tali diritti, contattare il Titolare all'indirizzo: **info@artifix.it**. È inoltre possibile proporre reclamo al Garante per la Protezione dei Dati Personali.
+
+    ### 5. Durata della conservazione
+    I dati raccolti tramite il form di contatto vengono conservati per il tempo strettamente necessario a rispondere alla richiesta e, comunque, per un periodo massimo di 24 mesi.
+
+    ### 6. Comunicazione e diffusione
+    I dati non saranno ceduti a terzi per finalità di marketing o venduti. Saranno trattati esclusivamente dal Titolare.
+    """)
+
+    st.markdown("---")
+    
+    if st.button("← Torna alla Dashboard", key="torna_dashboard_privacy_basso"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
 
 # --- PAGINA COOKIE POLICY ---
 elif page == "Cookie Policy":
