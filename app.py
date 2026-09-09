@@ -529,9 +529,11 @@ elif page == "Viewer 3D":
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                 
-                # PULIZIA DELLA MESH: Rimuove triangoli fantasma e normali invertite
-                mesh = trimesh.repair.fix_normals(mesh)  # Fissa le normali
-                mesh = trimesh.repair.fill_holes(mesh)   # Chiude eventuali buchi interni
+                # PULIZIA DELLA MESH (PROTETTA: se fallisce, carichiamo comunque il modello)
+                try:
+                    mesh = trimesh.repair.fix_normals(mesh)
+                except:
+                    pass
                 
                 # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (100.000 facce max per alta qualità)
                 if len(mesh.faces) > 100000:
@@ -735,9 +737,11 @@ elif page == "Converti Formati":
                     st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
                     mesh_preview = load_3d_file(file_bytes, file_extension)
                     if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
-                        # PULIZIA DELLA MESH: Rimuove triangoli fantasma e normali invertite
-                        mesh_preview = trimesh.repair.fix_normals(mesh_preview)
-                        mesh_preview = trimesh.repair.fill_holes(mesh_preview)
+                        # PULIZIA DELLA MESH (PROTETTA: se fallisce, carichiamo comunque il modello)
+                        try:
+                            mesh_preview = trimesh.repair.fix_normals(mesh_preview)
+                        except:
+                            pass
                         
                         # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (100.000 facce max per alta qualità)
                         if len(mesh_preview.faces) > 100000:
