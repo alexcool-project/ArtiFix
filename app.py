@@ -8,6 +8,9 @@ import os
 import json
 from datetime import datetime
 import tempfile
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # --- TENTATIVO IMPORT LIBRERIE ---
 try:
@@ -83,7 +86,7 @@ else:
         initial_sidebar_state="expanded"
     )
 
-# --- CSS ---
+# --- CSS PRINCIPALE ---
 st.markdown("""
 <style>
     .main-header { font-size: 2.5rem; color: #1f77b4; font-weight: 700; margin-bottom: 1rem; text-align: center; }
@@ -100,61 +103,21 @@ st.markdown("""
     .footer-text { margin: 0; font-size: 0.85rem; color: #666; }
     .footer-text strong { color: #1f77b4; }
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #1f77b4; margin: 0.5rem 0; }
-    .cookie-banner { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(30,30,40,0.95); color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; z-index: 9999; backdrop-filter: blur(8px); border-top: 3px solid #1f77b4; box-shadow: 0 -4px 20px rgba(0,0,0,0.3); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .cookie-banner p { margin: 0; font-size: 14px; line-height: 1.5; color: #e0e0e0; flex: 1; min-width: 200px; }
-    .cookie-banner a { color: #6ab0e6; text-decoration: underline; }
-    .cookie-buttons { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .cookie-btn { padding: 8px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.2s ease; }
-    .cookie-btn-accept { background: #1f77b4; color: white; }
-    .cookie-btn-accept:hover { background: #145a8a; transform: scale(1.02); }
-    .cookie-btn-decline { background: transparent; color: #ccc; border: 1px solid #666; }
-    .cookie-btn-decline:hover { background: rgba(255,255,255,0.05); border-color: #999; }
-    .cookie-btn-settings { background: transparent; color: #aaa; border: none; text-decoration: underline; font-size: 13px; }
-    .cookie-btn-settings:hover { color: #fff; }
-    @media (max-width: 600px) { .cookie-banner { flex-direction: column; align-items: stretch; text-align: center; padding: 16px; } .cookie-buttons { justify-content: center; } }
+    .cookie-link {
+        display: block; color: #1f77b4; text-decoration: none; font-size: 0.9rem; padding: 5px 0; font-weight: 500;
+    }
+    .cookie-link:hover { text-decoration: underline; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- BANNER COOKIE ---
+# --- STATO PAGINE E COOKIE ---
+if 'page_attuale' not in st.session_state:
+    st.session_state.page_attuale = "Dashboard"
+
 if 'cookie_consent' not in st.session_state:
     st.session_state.cookie_consent = None
 
-def render_cookie_banner():
-    if st.session_state.cookie_consent is None:
-        st.markdown("""
-        <div class="cookie-banner" id="cookie-banner">
-            <p>🍪 Utilizziamo cookie tecnici e di analytics per migliorare la tua esperienza. Continuando a navigare accetti la nostra <a href="#" target="_blank">Privacy Policy</a> e l'uso dei cookie secondo la normativa europea (GDPR).</p>
-            <div class="cookie-buttons">
-                <button class="cookie-btn cookie-btn-accept" onclick="acceptCookies()">Accetta tutti</button>
-                <button class="cookie-btn cookie-btn-decline" onclick="declineCookies()">Solo tecnici</button>
-                <button class="cookie-btn cookie-btn-settings" onclick="openSettings()">Impostazioni</button>
-            </div>
-        </div>
-        <script>
-            function acceptCookies() { document.getElementById('cookie-banner').style.display = 'none'; window.location.reload(); }
-            function declineCookies() { document.getElementById('cookie-banner').style.display = 'none'; window.location.reload(); }
-            function openSettings() { alert('Impostazioni cookie: puoi gestire le preferenze qui.'); }
-        </script>
-        """, unsafe_allow_html=True)
-
-if st.session_state.cookie_consent is None:
-    render_cookie_banner()
-
-# --- Logo ---
-if LOGO_BASE64:
-    st.markdown(f'<div class="logo-container"><img src="data:image/png;base64,{LOGO_BASE64}" alt="ArtiFix Logo"></div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="logo-container"><h1 style="color:#1f77b4;font-size:2.5rem;margin:0;">ARTIFIX</h1><p style="color:#555;font-size:1rem;margin:0;">CONVERT. FIX. DELIVER.</p></div>', unsafe_allow_html=True)
-
-# --- Intestazione ---
-if CUBO_BASE64:
-    st.markdown(f'<h1 class="main-header"><img src="data:image/png;base64,{CUBO_BASE64}" style="width:40px;height:40px;vertical-align:middle;margin-right:10px;"> ArtiFix - Riparazione File CAD/CAM Universale</h1>', unsafe_allow_html=True)
-else:
-    st.markdown('<h1 class="main-header">📐 ArtiFix - Riparazione File CAD/CAM Universale</h1>', unsafe_allow_html=True)
-
-st.markdown("Piattaforma professionale per la riparazione, conversione e visualizzazione di file di progettazione (CAD, BIM, 3D, Elettronica, Geospaziali, PDF, SketchUp)")
-
-# --- Formati supportati ---
+# --- DEFINIZIONE VARIABILI (PRIMA DELLE PAGINE) ---
 SUPPORTED_FORMATS = {
     "CAD 2D": {"extensions": [".dwg", ".dxf", ".dgn", ".dwt"], "icon": "📐", "description": "File CAD (DWG, DXF, DGN, DWT)"},
     "CAD 3D & Mesh": {"extensions": [".stl", ".obj", ".3mf", ".ply", ".fbx", ".glb", ".gltf", ".step", ".iges", ".u3d", ".skp"], "icon": "🧊", "description": "Mesh 3D, modelli e SketchUp"},
@@ -169,7 +132,6 @@ ALL_EXTENSIONS = []
 for info in SUPPORTED_FORMATS.values():
     ALL_EXTENSIONS.extend(info["extensions"])
 
-# --- Matrice conversioni COMPLETA ---
 CONVERSION_MATRIX = {
     'stl': ['obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
     'obj': ['stl', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
@@ -333,7 +295,32 @@ def process_file(file_bytes, file_name):
     
     return result
 
-# --- BARRA LATERALE ---
+# --- FUNZIONE INVIO EMAIL ---
+def invia_email(nome, email_utente, messaggio):
+    smtp_server = st.secrets["SMTP_SERVER"]
+    smtp_port = st.secrets["SMTP_PORT"]
+    mittente = st.secrets["EMAIL_ADDRESS"]
+    password = st.secrets["EMAIL_PASSWORD"]
+    destinatario = st.secrets["RECIPIENT_EMAIL"]
+
+    msg = MIMEMultipart()
+    msg['From'] = mittente
+    msg['To'] = destinatario
+    msg['Subject'] = f"Nuovo messaggio da {nome}"
+    
+    corpo = f"Da: {nome} ({email_utente})\n\n{messaggio}"
+    msg.attach(MIMEText(corpo, 'plain'))
+
+    try:
+        server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        server.login(mittente, password)
+        server.sendmail(mittente, destinatario, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        return str(e)
+
+# --- BARRA LATERALE CON LINK AL COOKIE ---
 with st.sidebar:
     if LOGO_BASE64:
         st.markdown(f'<div class="sidebar-logo"><img src="data:image/png;base64,{LOGO_BASE64}" alt="ArtiFix Logo"></div>', unsafe_allow_html=True)
@@ -342,9 +329,26 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("## Navigazione")
-    page = st.radio("Vai a:", ["Dashboard", "Ripara File", "Viewer 3D", "Converti Formati", "Audit Progetto"], key="navigation", label_visibility="collapsed")
+    
+    if st.session_state.page_attuale == "Cookie Policy":
+        st.session_state.navigation = "Dashboard"
+        st.markdown("📍 **Sei nella pagina: Cookie Policy**")
+    else:
+        page = st.radio("Vai a:", ["Dashboard", "Ripara File", "Viewer 3D", "Converti Formati", "Progetto ArtiFix"], key="navigation", label_visibility="collapsed")
+        st.session_state.page_attuale = page
+    
     st.markdown("---")
-    st.caption("v4.0 - Universale Completo")
+    
+    # Link puro senza bordo e senza sfondo
+    if st.button("🍪 Consulta la Cookie Policy", use_container_width=True):
+        st.session_state.page_attuale = "Cookie Policy"
+        st.rerun()
+
+# --- LOGICA PAGINE ---
+if st.session_state.page_attuale == "Cookie Policy":
+    page = "Cookie Policy"
+else:
+    page = st.session_state.page_attuale
 
 # --- DASHBOARD ---
 if page == "Dashboard":
@@ -497,7 +501,6 @@ elif page == "Converti Formati":
         
         st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">Tipo: {file_type} | Estensione: .{file_extension}</div></div></div></div>', unsafe_allow_html=True)
         
-        # I formati convertibili sono: STL, OBJ, PLY, 3MF, GLB, GLTF, DXF, DWG
         convertibili = ["stl", "obj", "ply", "3mf", "glb", "gltf", "dxf", "dwg"]
         
         if file_extension not in convertibili:
@@ -545,3 +548,137 @@ elif page == "Converti Formati":
                                 st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
                         except Exception as e:
                             st.error(f"❌ Errore durante la conversione: {e}")
+
+# --- PROGETTO ARTIFIX (AUDIT + CONTATTI) ---
+elif page == "Progetto ArtiFix":
+    st.header("🚀 Progetto ArtiFix")
+    st.markdown("""
+    **ArtiFix** è una piattaforma professionale per la riparazione, conversione e visualizzazione di file CAD/CAM. 
+    Questo progetto è in continua evoluzione. Per richieste di informazioni, collaborazioni o assistenza tecnica, contattaci.
+    """)
+    
+    st.divider()
+    st.subheader("📧 Contattaci")
+    st.write("Invia una richiesta a info@artifix.it")
+    
+    with st.form("contatti"):
+        nome_input = st.text_input("Il tuo nome")
+        email_input = st.text_input("La tua email")
+        messaggio_input = st.text_area("Messaggio")
+        inviato = st.form_submit_button("Invia")
+
+        if inviato:
+            if nome_input and email_input and messaggio_input:
+                risultato = invia_email(nome_input, email_input, messaggio_input)
+                if risultato == True:
+                    st.success("Email inviata con successo!")
+                else:
+                    st.error(f"Errore: {risultato}")
+            else:
+                st.warning("Compila tutti i campi prima di inviare.")
+
+# --- PAGINA COOKIE POLICY ---
+elif page == "Cookie Policy":
+    st.header("🍪 Cookie Policy")
+    st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
+    st.caption("Ultimo aggiornamento: 9 settembre 2026")
+    
+    # Pulsante per tornare alla Dashboard (in ALTO)
+    if st.button("← Torna alla Dashboard", key="torna_dashboard_alto"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
+    
+    st.markdown("---")
+    
+    st.markdown("""
+    La presente Cookie Policy è resa ai sensi dell'art. 13 del Regolamento (UE) 2016/679 (GDPR) e del Provvedimento del Garante per la Protezione dei Dati Personali del 10 giugno 2021.
+
+    ### 1. Titolare del Trattamento
+    Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
+
+    ### 2. Cosa sono i Cookie
+    I cookie sono piccoli file di testo che i siti web inviano e registrano sul computer o dispositivo mobile dell'utente, per essere poi ritrasmessi agli stessi siti alle visite successive. Servono a ricordare le azioni e le preferenze dell'utente.
+
+    ### 3. Tipologie di Cookie utilizzate
+    Questo sito utilizza esclusivamente **Cookie Tecnici (o strettamente necessari)**. Questi cookie sono essenziali per il funzionamento del sito e non richiedono il consenso preventivo dell'utente.
+
+    *   **Cookie di Sessione**: Vengono eliminati automaticamente alla chiusura del browser. Sono utilizzati per mantenere attiva la sessione di navigazione e ricordare le scelte effettuate (es. il consenso ai cookie).
+    *   **Cookie di Funzionalità**: Permettono di ricordare le scelte dell'utente per migliorare l'esperienza di navigazione, come ad esempio il limite di upload impostato (5GB).
+
+    **Cookie di Terze Parti / Profilazione**: Questo sito **non utilizza** cookie di profilazione, di marketing o di terze parti (come Google Analytics o pixel di social media) per inviare pubblicità personalizzata.
+
+    ### 4. Gestione del Consenso
+    Al primo accesso, l'utente può scegliere se accettare o rifiutare i cookie tramite l'apposito banner. La scelta viene registrata e memorizzata nel browser. È possibile modificare la propria scelta in qualsiasi momento cancellando i dati di navigazione del browser o reimpostando la pagina.
+
+    ### 5. Come disabilitare i Cookie tramite il Browser
+    L'utente può gestire le preferenze sui cookie tramite le impostazioni del proprio browser. La disabilitazione di alcuni cookie potrebbe compromettere il corretto funzionamento di alcune sezioni del sito.
+
+    *   **Google Chrome**: [Istruzioni](https://support.google.com/chrome/answer/95647)
+    *   **Mozilla Firefox**: [Istruzioni](https://support.mozilla.org/kb/block-websites-storing-cookies)
+    *   **Microsoft Edge**: [Istruzioni](https://support.microsoft.com/microsoft-edge/delete-cookies-in-microsoft-edge)
+    *   **Safari**: [Istruzioni](https://support.apple.com/guide/safari/manage-cookies)
+
+    ### 6. Diritti dell'Interessato
+    Ai sensi degli artt. 15-22 del GDPR, l'utente ha il diritto di accesso, rettifica, cancellazione, limitazione, opposizione e portabilità dei propri dati personali. Per esercitare tali diritti, contattare l'email **info@artifix.it**. È inoltre possibile proporre reclamo all'Autorità di controllo (Garante per la Protezione dei Dati Personali - [www.garanteprivacy.it](http://www.garanteprivacy.it)).
+
+    ### 7. Aggiornamenti
+    La presente Cookie Policy può essere soggetta ad aggiornamenti. La versione aggiornata sarà sempre disponibile su questa pagina.
+    """)
+
+    st.markdown("---")
+    
+    # Pulsante per tornare alla Dashboard (in BASSO)
+    if st.button("← Torna alla Dashboard", key="torna_dashboard_basso"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
+
+# --- POPUP COOKIE INIZIALE (SEMPLICE E VISIBILE) ---
+if st.session_state.cookie_consent is None:
+    st.markdown("""
+    <style>
+        footer {visibility: hidden;}
+        .cookie-box {
+            background: #1a1a24;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 700px;
+            margin: 50px auto 0 auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .cookie-box h3 {
+            color: #6ab0e6;
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        .cookie-box p {
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        .cookie-box a { color: #6ab0e6; text-decoration: underline; }
+    </style>
+    
+    <div class="cookie-box">
+        <h3>🍪 Cookie Policy</h3>
+        <p>
+            Questo sito o gli strumenti terzi da questo utilizzati si avvalgono di cookie necessari al funzionamento ed utili alle finalità illustrate nella cookie policy. 
+            Se vuoi saperne di più o negare il consenso a tutti o ad alcuni cookie, <a href="#">consulta la cookie policy</a>. 
+            Chiudendo questo banner, scorrendo questa pagina, cliccando su un link o proseguendo la navigazione in altra maniera, acconsenti all'uso dei cookie.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Pulsanti funzionanti
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Solo tecnici", key="decline_cookies", use_container_width=True):
+            st.session_state.cookie_consent = "declined"
+            st.rerun()
+    with col2:
+        if st.button("Accetta tutti", key="accept_cookies", type="primary", use_container_width=True):
+            st.session_state.cookie_consent = "accepted"
+            st.rerun()
