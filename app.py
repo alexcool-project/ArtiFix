@@ -70,6 +70,14 @@ try:
 except ImportError:
     SVG_AVAILABLE = False
 
+# --- PROVA A IMPORTARE ASPOSE.CAD (PER LA CONVERSIONE 3D PDF) ---
+try:
+    import aspose.cad as cad
+    import aspose.cad.imageoptions as aspose_image_options
+    ASPOSE_AVAILABLE = True
+except ImportError:
+    ASPOSE_AVAILABLE = False
+
 # --- STATO PAGINE E COOKIE (INIZIALIZZATO SUBITO) ---
 if 'page_attuale' not in st.session_state:
     st.session_state.page_attuale = "Dashboard"
@@ -96,23 +104,17 @@ else:
         initial_sidebar_state="expanded"
     )
 
-# --- CSS IN VERSIONE CHIARA (LIGHT MODE) ---
+# --- CSS MINIMALE E PULITO ---
 st.markdown("""
 <style>
-    /* Imposta il tema chiaro per tutta la pagina */
-    .stApp {
-        background-color: #ffffff;
-        color: #333333;
-    }
-    
     .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
     .logo-container { text-align: center; padding: 1rem 0; }
     .logo-container img { max-width: 400px; height: auto; }
-    .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #e0e0e0; margin-bottom: 1rem; }
+    .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
     .sidebar-logo img { max-width: 180px; height: auto; }
     .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
     .stButton>button[kind="primary"] { background-color: #1f77b4; color: white; }
-    .metric-card { background-color: #f8f9fa; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .metric-card { background-color: #f0f2f6; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
     .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
     .metric-label { font-size: 0.85rem; color: #555; }
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
@@ -135,19 +137,19 @@ for info in SUPPORTED_FORMATS.values():
     ALL_EXTENSIONS.extend(info["extensions"])
 
 CONVERSION_MATRIX = {
-    'stl': ['obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
-    'obj': ['stl', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
-    'ply': ['stl', 'obj', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
-    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
-    'glb': ['stl', 'obj', 'ply', '3mf', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
-    'gltf': ['stl', 'obj', 'ply', '3mf', 'glb', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
-    'fbx': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'step', 'iges', 'u3d', 'skp', 'dxf'],
-    'step': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'iges', 'u3d', 'skp', 'dxf'],
-    'iges': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'u3d', 'skp', 'dxf'],
-    'u3d': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'skp', 'dxf'],
-    'skp': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'dxf'],
-    'dxf': ['stl', 'obj', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp'],
-    'dwg': ['stl', 'obj', 'dxf', 'glb', 'gltf'],
+    'stl': ['obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
+    'obj': ['stl', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
+    'ply': ['stl', 'obj', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
+    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
+    'glb': ['stl', 'obj', 'ply', '3mf', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
+    'gltf': ['stl', 'obj', 'ply', '3mf', 'glb', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
+    'fbx': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'step', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
+    'step': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'iges', 'u3d', 'skp', 'dxf', 'pdf'],
+    'iges': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'u3d', 'skp', 'dxf', 'pdf'],
+    'u3d': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'skp', 'dxf', 'pdf'],
+    'skp': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'dxf', 'pdf'],
+    'dxf': ['stl', 'obj', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'pdf'],
+    'dwg': ['stl', 'obj', 'dxf', 'glb', 'gltf', 'pdf'],
 }
 
 FORMAT_NAMES = {
@@ -163,7 +165,8 @@ FORMAT_NAMES = {
     'step': 'STEP (.step)',
     'iges': 'IGES (.iges)',
     'u3d': 'U3D (.u3d)',
-    'skp': 'SKP (.skp)'
+    'skp': 'SKP (.skp)',
+    'pdf': '3D PDF (.pdf)'
 }
 
 def detect_file_type(file_extension):
@@ -205,7 +208,32 @@ def convert_mesh(mesh, target_format):
     try:
         target_format = target_format.lower().replace('.', '')
         
-        if target_format == 'stl':
+        if target_format == 'pdf':
+            if ASPOSE_AVAILABLE:
+                try:
+                    # Crea un file temporaneo in formato STL
+                    temp_path = "temp_model.stl"
+                    mesh.export(temp_path)
+                    
+                    # Carica il file con Aspose.CAD
+                    cad_image = cad.Image.load(temp_path)
+                    
+                    # Imposta le opzioni di output PDF
+                    pdf_options = aspose_image_options.PdfOptions()
+                    
+                    # Esporta in PDF
+                    output_pdf = "converted_3d.pdf"
+                    cad_image.save(output_pdf, pdf_options)
+                    
+                    # Leggi il file PDF
+                    with open(output_pdf, "rb") as f:
+                        return f.read()
+                except Exception as e:
+                    return None
+            else:
+                return None
+        
+        elif target_format == 'stl':
             return trimesh.exchange.stl.export_stl(mesh)
         elif target_format == 'obj':
             return trimesh.exchange.obj.export_obj(mesh)
@@ -355,7 +383,7 @@ with st.sidebar:
     
     st.markdown(
         f"""
-        <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#e0e0e0; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
+        <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
             💙 Dona con PayPal
         </a>
         """,
@@ -529,21 +557,21 @@ elif page == "Converti Formati":
     
     with st.expander("📋 Matrice delle conversioni disponibili"):
         st.markdown("""
-        | Da → A | STL | OBJ | PLY | 3MF | GLB | GLTF | FBX | STEP | IGES | U3D | SKP | DXF | DWG |
-        |--------|-----|-----|-----|-----|-----|------|-----|------|------|-----|-----|-----|-----|
-        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **3MF** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **GLB** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **GLTF** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **STEP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ❌ |
-        | **IGES** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ❌ |
-        | **U3D** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ❌ |
-        | **SKP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❌ |
-        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ❌ |
-        | **DWG** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - |
+        | Da → A | STL | OBJ | PLY | 3MF | GLB | GLTF | FBX | STEP | IGES | U3D | SKP | DXF | DWG | PDF |
+        |--------|-----|-----|-----|-----|-----|------|-----|------|------|-----|-----|-----|-----|-----|
+        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+        | **3MF** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+        | **GLB** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+        | **GLTF** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+        | **STEP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+        | **IGES** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ❌ | ✅ |
+        | **U3D** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ❌ | ✅ |
+        | **SKP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❌ | ✅ |
+        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ❌ | ✅ |
+        | **DWG** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
         """)
         st.caption("✅ = Conversione supportata | ❌ = Conversione non supportata")
     
@@ -557,11 +585,11 @@ elif page == "Converti Formati":
         
         st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">Tipo: {file_type} | Estensione: .{file_extension}</div></div></div></div>', unsafe_allow_html=True)
         
-        convertibili = ["stl", "obj", "ply", "3mf", "glb", "gltf", "fbx", "step", "iges", "u3d", "skp", "dxf", "dwg"]
+        convertibili = ["stl", "obj", "ply", "3mf", "glb", "gltf", "fbx", "step", "iges", "u3d", "skp", "dxf", "dwg", "pdf"]
         
         if file_extension not in convertibili:
             st.warning(f"⚠️ Il formato **.{file_extension.upper()}** non può essere convertito in altri formati.")
-            st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, 3MF, GLB, GLTF, FBX, STEP, IGES, U3D, SKP, DXF, DWG**.")
+            st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, 3MF, GLB, GLTF, FBX, STEP, IGES, U3D, SKP, DXF, DWG, PDF**.")
         else:
             target_formats = CONVERSION_MATRIX.get(file_extension, [])
             target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
@@ -589,7 +617,8 @@ elif page == "Converti Formati":
                                         '3mf': 'application/octet-stream',
                                         'glb': 'application/octet-stream',
                                         'gltf': 'application/octet-stream',
-                                        'dxf': 'application/dxf'
+                                        'dxf': 'application/dxf',
+                                        'pdf': 'application/pdf'
                                     }
                                     st.download_button(
                                         label=f"📥 Scarica .{target_ext}",
