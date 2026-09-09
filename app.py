@@ -228,6 +228,13 @@ def load_3d_file(file_bytes, file_extension):
             return None
         else:
             mesh = trimesh.load(io.BytesIO(file_bytes), file_type=file_type)
+            # Se il file restituisce una "Scene", la convertiamo in una mesh unica
+            if isinstance(mesh, trimesh.Scene):
+                # Prendi la prima geometria (se ce ne sono più di una, le uniamo)
+                if len(mesh.geometry) > 0:
+                    mesh = trimesh.util.concatenate(list(mesh.geometry.values()))
+                else:
+                    return None
             if mesh is not None and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 return mesh
             return None
@@ -507,7 +514,7 @@ elif page == "Ripara File":
             progress_bar.progress(100)
             st.error(result["message"])
 
-# --- VIEWER 3D (CON BARRE DI AVANZAMENTO E PROTEZIONE ERRORI) ---
+# --- VIEWER 3D (CON BARRE DI AVANZAMENTO) ---
 elif page == "Viewer 3D":
     st.header("🖥️ Viewer 3D")
     viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
@@ -529,18 +536,15 @@ elif page == "Viewer 3D":
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                 
-                # PROTEZIONE TOTALE: Se semplificazione o riparazione falliscono, carichiamo direttamente
+                # PROTEZIONE TOTALE
                 try:
-                    if hasattr(mesh, 'faces') and len(mesh.faces) > 0:
-                        # Sempre semplifica se ha più di 100.000 facce (per garantire la fluidità)
-                        if len(mesh.faces) > 100000:
-                            mesh = mesh.simplify_quadric_decimation(face_count=100000)
-                        else:
-                            # Prova a riparare le normali, ma se fallisce usa la mesh originale
-                            try:
-                                mesh = trimesh.repair.fix_normals(mesh)
-                            except:
-                                pass
+                    if len(mesh.faces) > 100000:
+                        mesh = mesh.simplify_quadric_decimation(face_count=100000)
+                    else:
+                        try:
+                            mesh = trimesh.repair.fix_normals(mesh)
+                        except:
+                            pass
                 except:
                     pass
                 
@@ -585,7 +589,7 @@ elif page == "Viewer 3D":
                     controls.enableDamping = true;
                     controls.dampingFactor = 0.05;
                     controls.target.set(0,0,0);
-                    controls.screenSpacePanning = true; // Abilita il Pan (spostamento)
+                    controls.screenSpacePanning = true;
                     controls.update();
                     const al=5;
                     scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff0000, 0.4, 0.2));
