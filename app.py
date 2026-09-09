@@ -230,7 +230,6 @@ def load_3d_file(file_bytes, file_extension):
             mesh = trimesh.load(io.BytesIO(file_bytes), file_type=file_type)
             # Se il file restituisce una "Scene", la convertiamo in una mesh unica
             if isinstance(mesh, trimesh.Scene):
-                # Prendi la prima geometria (se ce ne sono più di una, le uniamo)
                 if len(mesh.geometry) > 0:
                     mesh = trimesh.util.concatenate(list(mesh.geometry.values()))
                 else:
@@ -513,8 +512,7 @@ elif page == "Ripara File":
             status_text.text("Errore durante l'analisi")
             progress_bar.progress(100)
             st.error(result["message"])
-
-# --- VIEWER 3D (CON BARRE DI AVANZAMENTO) ---
+    # --- VIEWER 3D (CON BARRE DI AVANZAMENTO E LIMITE VERTICI) ---
 elif page == "Viewer 3D":
     st.header("🖥️ Viewer 3D")
     viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
@@ -536,10 +534,12 @@ elif page == "Viewer 3D":
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                 
-                # PROTEZIONE TOTALE
+                # LIMITE CRITICO: Three.js Uint16Array supporta MAX 65.535 vertici
                 try:
-                    if len(mesh.faces) > 100000:
-                        mesh = mesh.simplify_quadric_decimation(face_count=100000)
+                    if len(mesh.vertices) > 65000:
+                        # Calcola il numero di facce approssimativo per stare sotto i 65k vertici
+                        target_faces = int(65000 / 3) * 3
+                        mesh = mesh.simplify_quadric_decimation(face_count=target_faces)
                     else:
                         try:
                             mesh = trimesh.repair.fix_normals(mesh)
@@ -752,8 +752,9 @@ elif page == "Converti Formati":
                     if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
                         # PROTEZIONE TOTALE
                         try:
-                            if len(mesh_preview.faces) > 100000:
-                                mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=100000)
+                            if len(mesh_preview.vertices) > 65000:
+                                target_faces = int(65000 / 3) * 3
+                                mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=target_faces)
                             else:
                                 try:
                                     mesh_preview = trimesh.repair.fix_normals(mesh_preview)
