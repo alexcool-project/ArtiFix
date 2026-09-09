@@ -28,7 +28,7 @@ LOGO_URL = "https://i.postimg.cc/KYf3DJ1d/Artifix-logo.png"
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
-# --- SEO: META TAG E DATI STRUTTURATI ---
+# --- SEO META TAG ---
 st.markdown("""
 <title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
 <meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF) in 3D PDF, STL, OBJ, GLTF e altri formati. Convertitore online gratuito e veloce per ingegneri e progettisti." />
@@ -110,7 +110,7 @@ if 'cookie_consent' not in st.session_state:
 # --- CONFIGURAZIONE PAGINA ---
 if CUBO_URL:
     st.set_page_config(
-        page_title="ArtiFix - Convertitore CAD/CAM Universale",
+        page_title="ArtiFix - Riparazione CAD/CAM Universale",
         page_icon=CUBO_URL,
         layout="wide",
         initial_sidebar_state="expanded"
@@ -461,7 +461,7 @@ if page == "Dashboard":
             st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
     st.info("👈 Seleziona una funzionalità dal menu.")
 
-# --- RIPARA FILE (CON BARRA DI AVANZAMENTO) ---
+# --- RIPARA FILE (CON BARRE DI AVANZAMENTO) ---
 elif page == "Ripara File":
     st.header("🛠️ Centro Riparazione File")
     uploaded_file = st.file_uploader("Seleziona un file", type=[ext[1:] for ext in ALL_EXTENSIONS], key="repair")
@@ -469,16 +469,24 @@ elif page == "Ripara File":
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        status_text.text("Analisi del file in corso... (20%)")
-        progress_bar.progress(20)
+        # Fase 1: Analisi (0% -> 30%)
+        status_text.text("Analisi del file in corso... (30%)")
+        progress_bar.progress(30)
+        time.sleep(0.5)
+        
         result = process_file(uploaded_file.getvalue(), uploaded_file.name)
         
+        # Fase 2: Verifica (30% -> 60%)
         status_text.text("Verifica del risultato... (60%)")
         progress_bar.progress(60)
+        time.sleep(0.5)
         
         if result["success"]:
+            # Fase 3: Completamento (60% -> 100%)
             status_text.text("Completamento... (100%)")
             progress_bar.progress(100)
+            time.sleep(0.5)
+            
             st.success(result["message"])
             if result.get("info"):
                 st.subheader("Dettagli")
@@ -489,11 +497,12 @@ elif page == "Ripara File":
                 st.success("✅ Riparato!")
                 st.download_button("📥 Scarica", data=uploaded_file.getvalue(), file_name=f"repaired_{uploaded_file.name}")
         else:
+            # Fase di errore
             status_text.text("Errore durante l'analisi")
             progress_bar.progress(100)
             st.error(result["message"])
 
-# --- VIEWER 3D (CON BARRA DI AVANZAMENTO) ---
+# --- VIEWER 3D (CON BARRE DI AVANZAMENTO) ---
 elif page == "Viewer 3D":
     st.header("🖥️ Viewer 3D")
     viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
@@ -501,19 +510,23 @@ elif page == "Viewer 3D":
         progress_bar = st.progress(0)
         status_text = st.empty()
         
+        # Fase 1: Caricamento (0% -> 30%)
         status_text.text("Caricamento del modello... (30%)")
         progress_bar.progress(30)
+        time.sleep(0.5)
         
         try:
             mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
             
+            # Fase 2: Elaborazione (30% -> 60%)
             status_text.text("Elaborazione vertici e facce... (60%)")
             progress_bar.progress(60)
+            time.sleep(0.5)
             
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                 
-                # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (evita il crash con modelli pesanti)
+                # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER
                 if len(mesh.faces) > 15000:
                     mesh = mesh.simplify_quadric_decimation(face_count=15000)
                 
@@ -527,8 +540,10 @@ elif page == "Viewer 3D":
                 mesh_data = {"vertices": vertices.tolist(), "faces": mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()}
                 mesh_json = json.dumps(mesh_data)
                 
+                # Fase 3: Costruzione vista 3D (60% -> 100%)
                 status_text.text("Costruzione della vista 3D... (100%)")
                 progress_bar.progress(100)
+                time.sleep(0.5)
                 
                 viewer_html = """
                 <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:500px;}#info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.8);padding:5px 15px;border-radius:20px;}.legend{position:absolute;bottom:60px;left:20px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}.legend span{display:inline-block;width:12px;height:12px;margin-right:4px;}.axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}</style>
@@ -595,7 +610,7 @@ elif page == "Viewer 3D":
         except Exception as e:
             st.error(f"❌ Errore: {e}")
 
-# --- CONVERTI FORMATI (CON TOOLTIP + BARRA DI AVANZAMENTO + ANTEPRIMA OPZIONALE) ---
+# --- CONVERTI FORMATI (CON TOOLTIP + BARRE DI AVANZAMENTO + ANTEPRIMA OPZIONALE) ---
 elif page == "Converti Formati":
     st.header("🔄 Conversione Formati Universale")
     st.markdown("Converti file tra **tutti i formati** supportati con **tutte le combinazioni** possibili.")
@@ -659,16 +674,25 @@ elif page == "Converti Formati":
                 # PULSANTE DI CONVERSIONE (PRIMA DELL'ANTEPRIMA)
                 if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
                     progress_bar = st.progress(0)
-                    st.write("Conversione in corso...")
+                    status_text = st.empty()
                     
+                    # Fase 1: Caricamento (0% -> 20%)
+                    status_text.text("Caricamento e analisi del modello... (20%)")
                     progress_bar.progress(20)
+                    time.sleep(0.5)
                     mesh = load_3d_file(file_bytes, file_extension)
                     
                     if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+                        # Fase 2: Conversione (20% -> 70%)
+                        status_text.text("Conversione in corso... (70%)")
                         progress_bar.progress(70)
+                        time.sleep(0.5)
                         result_bytes = convert_mesh(mesh, target_ext)
                         
+                        # Fase 3: Salvataggio (70% -> 100%)
+                        status_text.text("Salvataggio del file... (100%)")
                         progress_bar.progress(100)
+                        time.sleep(0.5)
                         
                         if result_bytes:
                             st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
