@@ -603,34 +603,63 @@ elif page == "Converti Formati":
                 if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
                     with st.spinner(f"Conversione in {target_selected.split(' ')[0]} in corso..."):
                         try:
-                            mesh = load_3d_file(file_bytes, file_extension)
-                            
-                            if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                                result_bytes = convert_mesh(mesh, target_ext)
+                            if file_extension in ['dwg', 'dxf', 'step', 'iges', 'u3d'] and target_ext == 'pdf' and ASPOSE_AVAILABLE:
+                                import aspose.cad as cad
+                                import aspose.cad.imageoptions as aspose_image_options
+                                
+                                temp_input = f"temp_input.{file_extension}"
+                                with open(temp_input, "wb") as f:
+                                    f.write(file_bytes)
+                                
+                                cad_image = cad.Image.load(temp_input)
+                                pdf_options = aspose_image_options.PdfOptions()
+                                output_pdf = "converted_3d.pdf"
+                                cad_image.save(output_pdf, pdf_options)
+                                
+                                with open(output_pdf, "rb") as f:
+                                    result_bytes = f.read()
                                 
                                 if result_bytes:
                                     st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
-                                    mime_types = {
-                                        'stl': 'application/octet-stream',
-                                        'obj': 'text/plain',
-                                        'ply': 'application/octet-stream',
-                                        '3mf': 'application/octet-stream',
-                                        'glb': 'application/octet-stream',
-                                        'gltf': 'application/octet-stream',
-                                        'dxf': 'application/dxf',
-                                        'pdf': 'application/pdf'
-                                    }
                                     st.download_button(
                                         label=f"📥 Scarica .{target_ext}",
                                         data=result_bytes,
                                         file_name=f"converted.{target_ext}",
-                                        mime=mime_types.get(target_ext, 'application/octet-stream'),
+                                        mime='application/pdf',
                                         use_container_width=True
                                     )
                                 else:
-                                    st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita. Riprova con un altro formato.")
+                                    st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita.")
+                            
                             else:
-                                st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
+                                mesh = load_3d_file(file_bytes, file_extension)
+                                
+                                if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+                                    result_bytes = convert_mesh(mesh, target_ext)
+                                    
+                                    if result_bytes:
+                                        st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
+                                        mime_types = {
+                                            'stl': 'application/octet-stream',
+                                            'obj': 'text/plain',
+                                            'ply': 'application/octet-stream',
+                                            '3mf': 'application/octet-stream',
+                                            'glb': 'application/octet-stream',
+                                            'gltf': 'application/octet-stream',
+                                            'dxf': 'application/dxf',
+                                            'pdf': 'application/pdf'
+                                        }
+                                        st.download_button(
+                                            label=f"📥 Scarica .{target_ext}",
+                                            data=result_bytes,
+                                            file_name=f"converted.{target_ext}",
+                                            mime=mime_types.get(target_ext, 'application/octet-stream'),
+                                            use_container_width=True
+                                        )
+                                    else:
+                                        st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita. Riprova con un altro formato.")
+                                else:
+                                    st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
                         except Exception as e:
                             st.error(f"❌ Errore durante la conversione: {e}")
 
