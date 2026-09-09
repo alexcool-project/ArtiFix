@@ -680,11 +680,10 @@ elif page == "Converti Formati":
                                 else:
                                     st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
                             
-                            # 3. STRATEGIA PER U3D: usa PYMESHLAB O PYASSIMP
+                            # 3. STRATEGIA PER U3D: usa SOLO PYMESHLAB
                             elif target_ext == 'u3d':
-                                try:
-                                    # Se PYMESHLAB è disponibile, prova a convertire con quello
-                                    if PYMESHLAB_AVAILABLE:
+                                if PYMESHLAB_AVAILABLE:
+                                    try:
                                         temp_input = f"temp_input.{file_extension}"
                                         with open(temp_input, "wb") as f:
                                             f.write(file_bytes)
@@ -695,36 +694,22 @@ elif page == "Converti Formati":
                                         
                                         with open("converted.u3d", "rb") as f:
                                             result_bytes = f.read()
-                                    
-                                    # ALTRIMENTI usa PYASSIMP (se disponibile)
-                                    elif PYASSIMP_AVAILABLE:
-                                        temp_input = f"temp_input.{file_extension}"
-                                        with open(temp_input, "wb") as f:
-                                            f.write(file_bytes)
                                         
-                                        scene = pyassimp.load(temp_input)
-                                        pyassimp.export(scene, "converted.u3d", file_type='u3d')
-                                        pyassimp.release(scene)
-                                        
-                                        with open("converted.u3d", "rb") as f:
-                                            result_bytes = f.read()
-                                    
-                                    else:
-                                        raise ImportError("Libreria U3D non installata")
-                                    
-                                    if result_bytes:
-                                        st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
-                                        st.download_button(
-                                            label=f"📥 Scarica .{target_ext}",
-                                            data=result_bytes,
-                                            file_name=f"converted.{target_ext}",
-                                            mime='application/octet-stream',
-                                            use_container_width=True
-                                        )
-                                    else:
-                                        st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita.")
-                                except Exception as e:
-                                    st.error(f"❌ Errore durante la conversione U3D: {str(e)}")
+                                        if result_bytes:
+                                            st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
+                                            st.download_button(
+                                                label=f"📥 Scarica .{target_ext}",
+                                                data=result_bytes,
+                                                file_name=f"converted.{target_ext}",
+                                                mime='application/octet-stream',
+                                                use_container_width=True
+                                            )
+                                        else:
+                                            st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita.")
+                                    except Exception as e:
+                                        st.error(f"❌ Errore durante la conversione U3D: {str(e)}")
+                                else:
+                                    st.error("❌ La libreria 'pymeshlab' non è installata. Aggiungila a requirements.txt.")
                             
                             # 4. STRATEGIA STANDARD PER ALTRI FORMATI (STL, OBJ, GLB -> DXF, GLTF, ecc.)
                             elif target_ext in ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf']:
@@ -759,6 +744,134 @@ elif page == "Converti Formati":
                                 st.error(f"❌ La conversione in {target_selected.split(' ')[0]} non è supportata da nessuna libreria installata.")
                         except Exception as e:
                             st.error(f"❌ Errore durante la conversione: {e}")
+
+# --- PROGETTO ARTIFIX (AUDIT + CONTATTI) ---
+elif page == "Progetto ArtiFix":
+    st.header("🚀 Progetto ArtiFix")
+    st.markdown("""
+    **ArtiFix** è una piattaforma professionale per la riparazione, conversione e visualizzazione di file CAD/CAM. 
+    Questo progetto è in continua evoluzione. Per richieste di informazioni, collaborazioni o assistenza tecnica, contattaci.
+    """)
+    
+    st.divider()
+    st.subheader("📧 Contattaci")
+    st.write("Invia una richiesta a info@artifix.it")
+    
+    with st.form("contatti"):
+        nome_input = st.text_input("Il tuo nome")
+        email_input = st.text_input("La tua email")
+        messaggio_input = st.text_area("Messaggio")
+        inviato = st.form_submit_button("Invia")
+
+        if inviato:
+            if nome_input and email_input and messaggio_input:
+                risultato = invia_email(nome_input, email_input, messaggio_input)
+                if risultato == True:
+                    st.success("Email inviata con successo!")
+                else:
+                    st.error(f"Errore: {risultato}")
+            else:
+                st.warning("Compila tutti i campi prima di inviare.")
+
+# --- PAGINA PRIVACY POLICY ---
+elif page == "Privacy Policy":
+    st.header("🔒 Privacy Policy")
+    st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
+    st.caption("Ultimo aggiornamento: 9 settembre 2026")
+    
+    if st.button("← Torna alla Dashboard", key="torna_dashboard_privacy"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
+    
+    st.markdown("---")
+    
+    st.markdown("""
+    La presente Privacy Policy è resa ai sensi dell'Art. 13 del Regolamento (UE) 2016/679 (GDPR), relativo alla protezione delle persone fisiche con riguardo al trattamento dei dati personali.
+
+    ### 1. Titolare del Trattamento
+    Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
+
+    ### 2. Dati raccolti e finalità
+    **Dati forniti volontariamente dall'utente**: Attraverso il form "Contattaci" vengono raccolti nome, indirizzo email e messaggio, al fine di rispondere alle richieste pervenute.
+    **Dati di navigazione**: Il sito utilizza cookie tecnici (per il funzionamento) e cookie di analytics (facoltativi) come descritto nella Cookie Policy.
+
+    ### 3. Base giuridica
+    Il trattamento si basa sul consenso dell'utente (Art. 6, par. 1, lett. a GDPR) e sull'esecuzione di misure precontrattuali richieste dall'utente (Art. 6, par. 1, lett. b GDPR).
+
+    ### 4. Diritti dell'interessato
+    Ai sensi degli Artt. 15-22 del GDPR, l'utente ha il diritto di:
+    *   Accesso, rettifica e cancellazione dei propri dati.
+    *   Limitazione e opposizione al trattamento.
+    *   Portabilità dei dati.
+    *   Revoca del consenso in qualsiasi momento.
+    
+    Per esercitare tali diritti, contattare il Titolare all'indirizzo: **info@artifix.it**. È inoltre possibile proporre reclamo al Garante per la Protezione dei Dati Personali.
+
+    ### 5. Durata della conservazione
+    I dati raccolti tramite il form di contatto vengono conservati per il tempo strettamente necessario a rispondere alla richiesta e, comunque, per un periodo massimo di 24 mesi.
+
+    ### 6. Comunicazione e diffusione
+    I dati non saranno ceduti a terzi per finalità di marketing o venduti. Saranno trattati esclusivamente dal Titolare.
+    """)
+
+    st.markdown("---")
+    
+    if st.button("← Torna alla Dashboard", key="torna_dashboard_privacy_basso"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
+
+# --- PAGINA COOKIE POLICY ---
+elif page == "Cookie Policy":
+    st.header("🍪 Cookie Policy")
+    st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
+    st.caption("Ultimo aggiornamento: 9 settembre 2026")
+    
+    if st.button("← Torna alla Dashboard", key="torna_dashboard_alto"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
+    
+    st.markdown("---")
+    
+    st.markdown("""
+    La presente Cookie Policy è resa ai sensi dell'art. 13 del Regolamento (UE) 2016/679 (GDPR) e del Provvedimento del Garante per la Protezione dei Dati Personali del 10 giugno 2021.
+
+    ### 1. Titolare del Trattamento
+    Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
+
+    ### 2. Cosa sono i Cookie
+    I cookie sono piccoli file di testo che i siti web inviano e registrano sul computer o dispositivo mobile dell'utente, per essere poi ritrasmessi agli stessi siti alle visite successive. Servono a ricordare le azioni e le preferenze dell'utente.
+
+    ### 3. Tipologie di Cookie utilizzate
+    Questo sito utilizza esclusivamente **Cookie Tecnici (o strettamente necessari)**. Questi cookie sono essenziali per il funzionamento del sito e non richiedono il consenso preventivo dell'utente.
+
+    *   **Cookie di Sessione**: Vengono eliminati automaticamente alla chiusura del browser. Sono utilizzati per mantenere attiva la sessione di navigazione e ricordare le scelte effettuate (es. il consenso ai cookie).
+    *   **Cookie di Funzionalità**: Permettono di ricordare le scelte dell'utente per migliorare l'esperienza di navigazione, come ad esempio il limite di upload impostato (5GB).
+
+    **Cookie di Terze Parti / Profilazione**: Questo sito **non utilizza** cookie di profilazione, di marketing o di terze parti (come Google Analytics o pixel di social media) per inviare pubblicità personalizzata.
+
+    ### 4. Gestione del Consenso
+    Al primo accesso, l'utente può scegliere se accettare o rifiutare i cookie tramite l'apposito banner. La scelta viene registrata e memorizzata nel browser. È possibile modificare la propria scelta in qualsiasi momento cancellando i dati di navigazione del browser o reimpostando la pagina.
+
+    ### 5. Come disabilitare i Cookie tramite il Browser
+    L'utente può gestire le preferenze sui cookie tramite le impostazioni del proprio browser. La disabilitazione di alcuni cookie potrebbe compromettere il corretto funzionamento di alcune sezioni del sito.
+
+    *   **Google Chrome**: [Istruzioni](https://support.google.com/chrome/answer/95647)
+    *   **Mozilla Firefox**: [Istruzioni](https://support.mozilla.org/kb/block-websites-storing-cookies)
+    *   **Microsoft Edge**: [Istruzioni](https://support.microsoft.com/microsoft-edge/delete-cookies-in-microsoft-edge)
+    *   **Safari**: [Istruzioni](https://support.apple.com/guide/safari/manage-cookies)
+
+    ### 6. Diritti dell'Interessato
+    Ai sensi degli artt. 15-22 del GDPR, l'utente ha il diritto di accesso, rettifica, cancellazione, limitazione, opposizione e portabilità dei propri dati personali. Per esercitare tali diritti, contattare l'email **info@artifix.it**. È inoltre possibile proporre reclamo all'Autorità di controllo (Garante per la Protezione dei Dati Personali - [www.garanteprivacy.it](http://www.garanteprivacy.it)).
+
+    ### 7. Aggiornamenti
+    La presente Cookie Policy può essere soggetta ad aggiornamenti. La versione aggiornata sarà sempre disponibile su questa pagina.
+    """)
+
+    st.markdown("---")
+    
+    if st.button("← Torna alla Dashboard", key="torna_dashboard_basso"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
 
 # --- PROGETTO ARTIFIX (AUDIT + CONTATTI) ---
 elif page == "Progetto ArtiFix":
