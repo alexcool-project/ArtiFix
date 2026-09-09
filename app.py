@@ -54,7 +54,7 @@ st.markdown("""
 </script>
 """, unsafe_allow_html=True)
 
-# --- CSS MINIMALE E PULITO (CON FOOTER FISSO) ---
+# --- CSS MINIMALE E PULITO ---
 st.markdown("""
 <style>
     .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
@@ -407,13 +407,6 @@ with st.sidebar:
         st.session_state.page_attuale = "Cookie Policy"
         st.rerun()
     
-    # Pulsante per testare il popup cookie
-    if st.button("🔄 Ripristina consenso cookie", key="reset_cookies"):
-        st.session_state.cookie_consent = None
-        if COOKIE_LIB:
-            cookie_controller.set('cookie_consent', None)
-        st.rerun()
-    
     st.markdown(
         f"""
         <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
@@ -664,6 +657,7 @@ elif page == "Converti Formati":
         st.caption("✅ = Conversione supportata | ❌ = Conversione non supportata")
     
     uploaded_file = st.file_uploader("Carica un file da convertire", type=[ext[1:] for ext in ALL_EXTENSIONS], key="convert")
+    st.caption("💡 Clicca per cercare il file sul tuo computer, oppure trascina e rilascia il file qui.")
     
     if uploaded_file:
         file_name = uploaded_file.name
