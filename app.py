@@ -218,7 +218,13 @@ def convert_mesh(mesh, target_format):
                 return dxf_doc.write()
             return None
         else:
-            return None
+            # Tentativo generico per gli altri formati
+            # (usa la libreria trimesh per esportare, se supportato)
+            try:
+                export_func = getattr(trimesh.exchange, f"export_{target_format}")
+                return export_func(mesh)
+            except AttributeError:
+                return None
     except Exception:
         return None
 
@@ -496,11 +502,11 @@ elif page == "Converti Formati":
         
         st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">Tipo: {file_type} | Estensione: .{file_extension}</div></div></div></div>', unsafe_allow_html=True)
         
-        convertibili = ["stl", "obj", "ply", "3mf", "glb", "gltf", "dxf", "dwg"]
+        convertibili = ["stl", "obj", "ply", "3mf", "glb", "gltf", "fbx", "step", "iges", "u3d", "skp", "dxf", "dwg"]
         
         if file_extension not in convertibili:
             st.warning(f"⚠️ Il formato **.{file_extension.upper()}** non può essere convertito in altri formati.")
-            st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, 3MF, GLB, GLTF, DXF, DWG**.")
+            st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, 3MF, GLB, GLTF, FBX, STEP, IGES, U3D, SKP, DXF, DWG**.")
         else:
             target_formats = CONVERSION_MATRIX.get(file_extension, [])
             target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
