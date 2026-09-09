@@ -479,24 +479,20 @@ elif page == "Ripara File":
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        # Fase 1: Analisi (0% -> 30%)
         status_text.text("Analisi del file in corso... (30%)")
         progress_bar.progress(30)
         time.sleep(0.5)
         
         result = process_file(uploaded_file.getvalue(), uploaded_file.name)
         
-        # Fase 2: Verifica (30% -> 60%)
         status_text.text("Verifica del risultato... (60%)")
         progress_bar.progress(60)
         time.sleep(0.5)
         
         if result["success"]:
-            # Fase 3: Completamento (60% -> 100%)
             status_text.text("Completamento... (100%)")
             progress_bar.progress(100)
             time.sleep(0.5)
-            
             st.success(result["message"])
             if result.get("info"):
                 st.subheader("Dettagli")
@@ -507,7 +503,6 @@ elif page == "Ripara File":
                 st.success("✅ Riparato!")
                 st.download_button("📥 Scarica", data=uploaded_file.getvalue(), file_name=f"repaired_{uploaded_file.name}")
         else:
-            # Fase di errore
             status_text.text("Errore durante l'analisi")
             progress_bar.progress(100)
             st.error(result["message"])
@@ -520,7 +515,6 @@ elif page == "Viewer 3D":
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        # Fase 1: Caricamento (0% -> 30%)
         status_text.text("Caricamento del modello... (30%)")
         progress_bar.progress(30)
         time.sleep(0.5)
@@ -528,7 +522,6 @@ elif page == "Viewer 3D":
         try:
             mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
             
-            # Fase 2: Elaborazione (30% -> 60%)
             status_text.text("Elaborazione vertici e facce... (60%)")
             progress_bar.progress(60)
             time.sleep(0.5)
@@ -536,9 +529,9 @@ elif page == "Viewer 3D":
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                 
-                # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER
-                if len(mesh.faces) > 15000:
-                    mesh = mesh.simplify_quadric_decimation(face_count=15000)
+                # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (30.000 facce max per miglior qualità)
+                if len(mesh.faces) > 30000:
+                    mesh = mesh.simplify_quadric_decimation(face_count=30000)
                 
                 bounds = mesh.bounds
                 min_y = bounds[0][1]
@@ -550,11 +543,11 @@ elif page == "Viewer 3D":
                 mesh_data = {"vertices": vertices.tolist(), "faces": mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()}
                 mesh_json = json.dumps(mesh_data)
                 
-                # Fase 3: Costruzione vista 3D (60% -> 100%)
                 status_text.text("Costruzione della vista 3D... (100%)")
                 progress_bar.progress(100)
                 time.sleep(0.5)
                 
+                # VIEWER CON PAN ESPLICITO
                 viewer_html = """
                 <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:500px;}#info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.8);padding:5px 15px;border-radius:20px;}.legend{position:absolute;bottom:60px;left:20px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}.legend span{display:inline-block;width:12px;height:12px;margin-right:4px;}.axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}</style>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -562,7 +555,7 @@ elif page == "Viewer 3D":
                 </head><body>
                 <div id="c"></div>
                 <div class="legend"><span class="axis-x"></span> X <span class="axis-y"></span> Y <span class="axis-z"></span> Z</div>
-                <div id="info">🔄 Ruota | Pan | Zoom</div>
+                <div id="info">🔄 Trascina per ruotare | 🖱️ Tasto destro per spostare | 🖱️ Rotella per zoom</div>
                 <script>
                 const data = """ + mesh_json + """;
                 const container = document.getElementById('c');
@@ -578,6 +571,7 @@ elif page == "Viewer 3D":
                 controls.enableDamping = true;
                 controls.dampingFactor = 0.05;
                 controls.target.set(0,0,0);
+                controls.screenSpacePanning = true; // Abilita il Pan (spostamento)
                 controls.update();
                 const al=5;
                 scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff0000, 0.4, 0.2));
@@ -687,20 +681,17 @@ elif page == "Converti Formati":
                     progress_bar = st.progress(0)
                     status_text = st.empty()
                     
-                    # Fase 1: Caricamento (0% -> 20%)
                     status_text.text("Caricamento e analisi del modello... (20%)")
                     progress_bar.progress(20)
                     time.sleep(0.5)
                     mesh = load_3d_file(file_bytes, file_extension)
                     
                     if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                        # Fase 2: Conversione (20% -> 70%)
                         status_text.text("Conversione in corso... (70%)")
                         progress_bar.progress(70)
                         time.sleep(0.5)
                         result_bytes = convert_mesh(mesh, target_ext)
                         
-                        # Fase 3: Salvataggio (70% -> 100%)
                         status_text.text("Salvataggio del file... (100%)")
                         progress_bar.progress(100)
                         time.sleep(0.5)
@@ -721,7 +712,6 @@ elif page == "Converti Formati":
                                 'dxf': 'application/dxf',
                                 'pdf': 'application/pdf'
                             }
-                            # AVVISO PRIMA DEL DOWNLOAD
                             st.info("📥 Il file è pronto! Stiamo preparando il download, attendi qualche secondo...")
                             time.sleep(1)
                             st.download_button(
@@ -742,9 +732,9 @@ elif page == "Converti Formati":
                     st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
                     mesh_preview = load_3d_file(file_bytes, file_extension)
                     if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
-                        # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER
-                        if len(mesh_preview.faces) > 15000:
-                            mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=15000)
+                        # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (30.000 facce max per miglior qualità)
+                        if len(mesh_preview.faces) > 30000:
+                            mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=30000)
                         
                         bounds = mesh_preview.bounds
                         min_y = bounds[0][1]
@@ -777,6 +767,7 @@ elif page == "Converti Formati":
                         controls.enableDamping = true;
                         controls.dampingFactor = 0.05;
                         controls.target.set(0,0,0);
+                        controls.screenSpacePanning = true; // Abilita il Pan (spostamento)
                         controls.update();
                         scene.add(new THREE.AmbientLight(0x404040,0.6));
                         const dl = new THREE.DirectionalLight(0xffffff,1);
