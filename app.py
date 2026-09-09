@@ -70,7 +70,7 @@ try:
 except ImportError:
     SVG_AVAILABLE = False
 
-# --- PROVA A IMPORTARE ASPOSE.CAD E PYMESHLAB (PER LA CONVERSIONE CAD/3D PDF) ---
+# --- PROVA A IMPORTARE ASPOSE.CAD (PER LA CONVERSIONE CAD 2D/3D) ---
 try:
     import aspose.cad as cad
     import aspose.cad.imageoptions as aspose_image_options
@@ -78,6 +78,7 @@ try:
 except ImportError:
     ASPOSE_AVAILABLE = False
 
+# --- PROVA A IMPORTARE PYMESHLAB (PER LA CONVERSIONE 3D PDF) ---
 try:
     import pymeshlab as ml
     PYMESHLAB_AVAILABLE = True
@@ -215,42 +216,30 @@ def convert_mesh(mesh, target_format):
         target_format = target_format.lower().replace('.', '')
         
         if target_format == 'pdf':
-            # Prova a convertire il modello in PDF usando PYMESHLAB (PDF 3D interattivo)
-            if PYMESHLAB_AVAILABLE:
-                try:
-                    # Crea un file temporaneo
-                    temp_mesh = "temp_mesh.obj"
-                    mesh.export(temp_mesh)
-                    
-                    # Usa MeshLab per convertire in PDF
-                    ms = ml.MeshSet()
-                    ms.load_new_mesh(temp_mesh)
-                    ms.save_current_mesh("converted_3d.pdf")
-                    
-                    with open("converted_3d.pdf", "rb") as f:
-                        return f.read()
-                except Exception:
-                    return None
-            # Fallback: usa ASPOSE per caricare il file e convertirlo in PDF
-            elif ASPOSE_AVAILABLE:
-                try:
-                    # Crea un file temporaneo STL
-                    temp_path = "temp_model.stl"
-                    mesh.export(temp_path)
-                    
-                    cad_image = cad.Image.load(temp_path)
-                    
-                    pdf_options = aspose_image_options.PdfOptions()
-                    
-                    output_pdf = "converted_3d.pdf"
-                    cad_image.save(output_pdf, pdf_options)
-                    
-                    with open(output_pdf, "rb") as f:
-                        return f.read()
-                except Exception:
-                    return None
-            else:
-                return None
+            # Prova a convertire il modello in PDF usando MATPLOTLIB (più affidabile di pymeshlab)
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
+            from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+            
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            
+            # Plot della mesh
+            tri_arrays = mesh.vertices[mesh.faces]
+            poly3d = Poly3DCollection(tri_arrays, alpha=0.1, edgecolor='k', facecolor='#1f77b4')
+            ax.add_collection3d(poly3d)
+            
+            # Imposta gli assi
+            scale = mesh.vertices.flatten()
+            ax.auto_scale_xyz(scale, scale, scale)
+            
+            # Salva su PDF
+            plt.savefig("converted_3d.pdf", format='pdf', bbox_inches='tight')
+            plt.close()
+            
+            with open("converted_3d.pdf", "rb") as f:
+                return f.read()
         
         elif target_format == 'stl':
             return trimesh.exchange.stl.export_stl(mesh)
@@ -651,40 +640,30 @@ elif page == "Converti Formati":
                                 else:
                                     st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita.")
                             
-                            # 2. STRATEGIA PER MESH (OBJ, STL, PLY, GLB, ecc): usa PYMESHLAB o TRIMESH per il PDF
+                            # 2. STRATEGIA PER MESH (OBJ, STL, PLY, GLB, ecc): usa MATPLOTLIB
                             elif target_ext == 'pdf' and file_extension in ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'skp']:
-                                # Carichiamo il file con trimesh
                                 mesh = load_3d_file(file_bytes, file_extension)
                                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                                    # Se PYMESHLAB è disponibile, convertiamo in PDF 3D vero
-                                    if PYMESHLAB_AVAILABLE:
-                                        temp_mesh = "temp_mesh.obj"
-                                        mesh.export(temp_mesh)
-                                        ms = ml.MeshSet()
-                                        ms.load_new_mesh(temp_mesh)
-                                        ms.save_current_mesh("converted_3d.pdf")
-                                        with open("converted_3d.pdf", "rb") as f:
-                                            result_bytes = f.read()
-                                    # ALTRIMENTI usa matplotlib per un PDF statico
-                                    else:
-                                        import matplotlib
-                                        matplotlib.use('Agg')
-                                        import matplotlib.pyplot as plt
-                                        from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-                                        
-                                        fig = plt.figure()
-                                        ax = fig.add_subplot(111, projection='3d')
-                                        tri_arrays = mesh.vertices[mesh.faces]
-                                        poly3d = Poly3DCollection(tri_arrays, alpha=0.1, edgecolor='k', facecolor='#1f77b4')
-                                        ax.add_collection3d(poly3d)
-                                        
-                                        scale = mesh.vertices.flatten()
-                                        ax.auto_scale_xyz(scale, scale, scale)
-                                        
-                                        plt.savefig("converted_3d.pdf", format='pdf', bbox_inches='tight')
-                                        plt.close()
-                                        with open("converted_3d.pdf", "rb") as f:
-                                            result_bytes = f.read()
+                                    # Usa MATPLOTLIB per generare un PDF con visualizzazione 3D
+                                    import matplotlib
+                                    matplotlib.use('Agg')
+                                    import matplotlib.pyplot as plt
+                                    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+                                    
+                                    fig = plt.figure()
+                                    ax = fig.add_subplot(111, projection='3d')
+                                    tri_arrays = mesh.vertices[mesh.faces]
+                                    poly3d = Poly3DCollection(tri_arrays, alpha=0.1, edgecolor='k', facecolor='#1f77b4')
+                                    ax.add_collection3d(poly3d)
+                                    
+                                    scale = mesh.vertices.flatten()
+                                    ax.auto_scale_xyz(scale, scale, scale)
+                                    
+                                    plt.savefig("converted_3d.pdf", format='pdf', bbox_inches='tight')
+                                    plt.close()
+                                    
+                                    with open("converted_3d.pdf", "rb") as f:
+                                        result_bytes = f.read()
                                     
                                     if result_bytes:
                                         st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
