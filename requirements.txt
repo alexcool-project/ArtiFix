@@ -52,3 +52,4 @@ aspose-cad
 streamlit-cookies-controller
 PyPDF2
 pymeshlab
+pyassimp
