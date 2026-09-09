@@ -28,6 +28,32 @@ LOGO_URL = "https://i.postimg.cc/KYf3DJ1d/Artifix-logo.png"
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
+# --- SEO: META TAG E DATI STRUTTURATI ---
+st.markdown("""
+<title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
+<meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF) in 3D PDF, STL, OBJ, GLTF e altri formati. Convertitore online gratuito e veloce per ingegneri e progettisti." />
+<meta name="keywords" content="convertitore CAD, convertire STL in 3D PDF, convertire OBJ in STL, convertire 3D PDF, convertitore gratuito, convertire DAE, convertire FBX, convertire GLB, conversione mesh 3D, ArtiFix, CAD/CAM tool" />
+<meta name="robots" content="index, follow" />
+<meta property="og:title" content="ArtiFix - Convertitore CAD/CAM Universale" />
+<meta property="og:description" content="Converti i tuoi file 3D (STL, OBJ, PLY, GLB, FBX, DAE) in 3D PDF e altri formati. Strumento professionale e gratuito per ingegneri e progettisti." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://i.postimg.cc/KYf3DJ1d/Artifix-logo.png" />
+<meta property="og:url" content="https://artifix.streamlit.app" />
+<meta property="og:locale" content="it_IT" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "ArtiFix",
+  "url": "https://artifix.streamlit.app",
+  "applicationCategory": "EngineeringApplication",
+  "operatingSystem": "Web",
+  "description": "Convertitore universale per file CAD/CAM e mesh 3D (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF). Converti in 3D PDF e altri formati.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+}
+</script>
+""", unsafe_allow_html=True)
+
 # --- TENTATIVO IMPORT LIBRERIE ---
 try:
     import ifcopenshell
@@ -84,7 +110,7 @@ if 'cookie_consent' not in st.session_state:
 # --- CONFIGURAZIONE PAGINA ---
 if CUBO_URL:
     st.set_page_config(
-        page_title="ArtiFix - Riparazione CAD/CAM Universale",
+        page_title="ArtiFix - Convertitore CAD/CAM Universale",
         page_icon=CUBO_URL,
         layout="wide",
         initial_sidebar_state="expanded"
@@ -364,6 +390,13 @@ with st.sidebar:
         st.session_state.page_attuale = "Cookie Policy"
         st.rerun()
     
+    # Pulsante per testare il popup cookie
+    if st.button("🔄 Ripristina consenso cookie", key="reset_cookies"):
+        st.session_state.cookie_consent = None
+        if COOKIE_LIB:
+            cookie_controller.set('cookie_consent', None)
+        st.rerun()
+    
     st.markdown(
         f"""
         <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
@@ -479,6 +512,10 @@ elif page == "Viewer 3D":
             
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
+                
+                # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (evita il crash con modelli pesanti)
+                if len(mesh.faces) > 15000:
+                    mesh = mesh.simplify_quadric_decimation(face_count=15000)
                 
                 bounds = mesh.bounds
                 min_y = bounds[0][1]
@@ -667,6 +704,10 @@ elif page == "Converti Formati":
                     st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
                     mesh_preview = load_3d_file(file_bytes, file_extension)
                     if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
+                        # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (evita il crash con modelli pesanti)
+                        if len(mesh_preview.faces) > 15000:
+                            mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=15000)
+                        
                         bounds = mesh_preview.bounds
                         min_y = bounds[0][1]
                         vertices = mesh_preview.vertices.copy()
