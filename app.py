@@ -123,18 +123,18 @@ for info in SUPPORTED_FORMATS.values():
 
 # --- MATRICE DI CONVERSIONE COMPLETA (AGGIORNATA) ---
 CONVERSION_MATRIX = {
-    'stl': ['obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
-    'obj': ['stl', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
-    'ply': ['stl', 'obj', '3mf', 'glb', 'gltf', 'dxf'],
-    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'dxf'],
-    'glb': ['stl', 'obj', 'ply', '3mf', 'gltf', 'dxf'],
-    'gltf': ['stl', 'obj', 'ply', '3mf', 'glb', 'dxf'],
-    'fbx': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
-    'step': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
-    'iges': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
-    'u3d': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
-    'skp': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf'],
-    'dxf': ['stl', 'obj', '3mf', 'glb', 'gltf', 'dxf'],
+    'stl': ['obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
+    'obj': ['stl', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
+    'ply': ['stl', 'obj', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
+    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
+    'glb': ['stl', 'obj', 'ply', '3mf', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
+    'gltf': ['stl', 'obj', 'ply', '3mf', 'glb', 'fbx', 'step', 'iges', 'u3d', 'skp', 'dxf'],
+    'fbx': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'step', 'iges', 'u3d', 'skp', 'dxf'],
+    'step': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'iges', 'u3d', 'skp', 'dxf'],
+    'iges': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'u3d', 'skp', 'dxf'],
+    'u3d': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'skp', 'dxf'],
+    'skp': ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'dxf'],
+    'dxf': ['stl', 'obj', '3mf', 'glb', 'gltf', 'fbx', 'step', 'iges', 'u3d', 'skp'],
     'dwg': ['stl', 'obj', 'dxf', 'glb', 'gltf'],
 }
 
@@ -481,8 +481,8 @@ elif page == "Converti Formati":
         | **IGES** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ❌ |
         | **U3D** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ❌ |
         | **SKP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❌ |
-        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | - | ❌ |
-        | **DWG** | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | - |
+        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ❌ |
+        | **DWG** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - |
         """)
         st.caption("✅ = Conversione supportata | ❌ = Conversione non supportata")
     
