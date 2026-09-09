@@ -358,6 +358,37 @@ if st.session_state.page_attuale == "Cookie Policy":
 else:
     page = st.session_state.page_attuale
 
+# --- POPUP COOKIE (DISEGNATO SUBITO, SENZA SFOCATURA) ---
+if st.session_state.cookie_consent is None:
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown("""
+        <h3 style="color: #6ab0e6; text-align: center; margin-bottom: 15px;">🍪 Cookie Policy</h3>
+        <p style="font-size: 15px; line-height: 1.8;">
+            Noi e terze parti selezionate utilizziamo cookie o tecnologie simili per finalità tecniche e, con il tuo consenso, anche per altre finalità come specificato nella cookie policy. 
+            Il rifiuto del consenso può rendere non disponibili le relative funzioni. Usa il pulsante “Accetta tutti i cookie” per acconsentire. 
+            Usa il pulsante “Accetta solo i cookie necessari” per continuare senza accettare.
+        </p>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 15px;">
+            <a href="#" style="color: #1f77b4; margin-right: 15px;">Termini</a>
+            <a href="#" style="color: #1f77b4; margin-right: 15px;">Privacy Policy</a>
+            <a href="#" style="color: #1f77b4;">Cookie Policy</a>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Accetta solo i cookie necessari", key="decline_cookies", use_container_width=True):
+                st.session_state.cookie_consent = "declined"
+                st.rerun()
+        with col2:
+            if st.button("Accetta tutti i cookie", key="accept_cookies", type="primary", use_container_width=True):
+                st.session_state.cookie_consent = "accepted"
+                st.rerun()
+
 # --- DASHBOARD ---
 if page == "Dashboard":
     st.markdown('<div class="logo-container"><img src="' + LOGO_URL + '" alt="Logo ArtiFix"></div>', unsafe_allow_html=True)
@@ -644,46 +675,3 @@ elif page == "Cookie Policy":
     if st.button("← Torna alla Dashboard", key="torna_dashboard_basso"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
-
-# --- POPUP COOKIE (INTEGRATO NEL FLUSSO DELLA PAGINA, GARANTITO) ---
-if st.session_state.cookie_consent is None:
-    # CSS per bloccare il resto della pagina e creare un riquadro centrale
-    st.markdown("""
-    <style>
-        footer {visibility: hidden;}
-        [data-testid="stAppViewContainer"] {
-            filter: blur(8px) brightness(0.5);
-            pointer-events: none;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # Crea il popup come un contenitore centrale
-    with st.container(border=True):
-        st.markdown("""
-        <h3 style="color: #6ab0e6; text-align: center; margin-bottom: 15px;">🍪 Cookie Policy</h3>
-        <p style="font-size: 15px; line-height: 1.8;">
-            Noi e terze parti selezionate utilizziamo cookie o tecnologie simili per finalità tecniche e, con il tuo consenso, anche per altre finalità come specificato nella cookie policy. 
-            Il rifiuto del consenso può rendere non disponibili le relative funzioni. Usa il pulsante “Accetta tutti i cookie” per acconsentire. 
-            Usa il pulsante “Accetta solo i cookie necessari” per continuare senza accettare.
-        </p>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div style="text-align: center; margin-bottom: 15px;">
-            <a href="#" style="color: #1f77b4; margin-right: 15px;">Termini</a>
-            <a href="#" style="color: #1f77b4; margin-right: 15px;">Privacy Policy</a>
-            <a href="#" style="color: #1f77b4;">Cookie Policy</a>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Pulsanti nativi Streamlit (funzionano AL 100%)
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Accetta solo i cookie necessari", key="decline_cookies", use_container_width=True):
-                st.session_state.cookie_consent = "declined"
-                st.rerun()
-        with col2:
-            if st.button("Accetta tutti i cookie", key="accept_cookies", type="primary", use_container_width=True):
-                st.session_state.cookie_consent = "accepted"
-                st.rerun()
