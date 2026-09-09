@@ -507,7 +507,7 @@ elif page == "Ripara File":
             progress_bar.progress(100)
             st.error(result["message"])
 
-# --- VIEWER 3D (CON BARRE DI AVANZAMENTO) ---
+# --- VIEWER 3D (CON BARRE DI AVANZAMENTO E PROTEZIONE ERRORI) ---
 elif page == "Viewer 3D":
     st.header("🖥️ Viewer 3D")
     viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
@@ -529,91 +529,100 @@ elif page == "Viewer 3D":
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                 
-                # PULIZIA DELLA MESH (PROTETTA: se fallisce, carichiamo comunque il modello)
+                # PROTEZIONE TOTALE: Se semplificazione o riparazione falliscono, carichiamo direttamente
                 try:
-                    mesh = trimesh.repair.fix_normals(mesh)
+                    if hasattr(mesh, 'faces') and len(mesh.faces) > 0:
+                        # Sempre semplifica se ha più di 100.000 facce (per garantire la fluidità)
+                        if len(mesh.faces) > 100000:
+                            mesh = mesh.simplify_quadric_decimation(face_count=100000)
+                        else:
+                            # Prova a riparare le normali, ma se fallisce usa la mesh originale
+                            try:
+                                mesh = trimesh.repair.fix_normals(mesh)
+                            except:
+                                pass
                 except:
                     pass
                 
-                # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (100.000 facce max per alta qualità)
-                if len(mesh.faces) > 100000:
-                    mesh = mesh.simplify_quadric_decimation(face_count=100000)
-                
-                bounds = mesh.bounds
-                min_y = bounds[0][1]
-                vertices = mesh.vertices.copy()
-                vertices[:, 1] -= min_y
-                vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
-                vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
-                
-                mesh_data = {"vertices": vertices.tolist(), "faces": mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()}
-                mesh_json = json.dumps(mesh_data)
-                
-                status_text.text("Costruzione della vista 3D... (100%)")
-                progress_bar.progress(100)
-                time.sleep(0.5)
-                
-                viewer_html = """
-                <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:500px;}#info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.8);padding:5px 15px;border-radius:20px;}.legend{position:absolute;bottom:60px;left:20px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}.legend span{display:inline-block;width:12px;height:12px;margin-right:4px;}.axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}</style>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-                </head><body>
-                <div id="c"></div>
-                <div class="legend"><span class="axis-x"></span> X <span class="axis-y"></span> Y <span class="axis-z"></span> Z</div>
-                <div id="info">🔄 Trascina per ruotare | 🖱️ Tasto destro per spostare | 🖱️ Rotella per zoom</div>
-                <script>
-                const data = """ + mesh_json + """;
-                const container = document.getElementById('c');
-                const scene = new THREE.Scene();
-                scene.background = new THREE.Color(0xf0f2f6);
-                const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
-                camera.position.set(10,5,10);
-                camera.lookAt(0,0,0);
-                const renderer = new THREE.WebGLRenderer({antialias:true});
-                renderer.setSize(container.clientWidth, container.clientHeight);
-                container.appendChild(renderer.domElement);
-                const controls = new THREE.OrbitControls(camera, renderer.domElement);
-                controls.enableDamping = true;
-                controls.dampingFactor = 0.05;
-                controls.target.set(0,0,0);
-                controls.screenSpacePanning = true; // Abilita il Pan (spostamento)
-                controls.update();
-                const al=5;
-                scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff0000, 0.4, 0.2));
-                scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), al, 0x00ff00, 0.4, 0.2));
-                scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), al, 0x0000ff, 0.4, 0.2));
-                const grid = new THREE.GridHelper(20,20,0x888888,0x444444);
-                grid.position.y=0;
-                scene.add(grid);
-                scene.add(new THREE.AmbientLight(0x404040,0.6));
-                const dl = new THREE.DirectionalLight(0xffffff,1);
-                dl.position.set(10,20,10);
-                dl.castShadow=true;
-                scene.add(dl);
-                scene.add(new THREE.DirectionalLight(0xffffff,0.5).position.set(-10,0,-10));
-                if(data.vertices && data.vertices.length>0){
-                    const geo = new THREE.BufferGeometry();
-                    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
-                    if(data.faces && data.faces.length>0){
-                        geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
-                        geo.computeVertexNormals();
+                # VERIFICA FINALE
+                if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
+                    st.error("❌ Errore nel processamento della mesh.")
+                else:
+                    bounds = mesh.bounds
+                    min_y = bounds[0][1]
+                    vertices = mesh.vertices.copy()
+                    vertices[:, 1] -= min_y
+                    vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
+                    vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
+                    
+                    mesh_data = {"vertices": vertices.tolist(), "faces": mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()}
+                    mesh_json = json.dumps(mesh_data)
+                    
+                    status_text.text("Costruzione della vista 3D... (100%)")
+                    progress_bar.progress(100)
+                    time.sleep(0.5)
+                    
+                    viewer_html = """
+                    <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:500px;}#info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.8);padding:5px 15px;border-radius:20px;}.legend{position:absolute;bottom:60px;left:20px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}.legend span{display:inline-block;width:12px;height:12px;margin-right:4px;}.axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}</style>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+                    </head><body>
+                    <div id="c"></div>
+                    <div class="legend"><span class="axis-x"></span> X <span class="axis-y"></span> Y <span class="axis-z"></span> Z</div>
+                    <div id="info">🔄 Trascina per ruotare | 🖱️ Tasto destro per spostare | 🖱️ Rotella per zoom</div>
+                    <script>
+                    const data = """ + mesh_json + """;
+                    const container = document.getElementById('c');
+                    const scene = new THREE.Scene();
+                    scene.background = new THREE.Color(0xf0f2f6);
+                    const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
+                    camera.position.set(10,5,10);
+                    camera.lookAt(0,0,0);
+                    const renderer = new THREE.WebGLRenderer({antialias:true});
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                    container.appendChild(renderer.domElement);
+                    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                    controls.enableDamping = true;
+                    controls.dampingFactor = 0.05;
+                    controls.target.set(0,0,0);
+                    controls.screenSpacePanning = true; // Abilita il Pan (spostamento)
+                    controls.update();
+                    const al=5;
+                    scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff0000, 0.4, 0.2));
+                    scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), al, 0x00ff00, 0.4, 0.2));
+                    scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), al, 0x0000ff, 0.4, 0.2));
+                    const grid = new THREE.GridHelper(20,20,0x888888,0x444444);
+                    grid.position.y=0;
+                    scene.add(grid);
+                    scene.add(new THREE.AmbientLight(0x404040,0.6));
+                    const dl = new THREE.DirectionalLight(0xffffff,1);
+                    dl.position.set(10,20,10);
+                    dl.castShadow=true;
+                    scene.add(dl);
+                    scene.add(new THREE.DirectionalLight(0xffffff,0.5).position.set(-10,0,-10));
+                    if(data.vertices && data.vertices.length>0){
+                        const geo = new THREE.BufferGeometry();
+                        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
+                        if(data.faces && data.faces.length>0){
+                            geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
+                            geo.computeVertexNormals();
+                        }
+                        const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
+                        const mesh = new THREE.Mesh(geo, mat);
+                        mesh.castShadow = true;
+                        mesh.receiveShadow = true;
+                        const box = new THREE.Box3().setFromObject(mesh);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x,size.y,size.z);
+                        if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
+                        scene.add(mesh);
                     }
-                    const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
-                    const mesh = new THREE.Mesh(geo, mat);
-                    mesh.castShadow = true;
-                    mesh.receiveShadow = true;
-                    const box = new THREE.Box3().setFromObject(mesh);
-                    const size = box.getSize(new THREE.Vector3());
-                    const maxDim = Math.max(size.x,size.y,size.z);
-                    if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
-                    scene.add(mesh);
-                }
-                function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
-                animate();
-                window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
-                </script></body></html>
-                """
-                st.components.v1.html(viewer_html, height=550)
+                    function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
+                    animate();
+                    window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+                    </script></body></html>
+                    """
+                    st.components.v1.html(viewer_html, height=550)
             else:
                 st.warning("⚠️ Impossibile caricare il modello.")
         except Exception as e:
@@ -737,78 +746,84 @@ elif page == "Converti Formati":
                     st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
                     mesh_preview = load_3d_file(file_bytes, file_extension)
                     if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
-                        # PULIZIA DELLA MESH (PROTETTA: se fallisce, carichiamo comunque il modello)
+                        # PROTEZIONE TOTALE
                         try:
-                            mesh_preview = trimesh.repair.fix_normals(mesh_preview)
+                            if len(mesh_preview.faces) > 100000:
+                                mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=100000)
+                            else:
+                                try:
+                                    mesh_preview = trimesh.repair.fix_normals(mesh_preview)
+                                except:
+                                    pass
                         except:
                             pass
                         
-                        # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (100.000 facce max per alta qualità)
-                        if len(mesh_preview.faces) > 100000:
-                            mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=100000)
-                        
-                        bounds = mesh_preview.bounds
-                        min_y = bounds[0][1]
-                        vertices = mesh_preview.vertices.copy()
-                        vertices[:, 1] -= min_y
-                        vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
-                        vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
-                        
-                        mesh_data = {"vertices": vertices.tolist(), "faces": mesh_preview.faces.tolist()}
-                        mesh_json = json.dumps(mesh_data)
-                        
-                        viewer_html = """
-                        <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:400px;}</style>
-                        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-                        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-                        </head><body>
-                        <div id="c"></div>
-                        <script>
-                        const data = """ + mesh_json + """;
-                        const container = document.getElementById('c');
-                        const scene = new THREE.Scene();
-                        scene.background = new THREE.Color(0xf0f2f6);
-                        const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
-                        camera.position.set(10,5,10);
-                        camera.lookAt(0,0,0);
-                        const renderer = new THREE.WebGLRenderer({antialias:true});
-                        renderer.setSize(container.clientWidth, container.clientHeight);
-                        container.appendChild(renderer.domElement);
-                        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-                        controls.enableDamping = true;
-                        controls.dampingFactor = 0.05;
-                        controls.target.set(0,0,0);
-                        controls.screenSpacePanning = true; // Abilita il Pan (spostamento)
-                        controls.update();
-                        scene.add(new THREE.AmbientLight(0x404040,0.6));
-                        const dl = new THREE.DirectionalLight(0xffffff,1);
-                        dl.position.set(10,20,10);
-                        dl.castShadow=true;
-                        scene.add(dl);
-                        scene.add(new THREE.DirectionalLight(0xffffff,0.5).position.set(-10,0,-10));
-                        if(data.vertices && data.vertices.length>0){
-                            const geo = new THREE.BufferGeometry();
-                            geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
-                            if(data.faces && data.faces.length>0){
-                                geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
-                                geo.computeVertexNormals();
+                        # VERIFICA FINALE
+                        if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
+                            st.error("❌ Errore nel processamento della mesh.")
+                        else:
+                            bounds = mesh_preview.bounds
+                            min_y = bounds[0][1]
+                            vertices = mesh_preview.vertices.copy()
+                            vertices[:, 1] -= min_y
+                            vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
+                            vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
+                            
+                            mesh_data = {"vertices": vertices.tolist(), "faces": mesh_preview.faces.tolist()}
+                            mesh_json = json.dumps(mesh_data)
+                            
+                            viewer_html = """
+                            <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:400px;}</style>
+                            <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+                            <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+                            </head><body>
+                            <div id="c"></div>
+                            <script>
+                            const data = """ + mesh_json + """;
+                            const container = document.getElementById('c');
+                            const scene = new THREE.Scene();
+                            scene.background = new THREE.Color(0xf0f2f6);
+                            const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
+                            camera.position.set(10,5,10);
+                            camera.lookAt(0,0,0);
+                            const renderer = new THREE.WebGLRenderer({antialias:true});
+                            renderer.setSize(container.clientWidth, container.clientHeight);
+                            container.appendChild(renderer.domElement);
+                            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                            controls.enableDamping = true;
+                            controls.dampingFactor = 0.05;
+                            controls.target.set(0,0,0);
+                            controls.screenSpacePanning = true;
+                            controls.update();
+                            scene.add(new THREE.AmbientLight(0x404040,0.6));
+                            const dl = new THREE.DirectionalLight(0xffffff,1);
+                            dl.position.set(10,20,10);
+                            dl.castShadow=true;
+                            scene.add(dl);
+                            scene.add(new THREE.DirectionalLight(0xffffff,0.5).position.set(-10,0,-10));
+                            if(data.vertices && data.vertices.length>0){
+                                const geo = new THREE.BufferGeometry();
+                                geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
+                                if(data.faces && data.faces.length>0){
+                                    geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
+                                    geo.computeVertexNormals();
+                                }
+                                const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
+                                const mesh = new THREE.Mesh(geo, mat);
+                                mesh.castShadow = true;
+                                mesh.receiveShadow = true;
+                                const box = new THREE.Box3().setFromObject(mesh);
+                                const size = box.getSize(new THREE.Vector3());
+                                const maxDim = Math.max(size.x,size.y,size.z);
+                                if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
+                                scene.add(mesh);
                             }
-                            const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
-                            const mesh = new THREE.Mesh(geo, mat);
-                            mesh.castShadow = true;
-                            mesh.receiveShadow = true;
-                            const box = new THREE.Box3().setFromObject(mesh);
-                            const size = box.getSize(new THREE.Vector3());
-                            const maxDim = Math.max(size.x,size.y,size.z);
-                            if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
-                            scene.add(mesh);
-                        }
-                        function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
-                        animate();
-                        window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
-                        </script></body></html>
-                        """
-                        st.components.v1.html(viewer_html, height=400)
+                            function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
+                            animate();
+                            window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+                            </script></body></html>
+                            """
+                            st.components.v1.html(viewer_html, height=400)
                     else:
                         st.warning("⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.")
 
