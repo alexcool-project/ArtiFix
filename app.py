@@ -529,9 +529,9 @@ elif page == "Viewer 3D":
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                 
-                # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (30.000 facce max per miglior qualità)
-                if len(mesh.faces) > 30000:
-                    mesh = mesh.simplify_quadric_decimation(face_count=30000)
+                # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (100.000 facce max per alta qualità)
+                if len(mesh.faces) > 100000:
+                    mesh = mesh.simplify_quadric_decimation(face_count=100000)
                 
                 bounds = mesh.bounds
                 min_y = bounds[0][1]
@@ -547,7 +547,7 @@ elif page == "Viewer 3D":
                 progress_bar.progress(100)
                 time.sleep(0.5)
                 
-                # VIEWER CON PAN ESPLICITO
+                # VIEWER CON PAN ESPLICITO E FLAT SHADING PER LA QUALITÀ
                 viewer_html = """
                 <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:500px;}#info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.8);padding:5px 15px;border-radius:20px;}.legend{position:absolute;bottom:60px;left:20px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}.legend span{display:inline-block;width:12px;height:12px;margin-right:4px;}.axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}</style>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -593,7 +593,7 @@ elif page == "Viewer 3D":
                         geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
                         geo.computeVertexNormals();
                     }
-                    const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:false, side:THREE.DoubleSide});
+                    const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
                     const mesh = new THREE.Mesh(geo, mat);
                     mesh.castShadow = true;
                     mesh.receiveShadow = true;
@@ -732,9 +732,9 @@ elif page == "Converti Formati":
                     st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
                     mesh_preview = load_3d_file(file_bytes, file_extension)
                     if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
-                        # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (30.000 facce max per miglior qualità)
-                        if len(mesh_preview.faces) > 30000:
-                            mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=30000)
+                        # SEMPLIFICAZIONE DELLA MESH PER IL VIEWER (100.000 facce max per alta qualità)
+                        if len(mesh_preview.faces) > 100000:
+                            mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=100000)
                         
                         bounds = mesh_preview.bounds
                         min_y = bounds[0][1]
@@ -782,7 +782,7 @@ elif page == "Converti Formati":
                                 geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
                                 geo.computeVertexNormals();
                             }
-                            const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:false, side:THREE.DoubleSide});
+                            const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
                             const mesh = new THREE.Mesh(geo, mat);
                             mesh.castShadow = true;
                             mesh.receiveShadow = true;
