@@ -28,6 +28,56 @@ LOGO_URL = "https://i.postimg.cc/KYf3DJ1d/Artifix-logo.png"
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
+# --- SISTEMA PUBBLICITARIO (SPONSOR) ---
+# PREMIUM BANNER (Fisso in basso)
+BANNER_PREMIUM = {
+    "image": "https://i.postimg.cc/XYZ/placeholder-premium.png",  # Sostituisci con il link immagine
+    "link": "https://www.sito-cliente.com"
+}
+
+# BASIC BANNER (Popup dopo lavoro completato)
+BANNER_BASIC = {
+    "image": "https://i.postimg.cc/ABC/placeholder-basic.png",  # Sostituisci con il link immagine
+    "link": "https://www.sito-cliente2.com"
+}
+
+# Funzione per mostrare il banner Premium (fisso in basso)
+def mostra_banner_premium():
+    st.markdown(f"""
+    <style>
+        .banner-premium {{
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #f8f9fa;
+            padding: 5px;
+            text-align: center;
+            z-index: 9998;
+            border-top: 2px solid #1f77b4;
+        }}
+    </style>
+    <div class="banner-premium">
+        <a href="{BANNER_PREMIUM['link']}" target="_blank">
+            <img src="{BANNER_PREMIUM['image']}" width="100%" style="max-width: 728px; height: auto; border-radius: 5px;">
+        </a>
+        <div style="font-size:10px; color:#888; margin-top:2px;">Spazio Premium</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Funzione per mostrare il banner Basic (Popup dopo lavoro)
+def mostra_banner_basic():
+    st.toast(
+        f"""
+        <div style="text-align:center; padding:5px;">
+            <a href="{BANNER_BASIC['link']}" target="_blank">
+                <img src="{BANNER_BASIC['image']}" width="100%" style="max-width: 300px; border-radius: 8px;">
+            </a>
+        </div>
+        """,
+        icon="📢"
+    )
+
 # --- SEO META TAG ---
 st.markdown("""
 <title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
@@ -73,7 +123,7 @@ st.markdown("""
     footer {visibility: hidden;}
     .footer-artifix {
         position: fixed;
-        bottom: 0;
+        bottom: 60px; /* Spostato in alto per non coprire il banner premium */
         left: 0;
         right: 0;
         background: #f8f9fa;
@@ -82,7 +132,7 @@ st.markdown("""
         font-size: 12px;
         color: #666;
         border-top: 1px solid #ddd;
-        z-index: 9999;
+        z-index: 9997;
     }
 </style>
 <div class="footer-artifix">© 2026 ArtiFix | Tutti i diritti riservati</div>
@@ -228,7 +278,6 @@ def load_3d_file(file_bytes, file_extension):
             return None
         else:
             mesh = trimesh.load(io.BytesIO(file_bytes), file_type=file_type)
-            # Se il file restituisce una "Scene", la convertiamo in una mesh unica
             if isinstance(mesh, trimesh.Scene):
                 if len(mesh.geometry) > 0:
                     mesh = trimesh.util.concatenate(list(mesh.geometry.values()))
@@ -476,6 +525,9 @@ if page == "Dashboard":
         with cols[idx % 4]:
             st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
     st.info("👈 Seleziona una funzionalità dal menu.")
+    
+    # Banner Premium fisso in basso (mostrato solo qui)
+    mostra_banner_premium()
 
 # --- RIPARA FILE (CON BARRE DI AVANZAMENTO) ---
 elif page == "Ripara File":
@@ -512,7 +564,11 @@ elif page == "Ripara File":
             status_text.text("Errore durante l'analisi")
             progress_bar.progress(100)
             st.error(result["message"])
-    # --- VIEWER 3D (CON BARRE DI AVANZAMENTO E LIMITE VERTICI) ---
+            
+        # Banner Basic (popup dopo lavoro completato)
+        mostra_banner_basic()
+
+# --- VIEWER 3D (CON BARRE DI AVANZAMENTO) ---
 elif page == "Viewer 3D":
     st.header("🖥️ Viewer 3D")
     viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
@@ -537,7 +593,6 @@ elif page == "Viewer 3D":
                 # LIMITE CRITICO: Three.js Uint16Array supporta MAX 65.535 vertici
                 try:
                     if len(mesh.vertices) > 65000:
-                        # Calcola il numero di facce approssimativo per stare sotto i 65k vertici
                         target_faces = int(65000 / 3) * 3
                         mesh = mesh.simplify_quadric_decimation(face_count=target_faces)
                     else:
@@ -572,390 +627,4 @@ elif page == "Viewer 3D":
                     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
                     </head><body>
                     <div id="c"></div>
-                    <div class="legend"><span class="axis-x"></span> X <span class="axis-y"></span> Y <span class="axis-z"></span> Z</div>
-                    <div id="info">🔄 Trascina per ruotare | 🖱️ Tasto destro per spostare | 🖱️ Rotella per zoom</div>
-                    <script>
-                    const data = """ + mesh_json + """;
-                    const container = document.getElementById('c');
-                    const scene = new THREE.Scene();
-                    scene.background = new THREE.Color(0xf0f2f6);
-                    const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
-                    camera.position.set(10,5,10);
-                    camera.lookAt(0,0,0);
-                    const renderer = new THREE.WebGLRenderer({antialias:true});
-                    renderer.setSize(container.clientWidth, container.clientHeight);
-                    container.appendChild(renderer.domElement);
-                    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-                    controls.enableDamping = true;
-                    controls.dampingFactor = 0.05;
-                    controls.target.set(0,0,0);
-                    controls.screenSpacePanning = true;
-                    controls.update();
-                    const al=5;
-                    scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff0000, 0.4, 0.2));
-                    scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), al, 0x00ff00, 0.4, 0.2));
-                    scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), al, 0x0000ff, 0.4, 0.2));
-                    const grid = new THREE.GridHelper(20,20,0x888888,0x444444);
-                    grid.position.y=0;
-                    scene.add(grid);
-                    scene.add(new THREE.AmbientLight(0x404040,0.6));
-                    const dl = new THREE.DirectionalLight(0xffffff,1);
-                    dl.position.set(10,20,10);
-                    dl.castShadow=true;
-                    scene.add(dl);
-                    scene.add(new THREE.DirectionalLight(0xffffff,0.5).position.set(-10,0,-10));
-                    if(data.vertices && data.vertices.length>0){
-                        const geo = new THREE.BufferGeometry();
-                        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
-                        if(data.faces && data.faces.length>0){
-                            geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
-                            geo.computeVertexNormals();
-                        }
-                        const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
-                        const mesh = new THREE.Mesh(geo, mat);
-                        mesh.castShadow = true;
-                        mesh.receiveShadow = true;
-                        const box = new THREE.Box3().setFromObject(mesh);
-                        const size = box.getSize(new THREE.Vector3());
-                        const maxDim = Math.max(size.x,size.y,size.z);
-                        if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
-                        scene.add(mesh);
-                    }
-                    function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
-                    animate();
-                    window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
-                    </script></body></html>
-                    """
-                    st.components.v1.html(viewer_html, height=550)
-            else:
-                st.warning("⚠️ Impossibile caricare il modello.")
-        except Exception as e:
-            st.error(f"❌ Errore: {e}")
-
-# --- CONVERTI FORMATI (CON TOOLTIP + BARRE DI AVANZAMENTO + ANTEPRIMA OPZIONALE) ---
-elif page == "Converti Formati":
-    st.header("🔄 Conversione Formati Universale")
-    st.markdown("Converti file tra **tutti i formati** supportati con **tutte le combinazioni** possibili.")
-    
-    # Nota informativa sui formati proprietari
-    with st.expander("ℹ️ Nota sui formati proprietari e a pagamento"):
-        st.markdown("""
-        **ArtiFix non può leggere direttamente i formati proprietari e a pagamento** (come DWG, SKP, RVT, STEP, IGES, ecc.) perché richiedono librerie commerciali e server dedicati. 
-        
-        **Come risolvere?** Se il tuo file è in un formato proprietario, ti consigliamo di:
-        1. Aprire il file nel software con cui è stato creato (es. AutoCAD, SketchUp, Revit).
-        2. Utilizzare la funzione **"Esporta"** o **"Salva con nome"** per convertirlo in **DAE (Collada)** o **OBJ**. 
-        3. Caricare il file DAE o OBJ su ArtiFix e convertirlo qui in qualsiasi altro formato mesh (STL, PLY, GLB, GLTF, ecc.) o 3D PDF.
-        
-        *DAE (Collada) e OBJ sono formati universali e gratuiti che possono essere esportati dalla quasi totalità dei software CAD 3D presenti sul mercato.*
-        """)
-    
-    with st.expander("📋 Matrice delle conversioni disponibili"):
-        st.markdown("""
-        | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |
-        |--------|-----|-----|-----|-----|------|-----|------|-----|-----|-----|-----|-----|
-        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **GLB** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **GLTF** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **3MF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **DAE** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ |
-        | **WRL** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
-        | **OFF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
-        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
-        """)
-        st.caption("✅ = Conversione supportata | ❌ = Conversione non supportata")
-    
-    uploaded_file = st.file_uploader("Carica un file da convertire", type=[ext[1:] for ext in ALL_EXTENSIONS], key="convert")
-    st.caption("💡 Clicca per cercare il file sul tuo computer, oppure trascina e rilascia il file qui.")
-    
-    if uploaded_file:
-        file_name = uploaded_file.name
-        file_bytes = uploaded_file.getvalue()
-        file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
-        file_type, icon = detect_file_type(file_extension)
-        
-        st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">Tipo: {file_type} | Estensione: .{file_extension}</div></div></div></div>', unsafe_allow_html=True)
-        
-        convertibili = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off", "dxf", "pdf"]
-        
-        if file_extension not in convertibili:
-            st.warning(f"⚠️ Il formato **.{file_extension.upper()}** non può essere convertito in altri formati.")
-            st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF**.")
-        else:
-            target_formats = CONVERSION_MATRIX.get(file_extension, [])
-            target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
-            
-            if not target_options:
-                st.warning("⚠️ Nessun formato di destinazione disponibile per questo file.")
-            else:
-                target_selected = st.selectbox("Formato di destinazione", target_options)
-                target_ext = target_selected.split(".")[1].replace(")", "").strip()
-                
-                # PULSANTE DI CONVERSIONE
-                if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
-                    
-                    status_text.text("Caricamento e analisi del modello... (20%)")
-                    progress_bar.progress(20)
-                    time.sleep(0.5)
-                    mesh = load_3d_file(file_bytes, file_extension)
-                    
-                    if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                        status_text.text("Conversione in corso... (70%)")
-                        progress_bar.progress(70)
-                        time.sleep(0.5)
-                        result_bytes = convert_mesh(mesh, target_ext)
-                        
-                        status_text.text("Salvataggio del file... (100%)")
-                        progress_bar.progress(100)
-                        time.sleep(0.5)
-                        
-                        if result_bytes:
-                            st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
-                            mime_types = {
-                                'stl': 'application/octet-stream',
-                                'obj': 'text/plain',
-                                'ply': 'application/octet-stream',
-                                'glb': 'application/octet-stream',
-                                'gltf': 'application/octet-stream',
-                                'fbx': 'application/octet-stream',
-                                '3mf': 'application/octet-stream',
-                                'dae': 'application/octet-stream',
-                                'wrl': 'application/octet-stream',
-                                'off': 'application/octet-stream',
-                                'dxf': 'application/dxf',
-                                'pdf': 'application/pdf'
-                            }
-                            st.info("📥 Il file è pronto! Stiamo preparando il download, attendi qualche secondo...")
-                            time.sleep(1)
-                            st.download_button(
-                                label=f"📥 Scarica .{target_ext}",
-                                data=result_bytes,
-                                file_name=f"converted.{target_ext}",
-                                mime=mime_types.get(target_ext, 'application/octet-stream'),
-                                use_container_width=True
-                            )
-                        else:
-                            st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita. Riprova con un altro formato.")
-                    else:
-                        st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
-                
-                # ANTEPRIMA OPZIONALE
-                st.markdown("---")
-                if st.button("🖥️ Mostra anteprima interattiva (ruota con il mouse)"):
-                    st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
-                    mesh_preview = load_3d_file(file_bytes, file_extension)
-                    if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
-                        # PROTEZIONE TOTALE
-                        try:
-                            if len(mesh_preview.vertices) > 65000:
-                                target_faces = int(65000 / 3) * 3
-                                mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=target_faces)
-                            else:
-                                try:
-                                    mesh_preview = trimesh.repair.fix_normals(mesh_preview)
-                                except:
-                                    pass
-                        except:
-                            pass
-                        
-                        # VERIFICA FINALE
-                        if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
-                            st.error("❌ Errore nel processamento della mesh.")
-                        else:
-                            bounds = mesh_preview.bounds
-                            min_y = bounds[0][1]
-                            vertices = mesh_preview.vertices.copy()
-                            vertices[:, 1] -= min_y
-                            vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
-                            vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
-                            
-                            mesh_data = {"vertices": vertices.tolist(), "faces": mesh_preview.faces.tolist()}
-                            mesh_json = json.dumps(mesh_data)
-                            
-                            viewer_html = """
-                            <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:400px;}</style>
-                            <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-                            <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-                            </head><body>
-                            <div id="c"></div>
-                            <script>
-                            const data = """ + mesh_json + """;
-                            const container = document.getElementById('c');
-                            const scene = new THREE.Scene();
-                            scene.background = new THREE.Color(0xf0f2f6);
-                            const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
-                            camera.position.set(10,5,10);
-                            camera.lookAt(0,0,0);
-                            const renderer = new THREE.WebGLRenderer({antialias:true});
-                            renderer.setSize(container.clientWidth, container.clientHeight);
-                            container.appendChild(renderer.domElement);
-                            const controls = new THREE.OrbitControls(camera, renderer.domElement);
-                            controls.enableDamping = true;
-                            controls.dampingFactor = 0.05;
-                            controls.target.set(0,0,0);
-                            controls.screenSpacePanning = true;
-                            controls.update();
-                            scene.add(new THREE.AmbientLight(0x404040,0.6));
-                            const dl = new THREE.DirectionalLight(0xffffff,1);
-                            dl.position.set(10,20,10);
-                            dl.castShadow=true;
-                            scene.add(dl);
-                            scene.add(new THREE.DirectionalLight(0xffffff,0.5).position.set(-10,0,-10));
-                            if(data.vertices && data.vertices.length>0){
-                                const geo = new THREE.BufferGeometry();
-                                geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
-                                if(data.faces && data.faces.length>0){
-                                    geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
-                                    geo.computeVertexNormals();
-                                }
-                                const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
-                                const mesh = new THREE.Mesh(geo, mat);
-                                mesh.castShadow = true;
-                                mesh.receiveShadow = true;
-                                const box = new THREE.Box3().setFromObject(mesh);
-                                const size = box.getSize(new THREE.Vector3());
-                                const maxDim = Math.max(size.x,size.y,size.z);
-                                if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
-                                scene.add(mesh);
-                            }
-                            function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
-                            animate();
-                            window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
-                            </script></body></html>
-                            """
-                            st.components.v1.html(viewer_html, height=400)
-                    else:
-                        st.warning("⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.")
-
-# --- PROGETTO ARTIFIX (AUDIT + CONTATTI) ---
-elif page == "Progetto ArtiFix":
-    st.header("🚀 Progetto ArtiFix")
-    st.markdown("""
-    **ArtiFix** è una piattaforma professionale per la riparazione, conversione e visualizzazione di file CAD/CAM. 
-    Questo progetto è in continua evoluzione. Per richieste di informazioni, collaborazioni o assistenza tecnica, contattaci.
-    """)
-    
-    st.divider()
-    st.subheader("📧 Contattaci")
-    st.write("Invia una richiesta a info@artifix.it")
-    
-    with st.form("contatti"):
-        nome_input = st.text_input("Il tuo nome")
-        email_input = st.text_input("La tua email")
-        messaggio_input = st.text_area("Messaggio")
-        inviato = st.form_submit_button("Invia")
-
-        if inviato:
-            if nome_input and email_input and messaggio_input:
-                risultato = invia_email(nome_input, email_input, messaggio_input)
-                if risultato == True:
-                    st.success("Email inviata con successo!")
-                else:
-                    st.error(f"Errore: {risultato}")
-            else:
-                st.warning("Compila tutti i campi prima di inviare.")
-
-# --- PAGINA PRIVACY POLICY ---
-elif page == "Privacy Policy":
-    st.header("🔒 Privacy Policy")
-    st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
-    st.caption("Ultimo aggiornamento: 9 settembre 2026")
-    
-    if st.button("← Torna alla Dashboard", key="torna_dashboard_privacy"):
-        st.session_state.page_attuale = "Dashboard"
-        st.rerun()
-    
-    st.markdown("---")
-    
-    st.markdown("""
-    La presente Privacy Policy è resa ai sensi dell'Art. 13 del Regolamento (UE) 2016/679 (GDPR), relativo alla protezione delle persone fisiche con riguardo al trattamento dei dati personali.
-
-    ### 1. Titolare del Trattamento
-    Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
-
-    ### 2. Dati raccolti e finalità
-    **Dati forniti volontariamente dall'utente**: Attraverso il form "Contattaci" vengono raccolti nome, indirizzo email e messaggio, al fine di rispondere alle richieste pervenute.
-    **Dati di navigazione**: Il sito utilizza cookie tecnici (per il funzionamento) e cookie di analytics (facoltativi) come descritto nella Cookie Policy.
-
-    ### 3. Base giuridica
-    Il trattamento si basa sul consenso dell'utente (Art. 6, par. 1, lett. a GDPR) e sull'esecuzione di misure precontrattuali richieste dall'utente (Art. 6, par. 1, lett. b GDPR).
-
-    ### 4. Diritti dell'interessato
-    Ai sensi degli Artt. 15-22 del GDPR, l'utente ha il diritto di:
-    *   Accesso, rettifica e cancellazione dei propri dati.
-    *   Limitazione e opposizione al trattamento.
-    *   Portabilità dei dati.
-    *   Revoca del consenso in qualsiasi momento.
-    
-    Per esercitare tali diritti, contattare il Titolare all'indirizzo: **info@artifix.it**. È inoltre possibile proporre reclamo al Garante per la Protezione dei Dati Personali.
-
-    ### 5. Durata della conservazione
-    I dati raccolti tramite il form di contatto vengono conservati per il tempo strettamente necessario a rispondere alla richiesta e, comunque, per un periodo massimo di 24 mesi.
-
-    ### 6. Comunicazione e diffusione
-    I dati non saranno ceduti a terzi per finalità di marketing o venduti. Saranno trattati esclusivamente dal Titolare.
-    """)
-
-    st.markdown("---")
-    
-    if st.button("← Torna alla Dashboard", key="torna_dashboard_privacy_basso"):
-        st.session_state.page_attuale = "Dashboard"
-        st.rerun()
-
-# --- PAGINA COOKIE POLICY ---
-elif page == "Cookie Policy":
-    st.header("🍪 Cookie Policy")
-    st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
-    st.caption("Ultimo aggiornamento: 9 settembre 2026")
-    
-    if st.button("← Torna alla Dashboard", key="torna_dashboard_alto"):
-        st.session_state.page_attuale = "Dashboard"
-        st.rerun()
-    
-    st.markdown("---")
-    
-    st.markdown("""
-    La presente Cookie Policy è resa ai sensi dell'art. 13 del Regolamento (UE) 2016/679 (GDPR) e del Provvedimento del Garante per la Protezione dei Dati Personali del 10 giugno 2021.
-
-    ### 1. Titolare del Trattamento
-    Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
-
-    ### 2. Cosa sono i Cookie
-    I cookie sono piccoli file di testo che i siti web inviano e registrano sul computer o dispositivo mobile dell'utente, per essere poi ritrasmessi agli stessi siti alle visite successive. Servono a ricordare le azioni e le preferenze dell'utente.
-
-    ### 3. Tipologie di Cookie utilizzate
-    Questo sito utilizza esclusivamente **Cookie Tecnici (o strettamente necessari)**. Questi cookie sono essenziali per il funzionamento del sito e non richiedono il consenso preventivo dell'utente.
-
-    *   **Cookie di Sessione**: Vengono eliminati automaticamente alla chiusura del browser. Sono utilizzati per mantenere attiva la sessione di navigazione e ricordare le scelte effettuate (es. il consenso ai cookie).
-    *   **Cookie di Funzionalità**: Permettono di ricordare le scelte dell'utente per migliorare l'esperienza di navigazione, come ad esempio il limite di upload impostato (5GB).
-
-    **Cookie di Terze Parti / Profilazione**: Questo sito **non utilizza** cookie di profilazione, di marketing o di terze parti (come Google Analytics o pixel di social media) per inviare pubblicità personalizzata.
-
-    ### 4. Gestione del Consenso
-    Al primo accesso, l'utente può scegliere se accettare o rifiutare i cookie tramite l'apposito banner. La scelta viene registrata e memorizzata nel browser. È possibile modificare la propria scelta in qualsiasi momento cancellando i dati di navigazione del browser o reimpostando la pagina.
-
-    ### 5. Come disabilitare i Cookie tramite il Browser
-    L'utente può gestire le preferenze sui cookie tramite le impostazioni del proprio browser. La disabilitazione di alcuni cookie potrebbe compromettere il corretto funzionamento di alcune sezioni del sito.
-
-    *   **Google Chrome**: [Istruzioni](https://support.google.com/chrome/answer/95647)
-    *   **Mozilla Firefox**: [Istruzioni](https://support.mozilla.org/kb/block-websites-storing-cookies)
-    *   **Microsoft Edge**: [Istruzioni](https://support.microsoft.com/microsoft-edge/delete-cookies-in-microsoft-edge)
-    *   **Safari**: [Istruzioni](https://support.apple.com/guide/safari/manage-cookies)
-
-    ### 6. Diritti dell'Interessato
-    Ai sensi degli artt. 15-22 del GDPR, l'utente ha il diritto di accesso, rettifica, cancellazione, limitazione, opposizione e portabilità dei propri dati personali. Per esercitare tali diritti, contattare l'email **info@artifix.it**. È inoltre possibile proporre reclamo all'Autorità di controllo (Garante per la Protezione dei Dati Personali - [www.garanteprivacy.it](http://www.garanteprivacy.it)).
-
-    ### 7. Aggiornamenti
-    La presente Cookie Policy può essere soggetta ad aggiornamenti. La versione aggiornata sarà sempre disponibile su questa pagina.
-    """)
-
-    st.markdown("---")
-    
-    if st.button("← Torna alla Dashboard", key="torna_dashboard_basso"):
-        st.session_state.page_attuale = "Dashboard"
-        st.rerun()
+                    <div class="legend"><span class="axis-x"></span> X <span class
