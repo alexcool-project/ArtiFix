@@ -558,10 +558,23 @@ elif page == "Viewer 3D":
         except Exception as e:
             st.error(f"❌ Errore: {e}")
 
-# --- CONVERTI FORMATI (CON BARRA DI AVANZAMENTO + ANTEPRIMA OPZIONALE) ---
+# --- CONVERTI FORMATI (CON TOOLTIP + BARRA DI AVANZAMENTO + ANTEPRIMA OPZIONALE) ---
 elif page == "Converti Formati":
     st.header("🔄 Conversione Formati Universale")
     st.markdown("Converti file tra **tutti i formati** supportati con **tutte le combinazioni** possibili.")
+    
+    # Nota informativa sui formati proprietari
+    with st.expander("ℹ️ Nota sui formati proprietari e a pagamento"):
+        st.markdown("""
+        **ArtiFix non può leggere direttamente i formati proprietari e a pagamento** (come DWG, SKP, RVT, STEP, IGES, ecc.) perché richiedono librerie commerciali e server dedicati. 
+        
+        **Come risolvere?** Se il tuo file è in un formato proprietario, ti consigliamo di:
+        1. Aprire il file nel software con cui è stato creato (es. AutoCAD, SketchUp, Revit).
+        2. Utilizzare la funzione **"Esporta"** o **"Salva con nome"** per convertirlo in **DAE (Collada)** o **OBJ**. 
+        3. Caricare il file DAE o OBJ su ArtiFix e convertirlo qui in qualsiasi altro formato mesh (STL, PLY, GLB, GLTF, ecc.) o 3D PDF.
+        
+        *DAE (Collada) e OBJ sono formati universali e gratuiti che possono essere esportati dalla quasi totalità dei software CAD 3D presenti sul mercato.*
+        """)
     
     with st.expander("📋 Matrice delle conversioni disponibili"):
         st.markdown("""
