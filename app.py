@@ -11,6 +11,14 @@ import tempfile
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from streamlit_cookies_controller import CookieController
+
+# --- Inizializza la libreria cookie ---
+cookie_controller = CookieController()
+
+# --- LINK DIRETTI DELLE IMMAGINI (da Postimages) ---
+CUBO_URL = "https://i.postimg.cc/bvp2nKwt/Archi-Fix-cubo-logo.png"
+LOGO_URL = "https://i.postimg.cc/KYf3DJ1d/Artifix-logo.png"
 
 # --- TENTATIVO IMPORT LIBRERIE ---
 try:
@@ -56,25 +64,10 @@ except ImportError:
     SVG_AVAILABLE = False
 
 # --- Configurazione Pagina ---
-CUBO_PATH = r"C:\Users\ichno\Desktop\ArtiFix\ArchiFix_cubo-logo.png"
-LOGO_PATH = r"C:\Users\ichno\Desktop\ArtiFix\Artifix_logo.png"
-
-def get_base64_image(image_path):
-    try:
-        if os.path.exists(image_path):
-            with open(image_path, "rb") as f:
-                return base64.b64encode(f.read()).decode()
-        return None
-    except Exception:
-        return None
-
-CUBO_BASE64 = get_base64_image(CUBO_PATH)
-LOGO_BASE64 = get_base64_image(LOGO_PATH)
-
-if CUBO_BASE64:
+if CUBO_URL:
     st.set_page_config(
         page_title="ArtiFix - Riparazione CAD/CAM Universale",
-        page_icon=f"data:image/png;base64,{CUBO_BASE64}",
+        page_icon=CUBO_URL,
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -111,9 +104,9 @@ if 'page_attuale' not in st.session_state:
     st.session_state.page_attuale = "Dashboard"
 
 if 'cookie_consent' not in st.session_state:
-    st.session_state.cookie_consent = None
+    st.session_state.cookie_consent = cookie_controller.get('cookie_consent')
 
-# --- DEFINIZIONE VARIABILI (PRIMA DELLE PAGINE) ---
+# --- DEFINIZIONE VARIABILI ---
 SUPPORTED_FORMATS = {
     "CAD 2D": {"extensions": [".dwg", ".dxf", ".dgn", ".dwt"], "icon": "📐", "description": "File CAD (DWG, DXF, DGN, DWT)"},
     "CAD 3D & Mesh": {"extensions": [".stl", ".obj", ".3mf", ".ply", ".fbx", ".glb", ".gltf", ".step", ".iges", ".u3d", ".skp"], "icon": "🧊", "description": "Mesh 3D, modelli e SketchUp"},
@@ -318,8 +311,8 @@ def invia_email(nome, email_utente, messaggio):
 
 # --- BARRA LATERALE ---
 with st.sidebar:
-    if LOGO_BASE64:
-        st.markdown(f'<div class="sidebar-logo"><img src="data:image/png;base64,{LOGO_BASE64}" alt="ArtiFix Logo"></div>', unsafe_allow_html=True)
+    if LOGO_URL:
+        st.markdown(f'<div class="sidebar-logo"><img src="{LOGO_URL}" alt="ArtiFix Logo"></div>', unsafe_allow_html=True)
     else:
         st.markdown('<div class="sidebar-logo"><h3 style="color:#1f77b4;margin:0;">🔧 ARTIFIX</h3></div>', unsafe_allow_html=True)
     
@@ -335,16 +328,10 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # LINK PURISSIMO, SENZA SFONDO E SENZA BORDO
-    st.markdown("""
-    <a href="#" style="color: #1f77b4; font-size: 0.9rem; text-decoration: none; display: block; padding-top: 5px;" onclick="parent.postMessage({type: 'streamlit:setComponentValue', value: 'policy'}, '*')">🍪 Consulta la Cookie Policy</a>
-    """, unsafe_allow_html=True)
-    
-    # Il pulsante nascosto che il link "attiva"
-    if st.button("Vai a Cookie Policy", key="go_policy", help="Apri la pagina Cookie Policy"):
+    # Pulsante VISIBILE con stile link (senza bordo e sfondo)
+    if st.button("🍪 Consulta la Cookie Policy", key="cookie_link"):
         st.session_state.page_attuale = "Cookie Policy"
         st.rerun()
-    st.markdown('<style>div[data-testid="stButton"] button { display: none; }</style>', unsafe_allow_html=True)
 
 # --- LOGICA PAGINE ---
 if st.session_state.page_attuale == "Cookie Policy":
