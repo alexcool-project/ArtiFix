@@ -11,6 +11,7 @@ import tempfile
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import time
 
 # --- LIBRERIA COOKIE (OPZIONALE) ---
 try:
@@ -427,14 +428,24 @@ if page == "Dashboard":
             st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
     st.info("👈 Seleziona una funzionalità dal menu.")
 
-# --- RIPARA FILE ---
+# --- RIPARA FILE (CON BARRA DI AVANZAMENTO) ---
 elif page == "Ripara File":
     st.header("🛠️ Centro Riparazione File")
     uploaded_file = st.file_uploader("Seleziona un file", type=[ext[1:] for ext in ALL_EXTENSIONS], key="repair")
     if uploaded_file:
-        with st.spinner("Analisi..."):
-            result = process_file(uploaded_file.getvalue(), uploaded_file.name)
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        status_text.text("Analisi del file in corso... (20%)")
+        progress_bar.progress(20)
+        result = process_file(uploaded_file.getvalue(), uploaded_file.name)
+        
+        status_text.text("Verifica del risultato... (60%)")
+        progress_bar.progress(60)
+        
         if result["success"]:
+            status_text.text("Completamento... (100%)")
+            progress_bar.progress(100)
             st.success(result["message"])
             if result.get("info"):
                 st.subheader("Dettagli")
@@ -445,15 +456,27 @@ elif page == "Ripara File":
                 st.success("✅ Riparato!")
                 st.download_button("📥 Scarica", data=uploaded_file.getvalue(), file_name=f"repaired_{uploaded_file.name}")
         else:
+            status_text.text("Errore durante l'analisi")
+            progress_bar.progress(100)
             st.error(result["message"])
 
-# --- VIEWER 3D ---
+# --- VIEWER 3D (CON BARRA DI AVANZAMENTO) ---
 elif page == "Viewer 3D":
     st.header("🖥️ Viewer 3D")
     viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
     if viewer_file:
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        status_text.text("Caricamento del modello... (30%)")
+        progress_bar.progress(30)
+        
         try:
             mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
+            
+            status_text.text("Elaborazione vertici e facce... (60%)")
+            progress_bar.progress(60)
+            
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                 st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                 
@@ -466,6 +489,9 @@ elif page == "Viewer 3D":
                 
                 mesh_data = {"vertices": vertices.tolist(), "faces": mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()}
                 mesh_json = json.dumps(mesh_data)
+                
+                status_text.text("Costruzione della vista 3D... (100%)")
+                progress_bar.progress(100)
                 
                 viewer_html = """
                 <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:500px;}#info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.8);padding:5px 15px;border-radius:20px;}.legend{position:absolute;bottom:60px;left:20px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}.legend span{display:inline-block;width:12px;height:12px;margin-right:4px;}.axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}</style>
@@ -532,7 +558,7 @@ elif page == "Viewer 3D":
         except Exception as e:
             st.error(f"❌ Errore: {e}")
 
-# --- CONVERTI FORMATI ---
+# --- CONVERTI FORMATI (CON BARRA DI AVANZAMENTO + ANTEPRIMA OPZIONALE) ---
 elif page == "Converti Formati":
     st.header("🔄 Conversione Formati Universale")
     st.markdown("Converti file tra **tutti i formati** supportati con **tutte le combinazioni** possibili.")
@@ -580,111 +606,117 @@ elif page == "Converti Formati":
                 target_selected = st.selectbox("Formato di destinazione", target_options)
                 target_ext = target_selected.split(".")[1].replace(")", "").strip()
                 
-                # Mostra l'anteprima interattiva 360° (se il file è una mesh valida)
-                st.markdown("### 🖥️ Anteprima interattiva (ruota con il mouse)")
-                mesh_preview = load_3d_file(file_bytes, file_extension)
-                if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
-                    bounds = mesh_preview.bounds
-                    min_y = bounds[0][1]
-                    vertices = mesh_preview.vertices.copy()
-                    vertices[:, 1] -= min_y
-                    vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
-                    vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
-                    
-                    mesh_data = {"vertices": vertices.tolist(), "faces": mesh_preview.faces.tolist()}
-                    mesh_json = json.dumps(mesh_data)
-                    
-                    viewer_html = """
-                    <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:400px;}</style>
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-                    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-                    </head><body>
-                    <div id="c"></div>
-                    <script>
-                    const data = """ + mesh_json + """;
-                    const container = document.getElementById('c');
-                    const scene = new THREE.Scene();
-                    scene.background = new THREE.Color(0xf0f2f6);
-                    const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
-                    camera.position.set(10,5,10);
-                    camera.lookAt(0,0,0);
-                    const renderer = new THREE.WebGLRenderer({antialias:true});
-                    renderer.setSize(container.clientWidth, container.clientHeight);
-                    container.appendChild(renderer.domElement);
-                    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-                    controls.enableDamping = true;
-                    controls.dampingFactor = 0.05;
-                    controls.target.set(0,0,0);
-                    controls.update();
-                    scene.add(new THREE.AmbientLight(0x404040,0.6));
-                    const dl = new THREE.DirectionalLight(0xffffff,1);
-                    dl.position.set(10,20,10);
-                    dl.castShadow=true;
-                    scene.add(dl);
-                    scene.add(new THREE.DirectionalLight(0xffffff,0.5).position.set(-10,0,-10));
-                    if(data.vertices && data.vertices.length>0){
-                        const geo = new THREE.BufferGeometry();
-                        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
-                        if(data.faces && data.faces.length>0){
-                            geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
-                            geo.computeVertexNormals();
-                        }
-                        const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:false, side:THREE.DoubleSide});
-                        const mesh = new THREE.Mesh(geo, mat);
-                        mesh.castShadow = true;
-                        mesh.receiveShadow = true;
-                        const box = new THREE.Box3().setFromObject(mesh);
-                        const size = box.getSize(new THREE.Vector3());
-                        const maxDim = Math.max(size.x,size.y,size.z);
-                        if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
-                        scene.add(mesh);
-                    }
-                    function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
-                    animate();
-                    window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
-                    </script></body></html>
-                    """
-                    st.components.v1.html(viewer_html, height=400)
-                else:
-                    st.warning("⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.")
-                
+                # PULSANTE DI CONVERSIONE (PRIMA DELL'ANTEPRIMA)
                 if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
-                    with st.spinner(f"Conversione in {target_selected.split(' ')[0]} in corso..."):
-                        try:
-                            mesh = load_3d_file(file_bytes, file_extension)
-                            
-                            if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                                result_bytes = convert_mesh(mesh, target_ext)
-                                
-                                if result_bytes:
-                                    st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
-                                    mime_types = {
-                                        'stl': 'application/octet-stream',
-                                        'obj': 'text/plain',
-                                        'ply': 'application/octet-stream',
-                                        'glb': 'application/octet-stream',
-                                        'gltf': 'application/octet-stream',
-                                        'fbx': 'application/octet-stream',
-                                        '3mf': 'application/octet-stream',
-                                        'dae': 'application/octet-stream',
-                                        'wrl': 'application/octet-stream',
-                                        'off': 'application/octet-stream',
-                                        'dxf': 'application/dxf',
-                                        'pdf': 'application/pdf'
-                                    }
-                                    st.download_button(
-                                        label=f"📥 Scarica .{target_ext}",
-                                        data=result_bytes,
-                                        file_name=f"converted.{target_ext}",
-                                        mime=mime_types.get(target_ext, 'application/octet-stream'),
-                                        use_container_width=True
-                                    )
-                                else:
-                                    st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita. Riprova con un altro formato.")
-                            else:
-                                st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
-                        except Exception as e:
-                            st.error(f"❌ Errore durante la conversione: {e}")
+                    progress_bar = st.progress(0)
+                    st.write("Conversione in corso...")
+                    
+                    progress_bar.progress(20)
+                    mesh = load_3d_file(file_bytes, file_extension)
+                    
+                    if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+                        progress_bar.progress(70)
+                        result_bytes = convert_mesh(mesh, target_ext)
+                        
+                        progress_bar.progress(100)
+                        
+                        if result_bytes:
+                            st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
+                            mime_types = {
+                                'stl': 'application/octet-stream',
+                                'obj': 'text/plain',
+                                'ply': 'application/octet-stream',
+                                'glb': 'application/octet-stream',
+                                'gltf': 'application/octet-stream',
+                                'fbx': 'application/octet-stream',
+                                '3mf': 'application/octet-stream',
+                                'dae': 'application/octet-stream',
+                                'wrl': 'application/octet-stream',
+                                'off': 'application/octet-stream',
+                                'dxf': 'application/dxf',
+                                'pdf': 'application/pdf'
+                            }
+                            st.download_button(
+                                label=f"📥 Scarica .{target_ext}",
+                                data=result_bytes,
+                                file_name=f"converted.{target_ext}",
+                                mime=mime_types.get(target_ext, 'application/octet-stream'),
+                                use_container_width=True
+                            )
+                        else:
+                            st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita. Riprova con un altro formato.")
+                    else:
+                        st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
+                
+                # ANTEPRIMA OPZIONALE (SE L'UTENTE LA RICHIEDE)
+                st.markdown("---")
+                if st.button("🖥️ Mostra anteprima interattiva (ruota con il mouse)"):
+                    st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
+                    mesh_preview = load_3d_file(file_bytes, file_extension)
+                    if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
+                        bounds = mesh_preview.bounds
+                        min_y = bounds[0][1]
+                        vertices = mesh_preview.vertices.copy()
+                        vertices[:, 1] -= min_y
+                        vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
+                        vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
+                        
+                        mesh_data = {"vertices": vertices.tolist(), "faces": mesh_preview.faces.tolist()}
+                        mesh_json = json.dumps(mesh_data)
+                        
+                        viewer_html = """
+                        <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:400px;}</style>
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+                        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+                        </head><body>
+                        <div id="c"></div>
+                        <script>
+                        const data = """ + mesh_json + """;
+                        const container = document.getElementById('c');
+                        const scene = new THREE.Scene();
+                        scene.background = new THREE.Color(0xf0f2f6);
+                        const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
+                        camera.position.set(10,5,10);
+                        camera.lookAt(0,0,0);
+                        const renderer = new THREE.WebGLRenderer({antialias:true});
+                        renderer.setSize(container.clientWidth, container.clientHeight);
+                        container.appendChild(renderer.domElement);
+                        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                        controls.enableDamping = true;
+                        controls.dampingFactor = 0.05;
+                        controls.target.set(0,0,0);
+                        controls.update();
+                        scene.add(new THREE.AmbientLight(0x404040,0.6));
+                        const dl = new THREE.DirectionalLight(0xffffff,1);
+                        dl.position.set(10,20,10);
+                        dl.castShadow=true;
+                        scene.add(dl);
+                        scene.add(new THREE.DirectionalLight(0xffffff,0.5).position.set(-10,0,-10));
+                        if(data.vertices && data.vertices.length>0){
+                            const geo = new THREE.BufferGeometry();
+                            geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
+                            if(data.faces && data.faces.length>0){
+                                geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
+                                geo.computeVertexNormals();
+                            }
+                            const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:false, side:THREE.DoubleSide});
+                            const mesh = new THREE.Mesh(geo, mat);
+                            mesh.castShadow = true;
+                            mesh.receiveShadow = true;
+                            const box = new THREE.Box3().setFromObject(mesh);
+                            const size = box.getSize(new THREE.Vector3());
+                            const maxDim = Math.max(size.x,size.y,size.z);
+                            if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
+                            scene.add(mesh);
+                        }
+                        function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
+                        animate();
+                        window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+                        </script></body></html>
+                        """
+                        st.components.v1.html(viewer_html, height=400)
+                    else:
+                        st.warning("⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.")
 
 # --- PROGETTO ARTIFIX (AUDIT + CONTATTI) ---
 elif page == "Progetto ArtiFix":
