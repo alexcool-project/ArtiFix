@@ -42,3 +42,12 @@ websockets==16.1.1
 streamlit-cookies-controller
 trimesh[all]
 aspose-cad
+streamlit
+ezdxf
+trimesh
+numpy
+pillow
+pandas
+aspose-cad
+streamlit-cookies-controller
+PyPDF2
