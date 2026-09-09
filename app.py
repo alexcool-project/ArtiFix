@@ -78,12 +78,18 @@ try:
 except ImportError:
     ASPOSE_AVAILABLE = False
 
-# --- PROVA A IMPORTARE PYMESHLAB (PER LA CONVERSIONE 3D PDF) ---
+# --- PROVA A IMPORTARE PYMESHLAB E PYASSIMP (PER LA CONVERSIONE U3D) ---
 try:
     import pymeshlab as ml
     PYMESHLAB_AVAILABLE = True
 except ImportError:
     PYMESHLAB_AVAILABLE = False
+
+try:
+    import pyassimp
+    PYASSIMP_AVAILABLE = True
+except ImportError:
+    PYASSIMP_AVAILABLE = False
 
 # --- STATO PAGINE E COOKIE (INIZIALIZZATO SUBITO) ---
 if 'page_attuale' not in st.session_state:
@@ -216,7 +222,6 @@ def convert_mesh(mesh, target_format):
         target_format = target_format.lower().replace('.', '')
         
         if target_format == 'pdf':
-            # Prova a convertire il modello in PDF usando MATPLOTLIB (più affidabile di pymeshlab)
             import matplotlib
             matplotlib.use('Agg')
             import matplotlib.pyplot as plt
@@ -225,16 +230,13 @@ def convert_mesh(mesh, target_format):
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
             
-            # Plot della mesh
             tri_arrays = mesh.vertices[mesh.faces]
             poly3d = Poly3DCollection(tri_arrays, alpha=0.1, edgecolor='k', facecolor='#1f77b4')
             ax.add_collection3d(poly3d)
             
-            # Imposta gli assi
             scale = mesh.vertices.flatten()
             ax.auto_scale_xyz(scale, scale, scale)
             
-            # Salva su PDF
             plt.savefig("converted_3d.pdf", format='pdf', bbox_inches='tight')
             plt.close()
             
@@ -644,7 +646,6 @@ elif page == "Converti Formati":
                             elif target_ext == 'pdf' and file_extension in ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'fbx', 'skp']:
                                 mesh = load_3d_file(file_bytes, file_extension)
                                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                                    # Usa MATPLOTLIB per generare un PDF con visualizzazione 3D
                                     import matplotlib
                                     matplotlib.use('Agg')
                                     import matplotlib.pyplot as plt
@@ -679,7 +680,53 @@ elif page == "Converti Formati":
                                 else:
                                     st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
                             
-                            # 3. STRATEGIA STANDARD PER ALTRI FORMATI (STL, OBJ, GLB -> DXF, GLTF, ecc.)
+                            # 3. STRATEGIA PER U3D: usa PYMESHLAB O PYASSIMP
+                            elif target_ext == 'u3d':
+                                try:
+                                    # Se PYMESHLAB è disponibile, prova a convertire con quello
+                                    if PYMESHLAB_AVAILABLE:
+                                        temp_input = f"temp_input.{file_extension}"
+                                        with open(temp_input, "wb") as f:
+                                            f.write(file_bytes)
+                                        
+                                        ms = ml.MeshSet()
+                                        ms.load_new_mesh(temp_input)
+                                        ms.save_current_mesh("converted.u3d")
+                                        
+                                        with open("converted.u3d", "rb") as f:
+                                            result_bytes = f.read()
+                                    
+                                    # ALTRIMENTI usa PYASSIMP (se disponibile)
+                                    elif PYASSIMP_AVAILABLE:
+                                        temp_input = f"temp_input.{file_extension}"
+                                        with open(temp_input, "wb") as f:
+                                            f.write(file_bytes)
+                                        
+                                        scene = pyassimp.load(temp_input)
+                                        pyassimp.export(scene, "converted.u3d", file_type='u3d')
+                                        pyassimp.release(scene)
+                                        
+                                        with open("converted.u3d", "rb") as f:
+                                            result_bytes = f.read()
+                                    
+                                    else:
+                                        raise ImportError("Libreria U3D non installata")
+                                    
+                                    if result_bytes:
+                                        st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
+                                        st.download_button(
+                                            label=f"📥 Scarica .{target_ext}",
+                                            data=result_bytes,
+                                            file_name=f"converted.{target_ext}",
+                                            mime='application/octet-stream',
+                                            use_container_width=True
+                                        )
+                                    else:
+                                        st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita.")
+                                except Exception as e:
+                                    st.error(f"❌ Errore durante la conversione U3D: {str(e)}")
+                            
+                            # 4. STRATEGIA STANDARD PER ALTRI FORMATI (STL, OBJ, GLB -> DXF, GLTF, ecc.)
                             elif target_ext in ['stl', 'obj', 'ply', '3mf', 'glb', 'gltf', 'dxf']:
                                 mesh = load_3d_file(file_bytes, file_extension)
                                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
@@ -707,7 +754,7 @@ elif page == "Converti Formati":
                                 else:
                                     st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
                             
-                            # 4. FALLBACK: nessuna conversione possibile
+                            # 5. FALLBACK: nessuna conversione possibile
                             else:
                                 st.error(f"❌ La conversione in {target_selected.split(' ')[0]} non è supportata da nessuna libreria installata.")
                         except Exception as e:
