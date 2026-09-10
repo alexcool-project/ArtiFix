@@ -67,17 +67,27 @@ st.markdown("""
     .sidebar-logo img { max-width: 180px; height: auto; }
     .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
         .stButton>button[kind="primary"],
+    .stButton>button[kind="primaryFormSubmit"],
     div[data-testid="stButton"] button[kind="primary"],
-    div[data-testid="stBaseButton-primary"],
-    button[data-testid="stBaseButton-primary"] {
+    div[data-testid="stButton"] button[kind="primaryFormSubmit"],
+    div[data-testid="stFormSubmitButton"] button,
+    button[kind="primary"],
+    button[kind="primaryFormSubmit"],
+    button[data-testid="stBaseButton-primary"],
+    button[data-testid="stBaseButton-primaryFormSubmit"] {
         background-color: #1f77b4 !important;
         color: white !important;
         border-color: #1f77b4 !important;
     }
-    .stButton>button[kind="primary"]:hover,
+        .stButton>button[kind="primary"]:hover,
+    .stButton>button[kind="primaryFormSubmit"]:hover,
     div[data-testid="stButton"] button[kind="primary"]:hover,
-    div[data-testid="stBaseButton-primary"]:hover,
-    button[data-testid="stBaseButton-primary"]:hover {
+    div[data-testid="stButton"] button[kind="primaryFormSubmit"]:hover,
+    div[data-testid="stFormSubmitButton"] button:hover,
+    button[kind="primary"]:hover,
+    button[kind="primaryFormSubmit"]:hover,
+    button[data-testid="stBaseButton-primary"]:hover,
+    button[data-testid="stBaseButton-primaryFormSubmit"]:hover {
         background-color: #1565a0 !important;
         border-color: #1565a0 !important;
     }
