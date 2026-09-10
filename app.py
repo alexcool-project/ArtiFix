@@ -338,7 +338,7 @@ def process_file(file_bytes, file_name):
                 result["message"] = "⚠️ File 3D non valido o formato non supportato."
         
 elif file_extension == 'ifc' and IFC_AVAILABLE:
-# ifcopenshell richiede un file su disco, non BytesIO
+            # ifcopenshell richiede un file su disco, non BytesIO
             with tempfile.NamedTemporaryFile(suffix='.ifc', delete=False) as tmp_ifc:
                 tmp_ifc.write(file_bytes)
                 tmp_ifc_path = tmp_ifc.name
