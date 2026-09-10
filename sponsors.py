@@ -14,7 +14,7 @@ MAX_VISIBLE = 6
 SCROLL_DURATION = 40  # secondi per un ciclo completo (più alto = più lento)
 
 
-@st.cache_data(ttl=600)  # cache 10 minuti
+@st.cache_data(ttl=300)  # cache 5 minuti
 def load_sponsors():
     """Legge il Google Sheet pubblicato come CSV e restituisce gli sponsor attivi e non scaduti."""
     if not SPONSORS_CSV_URL:
