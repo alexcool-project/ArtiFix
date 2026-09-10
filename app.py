@@ -71,40 +71,25 @@ st.markdown("""
     .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
     .metric-label { font-size: 0.85rem; color: #555; }
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
-    footer {visibility: hidden;}
-        .footer-artifix {
-        margin-top: 60px;
-        padding: 20px;
+        footer {visibility: hidden;}
+
+    .footer-artifix {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #f8f9fa;
+        padding: 12px;
         text-align: center;
         font-size: 12px;
         color: #666;
         border-top: 1px solid #ddd;
-        background: #f8f9fa;
+        z-index: 999;
     }
-        /* --- Layout per spingere il footer in fondo --- */
-    .stApp {
-        display: flex !important;
-        flex-direction: column;
-        min-height: 100vh;
-    }
-    .stApp > header {
-        flex-shrink: 0;
-    }
-    .main {
-        flex: 1 0 auto;
-    }
-    section.main > div {
-        display: flex;
-        flex-direction: column;
-        min-height: 100%;
-    }
+
+    /* Spazio per non coprire il contenuto con il footer fisso */
     .main .block-container {
-        flex: 1 0 auto;
-        display: flex;
-        flex-direction: column;
-    }
-    .main .block-container > div:last-child {
-        margin-top: auto;
+        padding-bottom: 80px !important;
     }
 </style>
 """, unsafe_allow_html=True)
