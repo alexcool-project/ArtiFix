@@ -1,5 +1,6 @@
 # sponsors.py
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 from datetime import datetime, timedelta
 import requests
@@ -10,6 +11,7 @@ SPONSORS_CSV_URL = st.secrets.get("SPONSORS_CSV_URL", "")
 BANNER_WIDTH = 300
 BANNER_HEIGHT = 100
 MAX_VISIBLE = 6
+SCROLL_DURATION = 40  # secondi per un ciclo completo (più alto = più lento)
 
 
 @st.cache_data(ttl=600)  # cache 10 minuti
@@ -88,7 +90,7 @@ def load_sponsors():
 
 
 def render_sponsor_band():
-    """Renderizza la banda laterale destra con i banner sponsor."""
+    """Renderizza la banda laterale destra con i banner sponsor in scorrimento verticale fluido."""
     sponsors = load_sponsors()
 
     if not sponsors:
@@ -113,55 +115,120 @@ def render_sponsor_band():
         )
         return
 
-    # Rotazione a blocchi (server-side)
-    offset = st.session_state.get("sponsor_offset", 0)
-    if len(sponsors) <= MAX_VISIBLE:
-        visibili = sponsors
-    else:
-        visibili = [sponsors[(offset + i) % len(sponsors)] for i in range(MAX_VISIBLE)]
-        st.session_state.sponsor_offset = (offset + MAX_VISIBLE) % len(sponsors)
+    # Calcola altezza iframe
+    num_visible = min(MAX_VISIBLE, len(sponsors))
+    iframe_height = 40 + (num_visible * (BANNER_HEIGHT + 12)) + 20
 
-    cards_html = ""
-    for s in visibili:
-        cards_html += f"""
-        <a href="{s['sito_url']}" target="_blank" rel="noopener noreferrer"
-           style="display:block; margin: 0 0 12px 0; text-decoration:none;">
-            <div style="
-                width: {BANNER_WIDTH}px;
-                height: {BANNER_HEIGHT}px;
-                border-radius: 10px;
-                overflow: hidden;
-                background: #ffffff;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: transform 0.2s ease, box-shadow 0.2s ease;"
-                onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 14px rgba(0,0,0,0.15)';"
-                onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
-                <img src="{s['logo_url']}" alt="{s['nome']}"
-                     style="max-width: 100%; max-height: 100%; object-fit: contain;" />
-            </div>
-        </a>
+    # Durata animazione proporzionale al numero di sponsor
+    total_banners = max(len(sponsors), 1)
+    duration = SCROLL_DURATION * (total_banners / 6.0) if total_banners > 6 else SCROLL_DURATION
+
+    # Genera i banner HTML
+    banners_html = ""
+    for s in sponsors:
+        banners_html += f"""
+            <a href="{s['sito_url']}" target="_blank" rel="noopener noreferrer" class="sponsor-card">
+                <img src="{s['logo_url']}" alt="{s['nome']}" loading="lazy">
+            </a>
         """
 
-    st.markdown(
-        f"""
-        <div style="margin-bottom: 8px;">
-            <div style="
-                font-size: 0.7rem;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: #999;
-                text-align: center;
-                margin-bottom: 10px;">
-                Sponsor ArtiFix
+    # HTML completo con animazione CSS
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="utf-8">
+    <style>
+        * {{ box-sizing: border-box; }}
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
+            background: transparent;
+            overflow: hidden;
+        }}
+        .band-title {{
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999;
+            text-align: center;
+            margin: 8px 0 12px;
+            font-weight: 600;
+        }}
+        .scroll-viewport {{
+            width: 100%;
+            height: calc(100% - 40px);
+            overflow: hidden;
+            position: relative;
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0%,
+                #000 8%,
+                #000 92%,
+                transparent 100%
+            );
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0%,
+                #000 8%,
+                #000 92%,
+                transparent 100%
+            );
+        }}
+        .scroll-content {{
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            animation: scrollUp {duration}s linear infinite;
+        }}
+        .scroll-content:hover {{
+            animation-play-state: paused;
+        }}
+        @keyframes scrollUp {{
+            0%   {{ transform: translateY(0); }}
+            100% {{ transform: translateY(-50%); }}
+        }}
+        .sponsor-card {{
+            display: block;
+            width: {BANNER_WIDTH}px;
+            height: {BANNER_HEIGHT}px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            flex-shrink: 0;
+            text-decoration: none;
+        }}
+        .sponsor-card:hover {{
+            transform: scale(1.03);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+        }}
+        .sponsor-card img {{
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }}
+    </style>
+    </head>
+    <body>
+        <div class="band-title">Sponsor ArtiFix</div>
+        <div class="scroll-viewport">
+            <div class="scroll-content">
+                {banners_html}
+                {banners_html}
             </div>
-            {cards_html}
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    </body>
+    </html>
+    """
+
+    components.html(html, height=iframe_height, scrolling=False)
 
 
 def sponsor_band_placeholder():
