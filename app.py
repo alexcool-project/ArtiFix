@@ -337,12 +337,22 @@ def process_file(file_bytes, file_name):
             else:
                 result["message"] = "⚠️ File 3D non valido o formato non supportato."
         
-        elif file_extension == 'ifc' and IFC_AVAILABLE:
-            ifc_file = ifcopenshell.open(io.BytesIO(file_bytes))
-            projects = ifc_file.by_type('IfcProject')
-            result["success"] = True
-            result["message"] = f"✅ IFC: {len(projects)} progetti"
-            result["info"] = {"projects": len(projects)}
+elif file_extension == 'ifc' and IFC_AVAILABLE:
+# ifcopenshell richiede un file su disco, non BytesIO
+            with tempfile.NamedTemporaryFile(suffix='.ifc', delete=False) as tmp_ifc:
+                tmp_ifc.write(file_bytes)
+                tmp_ifc_path = tmp_ifc.name
+            try:
+                ifc_file = ifcopenshell.open(tmp_ifc_path)
+                projects = ifc_file.by_type('IfcProject')
+                result["success"] = True
+                result["message"] = f"✅ IFC: {len(projects)} progetti"
+                result["info"] = {"projects": len(projects)}
+            finally:
+                try:
+                    os.unlink(tmp_ifc_path)
+                except:
+                    pass
         
         elif file_extension in ['shp','geojson','kml','gpx'] and GEOPANDAS_AVAILABLE:
             if file_extension == 'shp':
