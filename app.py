@@ -71,8 +71,6 @@ st.markdown("""
     .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
     .metric-label { font-size: 0.85rem; color: #555; }
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
-    
-    /* FOOTER FISSO */
     footer {visibility: hidden;}
     .footer-artifix {
         position: fixed;
@@ -134,7 +132,7 @@ try:
 except ImportError:
     SVG_AVAILABLE = False
 
-# --- STATO PAGINE E COOKIE (INIZIALIZZATO SUBITO) ---
+# --- STATO PAGINE E COOKIE ---
 if 'page_attuale' not in st.session_state:
     st.session_state.page_attuale = "Dashboard"
 
@@ -337,8 +335,7 @@ def process_file(file_bytes, file_name):
             else:
                 result["message"] = "⚠️ File 3D non valido o formato non supportato."
         
-elif file_extension == 'ifc' and IFC_AVAILABLE:
-            # ifcopenshell richiede un file su disco, non BytesIO
+        elif file_extension == 'ifc' and IFC_AVAILABLE:
             with tempfile.NamedTemporaryFile(suffix='.ifc', delete=False) as tmp_ifc:
                 tmp_ifc.write(file_bytes)
                 tmp_ifc_path = tmp_ifc.name
@@ -373,7 +370,6 @@ elif file_extension == 'ifc' and IFC_AVAILABLE:
     
     return result
 
-# --- FUNZIONE INVIO EMAIL ---
 def invia_email(nome, email_utente, messaggio):
     smtp_server = st.secrets["SMTP_SERVER"]
     smtp_port = st.secrets["SMTP_PORT"]
@@ -460,7 +456,7 @@ elif st.session_state.page_attuale == "Cookie Policy":
 else:
     page = st.session_state.page_attuale
 
-# --- POPUP COOKIE E PRIVACY (VERSIONE LIGHT) ---
+# --- POPUP COOKIE E PRIVACY ---
 if st.session_state.cookie_consent is None:
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     with st.container(border=True):
@@ -468,8 +464,8 @@ if st.session_state.cookie_consent is None:
         <h3 style="color: #1f77b4; text-align: center; margin-bottom: 15px;">🍪 Cookie Policy</h3>
         <p style="font-size: 15px; line-height: 1.8;">
             Noi e terze parti selezionate utilizziamo cookie o tecnologie simili per finalità tecniche e, con il tuo consenso, anche per altre finalità come specificato nella cookie policy. 
-            Il rifiuto del consenso può rendere non disponibili le relative funzioni. Usa il pulsante “Accetta tutti i cookie” per acconsentire. 
-            Usa il pulsante “Accetta solo i cookie necessari” per continuare senza accettare.
+            Il rifiuto del consenso può rendere non disponibili le relative funzioni. Usa il pulsante "Accetta tutti i cookie" per acconsentire. 
+            Usa il pulsante "Accetta solo i cookie necessari" per continuare senza accettare.
         </p>
         """, unsafe_allow_html=True)
         
@@ -488,7 +484,7 @@ if st.session_state.cookie_consent is None:
             if st.button("Accetta tutti i cookie", key="accept_cookies", type="primary", use_container_width=True):
                 st.session_state.cookie_consent = "accepted"
                 st.rerun()
-
+    
 # --- DASHBOARD ---
 if page == "Dashboard":
     col_main, col_side = st.columns([3, 1], gap="large")
@@ -513,7 +509,7 @@ if page == "Dashboard":
         sponsor_band_placeholder()
 
 
-# --- RIPARA FILE (CON BARRE DI AVANZAMENTO) ---
+# --- RIPARA FILE ---
 elif page == "Ripara File":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
@@ -555,7 +551,7 @@ elif page == "Ripara File":
         sponsor_band_placeholder()
 
 
-# --- VIEWER 3D (CON BARRE DI AVANZAMENTO) ---
+# --- VIEWER 3D ---
 elif page == "Viewer 3D":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
@@ -579,7 +575,6 @@ elif page == "Viewer 3D":
                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                     st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                     
-                    # LIMITE CRITICO: Three.js Uint16Array supporta MAX 65.535 vertici
                     try:
                         if len(mesh.vertices) > 65000:
                             target_faces = int(65000 / 3) * 3
@@ -592,7 +587,6 @@ elif page == "Viewer 3D":
                     except:
                         pass
                     
-                    # VERIFICA FINALE
                     if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
                         st.error("❌ Errore nel processamento della mesh.")
                     else:
@@ -680,15 +674,14 @@ elif page == "Viewer 3D":
     with col_side:
         render_sponsor_band()
         sponsor_band_placeholder()
-
-# --- CONVERTI FORMATI (CON TOOLTIP + BARRE DI AVANZAMENTO + ANTEPRIMA OPZIONALE) ---
+    
+# --- CONVERTI FORMATI ---
 elif page == "Converti Formati":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
         st.header("🔄 Conversione Formati Universale")
         st.markdown("Converti file tra **tutti i formati** supportati con **tutte le combinazioni** possibili.")
         
-        # Nota informativa sui formati proprietari
         with st.expander("ℹ️ Nota sui formati proprietari e a pagamento"):
             st.markdown("""
             **ArtiFix non può leggere direttamente i formati proprietari e a pagamento** (come DWG, SKP, RVT, STEP, IGES, ecc.) perché richiedono librerie commerciali e server dedicati. 
@@ -745,7 +738,6 @@ elif page == "Converti Formati":
                     target_selected = st.selectbox("Formato di destinazione", target_options)
                     target_ext = target_selected.split(".")[1].replace(")", "").strip()
                     
-                    # PULSANTE DI CONVERSIONE
                     if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
                         progress_bar = st.progress(0)
                         status_text = st.empty()
@@ -795,13 +787,11 @@ elif page == "Converti Formati":
                         else:
                             st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
                     
-                    # ANTEPRIMA OPZIONALE
                     st.markdown("---")
                     if st.button("🖥️ Mostra anteprima interattiva (ruota con il mouse)"):
                         st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
                         mesh_preview = load_3d_file(file_bytes, file_extension)
                         if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
-                            # PROTEZIONE TOTALE
                             try:
                                 if len(mesh_preview.vertices) > 65000:
                                     target_faces = int(65000 / 3) * 3
@@ -814,7 +804,6 @@ elif page == "Converti Formati":
                             except:
                                 pass
                             
-                            # VERIFICA FINALE
                             if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
                                 st.error("❌ Errore nel processamento della mesh.")
                             else:
@@ -889,7 +878,7 @@ elif page == "Converti Formati":
         sponsor_band_placeholder()
 
 
-# --- PROGETTO ARTIFIX (AUDIT + CONTATTI) ---
+# --- PROGETTO ARTIFIX ---
 elif page == "Progetto ArtiFix":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
@@ -1010,7 +999,7 @@ Nuova richiesta sponsor:
         sponsor_band_placeholder()
 
 
-# --- PAGINA PRIVACY POLICY ---
+# --- PRIVACY POLICY ---
 elif page == "Privacy Policy":
     st.header("🔒 Privacy Policy")
     st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
@@ -1058,7 +1047,7 @@ elif page == "Privacy Policy":
         st.rerun()
 
 
-# --- PAGINA COOKIE POLICY ---
+# --- COOKIE POLICY ---
 elif page == "Cookie Policy":
     st.header("🍪 Cookie Policy")
     st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
@@ -1110,4 +1099,3 @@ elif page == "Cookie Policy":
     if st.button("← Torna alla Dashboard", key="torna_dashboard_basso"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
-
