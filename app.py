@@ -72,18 +72,14 @@ st.markdown("""
     .metric-label { font-size: 0.85rem; color: #555; }
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
     footer {visibility: hidden;}
-    .footer-artifix {
-        position: fixed;
-        bottom: 60px;
-        left: 0;
-        right: 0;
-        background: #f8f9fa;
-        padding: 10px;
+        .footer-artifix {
+        margin-top: 60px;
+        padding: 20px;
         text-align: center;
         font-size: 12px;
         color: #666;
         border-top: 1px solid #ddd;
-        z-index: 9997;
+        background: #f8f9fa;
     }
 </style>
 <div class="footer-artifix">© 2026 ArtiFix | Tutti i diritti riservati</div>
