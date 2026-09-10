@@ -82,7 +82,6 @@ st.markdown("""
         background: #f8f9fa;
     }
 </style>
-<div class="footer-artifix">© 2026 ArtiFix | Tutti i diritti riservati</div>
 """, unsafe_allow_html=True)
 
 # --- TENTATIVO IMPORT LIBRERIE ---
@@ -1095,3 +1094,12 @@ elif page == "Cookie Policy":
     if st.button("← Torna alla Dashboard", key="torna_dashboard_basso"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
+
+# --- FOOTER GLOBALE (appare a fondo di ogni pagina) ---
+st.markdown("---")
+st.markdown(
+    '<div style="text-align:center; padding:20px 0; color:#666; font-size:12px;">'
+    '© 2026 ArtiFix | Tutti i diritti riservati'
+    '</div>',
+    unsafe_allow_html=True
+)
