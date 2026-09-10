@@ -66,7 +66,21 @@ st.markdown("""
     .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
     .sidebar-logo img { max-width: 180px; height: auto; }
     .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
-    .stButton>button[kind="primary"] { background-color: #1f77b4; color: white; }
+        .stButton>button[kind="primary"],
+    div[data-testid="stButton"] button[kind="primary"],
+    div[data-testid="stBaseButton-primary"],
+    button[data-testid="stBaseButton-primary"] {
+        background-color: #1f77b4 !important;
+        color: white !important;
+        border-color: #1f77b4 !important;
+    }
+    .stButton>button[kind="primary"]:hover,
+    div[data-testid="stButton"] button[kind="primary"]:hover,
+    div[data-testid="stBaseButton-primary"]:hover,
+    button[data-testid="stBaseButton-primary"]:hover {
+        background-color: #1565a0 !important;
+        border-color: #1565a0 !important;
+    }
     .metric-card { background-color: #f0f2f6; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
     .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
     .metric-label { font-size: 0.85rem; color: #555; }
