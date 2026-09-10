@@ -41,6 +41,5 @@ watchdog==6.0.0
 websockets==16.1.1
 streamlit-cookies-controller
 trimesh[all]
-aspose-cad
 PyPDF2
 pymeshlab
