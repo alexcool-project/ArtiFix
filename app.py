@@ -62,9 +62,9 @@ st.markdown("""
 <style>
     .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
     .logo-container { text-align: center; padding: 1rem 0; }
-    .logo-container img { max-width: 400px; height: auto; }
+    .logo-container img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
     .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
-    .sidebar-logo img { max-width: 180px; height: auto; }
+    .sidebar-logo img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
     .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
         .stButton>button[kind="primary"],
     .stButton>button[kind="primaryFormSubmit"],
