@@ -191,7 +191,8 @@ def render_sponsor_band():
         }}
         .sponsor-card {{
             display: block;
-            width: {BANNER_WIDTH}px;
+            width: 100%;
+            max-width: {BANNER_WIDTH}px;
             height: {BANNER_HEIGHT}px;
             border-radius: 10px;
             overflow: hidden;
