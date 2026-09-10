@@ -81,6 +81,31 @@ st.markdown("""
         border-top: 1px solid #ddd;
         background: #f8f9fa;
     }
+        /* --- Layout per spingere il footer in fondo --- */
+    .stApp {
+        display: flex !important;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    .stApp > header {
+        flex-shrink: 0;
+    }
+    .main {
+        flex: 1 0 auto;
+    }
+    section.main > div {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+    }
+    .main .block-container {
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
+    }
+    .main .block-container > div:last-child {
+        margin-top: auto;
+    }
 </style>
 """, unsafe_allow_html=True)
 
