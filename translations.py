@@ -1,440 +1,452 @@
-import streamlit as st
-import ezdxf
-import trimesh
-import io
-import numpy as np
-import base64
-import os
-import json
-from datetime import datetime
-import tempfile
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import time
+# translations.py
+# Dizionario completo delle traduzioni IT/EN per ArtiFix
 
-# --- MODULO SPONSOR (Google Sheets) ---
-from sponsors import load_sponsors, render_sponsor_band, sponsor_band_placeholder
-
-# --- MODULO TRADUZIONI (IT/EN) ---
-from translations import TRANSLATIONS, get_text, detect_browser_language
-
-# --- LIBRERIA COOKIE (OPZIONALE) ---
-try:
-    from streamlit_cookies_controller import CookieController
-    cookie_controller = CookieController()
-    COOKIE_LIB = True
-except ImportError:
-    COOKIE_LIB = False
-
-# --- LINK DIRETTI DELLE IMMAGINI ---
-CUBO_URL = "https://i.postimg.cc/bvp2nKwt/Archi-Fix-cubo-logo.png"
-LOGO_URL = "https://i.postimg.cc/KYf3DJ1d/Artifix-logo.png"
-
-# --- LINK PAGAMENTO (PayPal) ---
-DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
-
-# --- STATO LINGUA (RILEVAMENTO BROWSER) ---
-if 'lang' not in st.session_state:
-    st.session_state.lang = detect_browser_language()
-
-# --- FUNZIONE HELPER PER TRADUZIONE ---
-def t(key, **kwargs):
-    """Shortcut per get_text con la lingua corrente."""
-    return get_text(key, st.session_state.lang, **kwargs)
-
-# --- SEO META TAG ---
-st.markdown("""
-<title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
-<meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF) in 3D PDF, STL, OBJ, GLTF e altri formati. Convertitore online gratuito e veloce per ingegneri e progettisti." />
-<meta name="keywords" content="convertitore CAD, convertire STL in 3D PDF, convertire OBJ in STL, convertire 3D PDF, convertitore gratuito, convertire DAE, convertire FBX, convertire GLB, conversione mesh 3D, ArtiFix, CAD/CAM tool" />
-<meta name="robots" content="index, follow" />
-<meta property="og:title" content="ArtiFix - Convertitore CAD/CAM Universale" />
-<meta property="og:description" content="Converti i tuoi file 3D (STL, OBJ, PLY, GLB, FBX, DAE) in 3D PDF e altri formati. Strumento professionale e gratuito per ingegneri e progettisti." />
-<meta property="og:type" content="website" />
-<meta property="og:image" content="https://i.postimg.cc/KYf3DJ1d/Artifix-logo.png" />
-<meta property="og:url" content="https://artifix.streamlit.app" />
-<meta property="og:locale" content="it_IT" />
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "ArtiFix",
-  "url": "https://artifix.streamlit.app",
-  "applicationCategory": "EngineeringApplication",
-  "operatingSystem": "Web",
-  "description": "Convertitore universale per file CAD/CAM e mesh 3D (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF). Converti in 3D PDF e altri formati.",
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
-}
-</script>
-""", unsafe_allow_html=True)
-
-# --- CSS MINIMALE E PULITO ---
-st.markdown("""
-<style>
-    .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
-    .logo-container { text-align: center; padding: 1rem 0; }
-    .logo-container img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
-    .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
-    .sidebar-logo img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
-    .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
-    .stButton>button[kind="primary"],
-    .stButton>button[kind="primaryFormSubmit"],
-    div[data-testid="stButton"] button[kind="primary"],
-    div[data-testid="stButton"] button[kind="primaryFormSubmit"],
-    div[data-testid="stFormSubmitButton"] button,
-    button[kind="primary"],
-    button[kind="primaryFormSubmit"],
-    button[data-testid="stBaseButton-primary"],
-    button[data-testid="stBaseButton-primaryFormSubmit"] {
-        background-color: #1f77b4 !important;
-        color: white !important;
-        border-color: #1f77b4 !important;
-    }
-    .stButton>button[kind="primary"]:hover,
-    .stButton>button[kind="primaryFormSubmit"]:hover,
-    div[data-testid="stButton"] button[kind="primary"]:hover,
-    div[data-testid="stButton"] button[kind="primaryFormSubmit"]:hover,
-    div[data-testid="stFormSubmitButton"] button:hover,
-    button[kind="primary"]:hover,
-    button[kind="primaryFormSubmit"]:hover,
-    button[data-testid="stBaseButton-primary"]:hover,
-    button[data-testid="stBaseButton-primaryFormSubmit"]:hover {
-        background-color: #1565a0 !important;
-        border-color: #1565a0 !important;
-    }
-    .metric-card { background-color: #f0f2f6; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-    .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
-    .metric-label { font-size: 0.85rem; color: #555; }
-    .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
-    footer {visibility: hidden;}
-
-    .footer-artifix {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: #f8f9fa;
-        padding: 12px;
-        text-align: center;
-        font-size: 12px;
-        color: #666;
-        border-top: 1px solid #ddd;
-        z-index: 999;
-    }
-
-    .main .block-container {
-        padding-bottom: 80px !important;
-    }
-
-    .lang-selector {
-        padding: 8px 0;
-        margin-bottom: 15px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# --- TENTATIVO IMPORT LIBRERIE ---
-try:
-    import ifcopenshell
-    IFC_AVAILABLE = True
-except ImportError:
-    IFC_AVAILABLE = False
-
-try:
-    import geopandas as gpd
-    GEOPANDAS_AVAILABLE = True
-except ImportError:
-    GEOPANDAS_AVAILABLE = False
-
-try:
-    from PyPDF2 import PdfReader
-    PDF_AVAILABLE = True
-except ImportError:
-    PDF_AVAILABLE = False
-
-try:
-    import fitz
-    FITZ_AVAILABLE = True
-except ImportError:
-    FITZ_AVAILABLE = False
-
-try:
-    import docx
-    DOCX_AVAILABLE = True
-except ImportError:
-    DOCX_AVAILABLE = False
-
-try:
-    import openpyxl
-    XLSX_AVAILABLE = True
-except ImportError:
-    XLSX_AVAILABLE = False
-
-try:
-    import cairosvg
-    SVG_AVAILABLE = True
-except ImportError:
-    SVG_AVAILABLE = False
-
-# --- STATO PAGINE E COOKIE ---
-if 'page_attuale' not in st.session_state:
-    st.session_state.page_attuale = "Dashboard"
-
-if 'cookie_consent' not in st.session_state:
-    if COOKIE_LIB:
-        st.session_state.cookie_consent = cookie_controller.get('cookie_consent')
-    else:
-        st.session_state.cookie_consent = None
-
-# --- CONFIGURAZIONE PAGINA ---
-if CUBO_URL:
-    st.set_page_config(
-        page_title=t("app_title"),
-        page_icon=CUBO_URL,
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-else:
-    st.set_page_config(
-        page_title=t("app_title"),
-        page_icon="📐",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-
-# --- DEFINIZIONE VARIABILI ---
-SUPPORTED_FORMATS = {
-    "CAD 2D": {"extensions": [".dxf"], "icon": "📐", "description": "File CAD (DXF)"},
-    "CAD 3D & Mesh": {"extensions": [".stl", ".obj", ".ply", ".glb", ".gltf", ".fbx", ".3mf", ".dae", ".wrl", ".off", ".u3d"], "icon": "🧊", "description": "Mesh 3D (STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, U3D)"},
-    "BIM": {"extensions": [".ifc"], "icon": "🏗️", "description": "Building Information Modeling (IFC)"},
-    "Geospaziale": {"extensions": [".shp", ".geojson", ".kml", ".gpx"], "icon": "🌍", "description": "Dati geografici e GIS"},
-    "Vettoriale": {"extensions": [".svg"], "icon": "✏️", "description": "Grafica vettoriale (SVG)"},
-    "Documenti": {"extensions": [".pdf", ".docx", ".xlsx"], "icon": "📄", "description": "Documenti, fogli di calcolo"}
-}
-
-ALL_EXTENSIONS = []
-for info in SUPPORTED_FORMATS.values():
-    ALL_EXTENSIONS.extend(info["extensions"])
-
-CONVERSION_MATRIX = {
-    'stl': ['obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'obj': ['stl', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'ply': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'glb': ['stl', 'obj', 'ply', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'gltf': ['stl', 'obj', 'ply', 'glb', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'fbx': ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'dae': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
-    'wrl': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'off', 'dxf', 'pdf'],
-    'off': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'dxf', 'pdf'],
-    'dxf': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'pdf'],
-}
-
-FORMAT_NAMES = {
-    'stl': 'STL (.stl)',
-    'obj': 'OBJ (.obj)',
-    'ply': 'PLY (.ply)',
-    'glb': 'GLB (.glb)',
-    'gltf': 'GLTF (.gltf)',
-    'fbx': 'FBX (.fbx)',
-    '3mf': '3MF (.3mf)',
-    'dae': 'DAE (.dae)',
-    'wrl': 'WRL (.wrl)',
-    'off': 'OFF (.off)',
-    'u3d': 'U3D (.u3d)',
-    'dxf': 'DXF (.dxf)',
-    'pdf': '3D PDF (.pdf)'
-}
-
-def detect_file_type(file_extension):
-    file_extension = file_extension.lower().replace('.', '')
-    for category, info in SUPPORTED_FORMATS.items():
-        for ext in info["extensions"]:
-            if ext.replace('.', '') == file_extension:
-                return category, info["icon"]
-    return "Sconosciuto", "❓"
-
-def load_3d_file(file_bytes, file_extension):
-    try:
-        file_extension = file_extension.lower().replace('.', '')
-        format_map = {
-            'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'fbx':'fbx', '3mf':'3mf', 'dae':'dae', 'wrl':'wrl', 'off':'off', 'u3d':'u3d'
-        }
-        file_type = format_map.get(file_extension, file_extension)
+TRANSLATIONS = {
+    "it": {
+        # --- GENERALE ---
+        "app_title": "ArtiFix - Riparazione CAD/CAM Universale",
+        "lang_flag": "🇮🇹 Italiano",
+        "sidebar_navigation": "Navigazione",
+        "sidebar_lang_select": "Lingua / Language",
+        "welcome": "Benvenuto su ArtiFix",
         
-        if file_extension in ['obj', 'dae']:
-            for method in [file_type, None]:
-                try:
-                    mesh = trimesh.load(io.BytesIO(file_bytes), file_type=method, force='mesh') if method else trimesh.load(io.BytesIO(file_bytes))
-                    if mesh is not None and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                        return mesh
-                except:
-                    continue
-            return None
-        else:
-            mesh = trimesh.load(io.BytesIO(file_bytes), file_type=file_type)
-            if isinstance(mesh, trimesh.Scene):
-                if len(mesh.geometry) > 0:
-                    mesh = trimesh.util.concatenate(list(mesh.geometry.values()))
-                else:
-                    return None
-            if mesh is not None and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                return mesh
-            return None
+        # --- MENU SIDEBAR ---
+        "nav_dashboard": "Dashboard",
+        "nav_repair": "Ripara File",
+        "nav_viewer": "Viewer 3D",
+        "nav_convert": "Converti Formati",
+        "nav_project": "Progetto ArtiFix",
+        "nav_sponsor": "Diventa Sponsor",
+        "nav_privacy": "🔒 Privacy Policy",
+        "nav_cookie": "🍪 Cookie Policy",
+        "nav_donate": "💙 Dona con PayPal",
+        "nav_become_sponsor": "🤝 Diventa Sponsor",
+        
+        # --- COOKIE BANNER ---
+        "cookie_title": "🍪 Cookie Policy",
+        "cookie_text": "Noi e terze parti selezionate utilizziamo cookie o tecnologie simili per finalità tecniche e, con il tuo consenso, anche per altre finalità come specificato nella cookie policy. Il rifiuto del consenso può rendere non disponibili le relative funzioni. Usa il pulsante \"Accetta tutti i cookie\" per acconsentire. Usa il pulsante \"Accetta solo i cookie necessari\" per continuare senza accettare.",
+        "cookie_check_privacy": "Consulta la Privacy Policy tramite il pulsante apposito",
+        "cookie_accept_necessary": "Accetta solo i cookie necessari",
+        "cookie_accept_all": "Accetta tutti i cookie",
+        
+        # --- DASHBOARD ---
+        "dash_header": "📊 Dashboard",
+        "dash_metric_repaired": "File Riparati",
+        "dash_metric_conversions": "Conversioni",
+        "dash_metric_formats": "Formati",
+        "dash_metric_online": "Online",
+        "dash_supported_formats": "📁 Formati Supportati (50+ estensioni)",
+        "dash_info_select": "👈 Seleziona una funzionalità dal menu.",
+        
+        # --- RIPARA FILE ---
+        "repair_header": "🛠️ Centro Riparazione File",
+        "repair_upload": "Seleziona un file",
+        "repair_status_analyzing": "Analisi del file in corso... (30%)",
+        "repair_status_verifying": "Verifica del risultato... (60%)",
+        "repair_status_completing": "Completamento... (100%)",
+        "repair_status_error": "Errore durante l'analisi",
+        "repair_details": "Dettagli",
+        "repair_button_repair": "🔧 Ripara",
+        "repair_button_download": "📥 Scarica",
+        "repair_success": "✅ Riparato!",
+        
+        # --- VIEWER 3D ---
+        "viewer_header": "🖥️ Viewer 3D",
+        "viewer_upload": "Carica modello 3D",
+        "viewer_status_loading": "Caricamento del modello... (30%)",
+        "viewer_status_processing": "Elaborazione vertici e facce... (60%)",
+        "viewer_status_building": "Costruzione della vista 3D... (100%)",
+        "viewer_success": "✅ {vertices} vertici, {faces} facce",
+        "viewer_error_processing": "❌ Errore nel processamento della mesh.",
+        "viewer_warning_no_model": "⚠️ Impossibile caricare il modello.",
+        "viewer_error_generic": "❌ Errore: {error}",
+        "viewer_legend": "🔄 Trascina per ruotare | 🖱️ Tasto destro per spostare | 🖱️ Rotella per zoom",
+        
+        # --- CONVERTI FORMATI ---
+        "convert_header": "🔄 Conversione Formati Universale",
+        "convert_subtitle": "Converti file tra **tutti i formati** supportati con **tutte le combinazioni** possibili.",
+        "convert_expander_note": "ℹ️ Nota sui formati proprietari e a pagamento",
+        "convert_note_text": """**ArtiFix non può leggere direttamente i formati proprietari e a pagamento** (come DWG, SKP, RVT, STEP, IGES, ecc.) perché richiedono librerie commerciali e server dedicati.
+
+**Come risolvere?** Se il tuo file è in un formato proprietario, ti consigliamo di:
+1. Aprire il file nel software con cui è stato creato (es. AutoCAD, SketchUp, Revit).
+2. Utilizzare la funzione **"Esporta"** o **"Salva con nome"** per convertirlo in **DAE (Collada)** o **OBJ**.
+3. Caricare il file DAE o OBJ su ArtiFix e convertirlo qui in qualsiasi altro formato mesh (STL, PLY, GLB, GLTF, ecc.) o 3D PDF.
+
+*DAE (Collada) e OBJ sono formati universali e gratuiti che possono essere esportati dalla quasi totalità dei software CAD 3D presenti sul mercato.*""",
+        "convert_expander_matrix": "📋 Matrice delle conversioni disponibili",
+        "convert_caption_matrix": "✅ = Conversione supportata | ❌ = Conversione non supportata",
+        "convert_upload": "Carica un file da convertire",
+        "convert_upload_hint": "💡 Clicca per cercare il file sul tuo computer, oppure trascina e rilascia il file qui.",
+        "convert_target_format": "Formato di destinazione",
+        "convert_button_convert": "🔄 Converti in {format}",
+        "convert_status_loading": "Caricamento e analisi del modello... (20%)",
+        "convert_status_converting": "Conversione in corso... (70%)",
+        "convert_status_saving": "Salvataggio del file... (100%)",
+        "convert_success": "✅ Conversione in {format} completata!",
+        "convert_info_ready": "📥 Il file è pronto! Stiamo preparando il download, attendi qualche secondo...",
+        "convert_button_download": "📥 Scarica .{format}",
+        "convert_error": "❌ Conversione in {format} fallita. Riprova con un altro formato.",
+        "convert_error_load": "❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.",
+        "convert_button_preview": "🖥️ Mostra anteprima interattiva (ruota con il mouse)",
+        "convert_info_preview": "💡 Ruota il modello a 360° con il mouse o il touchpad",
+        "convert_warning_format": "⚠️ Il formato **.{format}** non può essere convertito in altri formati.",
+        "convert_info_formats": "💡 I formati convertibili sono: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF**.",
+        "convert_warning_no_target": "⚠️ Nessun formato di destinazione disponibile per questo file.",
+        "convert_warning_no_preview": "⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.",
+        "convert_file_type": "Tipo: {type} | Estensione: .{ext}",
+        
+        # --- PROGETTO ARTIFIX ---
+        "project_header": "🚀 Progetto ArtiFix",
+        "project_text": """**ArtiFix** è una piattaforma professionale per la riparazione, conversione e visualizzazione di file CAD/CAM.
+Questo progetto è in continua evoluzione. Per richieste di informazioni, collaborazioni o assistenza tecnica, contattaci.""",
+        "project_contact": "📧 Contattaci",
+        "project_contact_text": "Invia una richiesta a info@artifix.it",
+        "project_form_name": "Il tuo nome",
+        "project_form_email": "La tua email",
+        "project_form_message": "Messaggio",
+        "project_form_submit": "Invia",
+        "project_success": "Email inviata con successo!",
+        "project_error": "Errore: {error}",
+        "project_warning": "Compila tutti i campi prima di inviare.",
+        
+        # --- DIVENTA SPONSOR ---
+        "sponsor_header": "🤝 Diventa Sponsor di ArtiFix",
+        "sponsor_intro": """**ArtiFix** è un progetto indipendente che offre strumenti gratuiti per la riparazione, conversione e visualizzazione di file CAD/CAM.
+
+Ogni giorno centinaia di professionisti, studenti e appassionati utilizzano i servizi di ArtiFix. Se anche tu credi in questo progetto e vuoi sostenerlo, puoi diventare **sponsor**.""",
+        "sponsor_format_title": "📐 Formato banner richiesto",
+        "sponsor_format_text": """- **Dimensioni:** 300 × 100 px
+- **Formato file:** PNG (preferito) o JPG
+- **Sfondo:** trasparente o neutro
+- **Peso massimo:** 200 KB
+- **Contenuto:** logo aziendale + eventuale payoff breve""",
+        "sponsor_how_title": "💶 Come funziona",
+        "sponsor_how_text": """1. Effettui una **donazione liberale** tramite il pulsante PayPal qui sotto.
+2. Compili il form con i dati del tuo brand (nome, sito, email, logo).
+3. Entro 24-48h il tuo banner viene pubblicato nella banda laterale di ArtiFix per **30 giorni**.
+4. Al termine dei 30 giorni, se desideri rinnovare, puoi donare nuovamente.""",
+        "sponsor_donate_button": "💙 Dona con PayPal",
+        "sponsor_form_title": "📤 Invia la tua richiesta",
+        "sponsor_form_caption": "Dopo aver effettuato la donazione, compila questo form con i dati del tuo brand.",
+        "sponsor_form_brand": "Nome brand/azienda *",
+        "sponsor_form_email": "Email di riferimento *",
+        "sponsor_form_site": "Sito web (URL completo, es. https://www.miosito.it) *",
+        "sponsor_form_logo": "URL pubblico del logo (Postimages, Imgur, ecc.) *",
+        "sponsor_form_message": "Messaggio opzionale (breve descrizione attività)",
+        "sponsor_form_submit": "Invia richiesta sponsor",
+        "sponsor_form_success": "✅ Richiesta inviata! Ti contatteremo entro 48h.",
+        "sponsor_form_error": "Errore invio: {error}",
+        "sponsor_form_warning": "Compila tutti i campi obbligatori (*).",
+        "sponsor_form_info": "💡 Dopo la donazione, invia la richiesta tramite questo form. Il tuo banner sarà attivo entro 24-48h.",
+        
+        # --- PRIVACY POLICY ---
+        "privacy_header": "🔒 Privacy Policy",
+        "privacy_subtitle": "**ArtiFix - Riparazione File CAD/CAM Universale**",
+        "privacy_updated": "Ultimo aggiornamento: 9 settembre 2026",
+        "privacy_back": "← Torna alla Dashboard",
+        "privacy_content": """La presente Privacy Policy è resa ai sensi dell'Art. 13 del Regolamento (UE) 2016/679 (GDPR), relativo alla protezione delle persone fisiche con riguardo al trattamento dei dati personali.
+
+### 1. Titolare del Trattamento
+Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
+
+### 2. Dati raccolti e finalità
+**Dati forniti volontariamente dall'utente**: Attraverso il form "Contattaci" vengono raccolti nome, indirizzo email e messaggio, al fine di rispondere alle richieste pervenute.
+**Dati di navigazione**: Il sito utilizza cookie tecnici (per il funzionamento) e cookie di analytics (facoltativi) come descritto nella Cookie Policy.
+
+### 3. Base giuridica
+Il trattamento si basa sul consenso dell'utente (Art. 6, par. 1, lett. a GDPR) e sull'esecuzione di misure precontrattuali richieste dall'utente (Art. 6, par. 1, lett. b GDPR).
+
+### 4. Diritti dell'interessato
+Ai sensi degli Artt. 15-22 del GDPR, l'utente ha il diritto di:
+*   Accesso, rettifica e cancellazione dei propri dati.
+*   Limitazione e opposizione al trattamento.
+*   Portabilità dei dati.
+*   Revoca del consenso in qualsiasi momento.
+
+Per esercitare tali diritti, contattare il Titolare all'indirizzo: **info@artifix.it**. È inoltre possibile proporre reclamo al Garante per la Protezione dei Dati Personali.
+
+### 5. Durata della conservazione
+I dati raccolti tramite il form di contatto vengono conservati per il tempo strettamente necessario a rispondere alla richiesta e, comunque, per un periodo massimo di 24 mesi.
+
+### 6. Comunicazione e diffusione
+I dati non saranno ceduti a terzi per finalità di marketing o venduti. Saranno trattati esclusivamente dal Titolare.""",
+        
+        # --- COOKIE POLICY ---
+        "cookie_policy_header": "🍪 Cookie Policy",
+        "cookie_policy_subtitle": "**ArtiFix - Riparazione File CAD/CAM Universale**",
+        "cookie_policy_updated": "Ultimo aggiornamento: 9 settembre 2026",
+        "cookie_policy_back": "← Torna alla Dashboard",
+        "cookie_policy_content": """La presente Cookie Policy è resa ai sensi dell'art. 13 del Regolamento (UE) 2016/679 (GDPR) e del Provvedimento del Garante per la Protezione dei Dati Personali del 10 giugno 2021.
+
+### 1. Titolare del Trattamento
+Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
+
+### 2. Cosa sono i Cookie
+I cookie sono piccoli file di testo che i siti web inviano e registrano sul computer o dispositivo mobile dell'utente, per essere poi ritrasmessi agli stessi siti alle visite successive. Servono a ricordare le azioni e le preferenze dell'utente.
+
+### 3. Tipologie di Cookie utilizzate
+Questo sito utilizza esclusivamente **Cookie Tecnici (o strettamente necessari)**. Questi cookie sono essenziali per il funzionamento del sito e non richiedono il consenso preventivo dell'utente.
+
+*   **Cookie di Sessione**: Vengono eliminati automaticamente alla chiusura del browser. Sono utilizzati per mantenere attiva la sessione di navigazione e ricordare le scelte effettuate (es. il consenso ai cookie).
+*   **Cookie di Funzionalità**: Permettono di ricordare le scelte dell'utente per migliorare l'esperienza di navigazione, come ad esempio il limite di upload impostato (5GB).
+
+**Cookie di Terze Parti / Profilazione**: Questo sito **non utilizza** cookie di profilazione, di marketing o di terze parti (come Google Analytics o pixel di social media) per inviare pubblicità personalizzata.
+
+### 4. Gestione del Consenso
+Al primo accesso, l'utente può scegliere se accettare o rifiutare i cookie tramite l'apposito banner. La scelta viene registrata e memorizzata nel browser. È possibile modificare la propria scelta in qualsiasi momento cancellando i dati di navigazione del browser o reimpostando la pagina.
+
+### 5. Come disabilitare i Cookie tramite il Browser
+L'utente può gestire le preferenze sui cookie tramite le impostazioni del proprio browser. La disabilitazione di alcuni cookie potrebbe compromettere il corretto funzionamento di alcune sezioni del sito.
+
+*   **Google Chrome**: [Istruzioni](https://support.google.com/chrome/answer/95647)
+*   **Mozilla Firefox**: [Istruzioni](https://support.mozilla.org/kb/block-websites-storing-cookies)
+*   **Microsoft Edge**: [Istruzioni](https://support.microsoft.com/microsoft-edge/delete-cookies-in-microsoft-edge)
+*   **Safari**: [Istruzioni](https://support.apple.com/guide/safari/manage-cookies)
+
+### 6. Diritti dell'Interessato
+Ai sensi degli artt. 15-22 del GDPR, l'utente ha il diritto di accesso, rettifica, cancellazione, limitazione, opposizione e portabilità dei propri dati personali. Per esercitare tali diritti, contattare l'email **info@artifix.it**. È inoltre possibile proporre reclamo all'Autorità di controllo (Garante per la Protezione dei Dati Personali - [www.garanteprivacy.it](http://www.garanteprivacy.it)).
+
+### 7. Aggiornamenti
+La presente Cookie Policy può essere soggetta ad aggiornamenti. La versione aggiornata sarà sempre disponibile su questa pagina.""",
+        
+        # --- FOOTER ---
+        "footer": "© 2026 ArtiFix | Tutti i diritti riservati",
+    },
+    
+    "en": {
+        # --- GENERAL ---
+        "app_title": "ArtiFix - Universal CAD/CAM Repair",
+        "lang_flag": "🇬🇧 English",
+        "sidebar_navigation": "Navigation",
+        "sidebar_lang_select": "Lingua / Language",
+        "welcome": "Welcome to ArtiFix",
+        
+        # --- SIDEBAR MENU ---
+        "nav_dashboard": "Dashboard",
+        "nav_repair": "Repair File",
+        "nav_viewer": "3D Viewer",
+        "nav_convert": "Convert Formats",
+        "nav_project": "ArtiFix Project",
+        "nav_sponsor": "Become a Sponsor",
+        "nav_privacy": "🔒 Privacy Policy",
+        "nav_cookie": "🍪 Cookie Policy",
+        "nav_donate": "💙 Donate with PayPal",
+        "nav_become_sponsor": "🤝 Become a Sponsor",
+        
+        # --- COOKIE BANNER ---
+        "cookie_title": "🍪 Cookie Policy",
+        "cookie_text": "We and selected third parties use cookies or similar technologies for technical purposes and, with your consent, also for other purposes as specified in the cookie policy. Denying consent may make related features unavailable. Use the \"Accept all cookies\" button to consent. Use the \"Accept only necessary cookies\" button to continue without accepting.",
+        "cookie_check_privacy": "View the Privacy Policy using the dedicated button",
+        "cookie_accept_necessary": "Accept only necessary cookies",
+        "cookie_accept_all": "Accept all cookies",
+        
+        # --- DASHBOARD ---
+        "dash_header": "📊 Dashboard",
+        "dash_metric_repaired": "Repaired Files",
+        "dash_metric_conversions": "Conversions",
+        "dash_metric_formats": "Formats",
+        "dash_metric_online": "Online",
+        "dash_supported_formats": "📁 Supported Formats (50+ extensions)",
+        "dash_info_select": "👈 Select a feature from the menu.",
+        
+        # --- REPAIR FILE ---
+        "repair_header": "🛠️ File Repair Center",
+        "repair_upload": "Select a file",
+        "repair_status_analyzing": "Analyzing file... (30%)",
+        "repair_status_verifying": "Verifying result... (60%)",
+        "repair_status_completing": "Completing... (100%)",
+        "repair_status_error": "Error during analysis",
+        "repair_details": "Details",
+        "repair_button_repair": "🔧 Repair",
+        "repair_button_download": "📥 Download",
+        "repair_success": "✅ Repaired!",
+        
+        # --- VIEWER 3D ---
+        "viewer_header": "🖥️ 3D Viewer",
+        "viewer_upload": "Upload 3D model",
+        "viewer_status_loading": "Loading model... (30%)",
+        "viewer_status_processing": "Processing vertices and faces... (60%)",
+        "viewer_status_building": "Building 3D view... (100%)",
+        "viewer_success": "✅ {vertices} vertices, {faces} faces",
+        "viewer_error_processing": "❌ Error processing mesh.",
+        "viewer_warning_no_model": "⚠️ Unable to load model.",
+        "viewer_error_generic": "❌ Error: {error}",
+        "viewer_legend": "🔄 Drag to rotate | 🖱️ Right-click to pan | 🖱️ Scroll to zoom",
+        
+        # --- CONVERT FORMATS ---
+        "convert_header": "🔄 Universal Format Conversion",
+        "convert_subtitle": "Convert files between **all supported formats** with **all possible combinations**.",
+        "convert_expander_note": "ℹ️ Note on proprietary and paid formats",
+        "convert_note_text": """**ArtiFix cannot directly read proprietary and paid formats** (such as DWG, SKP, RVT, STEP, IGES, etc.) because they require commercial libraries and dedicated servers.
+
+**How to solve?** If your file is in a proprietary format, we recommend:
+1. Open the file in the software it was created with (e.g. AutoCAD, SketchUp, Revit).
+2. Use the **"Export"** or **"Save As"** function to convert it to **DAE (Collada)** or **OBJ**.
+3. Upload the DAE or OBJ file to ArtiFix and convert it here to any other mesh format (STL, PLY, GLB, GLTF, etc.) or 3D PDF.
+
+*DAE (Collada) and OBJ are universal, free formats that can be exported from almost all 3D CAD software on the market.*""",
+        "convert_expander_matrix": "📋 Available conversion matrix",
+        "convert_caption_matrix": "✅ = Conversion supported | ❌ = Conversion not supported",
+        "convert_upload": "Upload a file to convert",
+        "convert_upload_hint": "💡 Click to browse your computer, or drag and drop the file here.",
+        "convert_target_format": "Target format",
+        "convert_button_convert": "🔄 Convert to {format}",
+        "convert_status_loading": "Loading and analyzing model... (20%)",
+        "convert_status_converting": "Converting... (70%)",
+        "convert_status_saving": "Saving file... (100%)",
+        "convert_success": "✅ Conversion to {format} completed!",
+        "convert_info_ready": "📥 The file is ready! Preparing download, please wait...",
+        "convert_button_download": "📥 Download .{format}",
+        "convert_error": "❌ Conversion to {format} failed. Try another format.",
+        "convert_error_load": "❌ Unable to load model. Make sure the file is a valid 3D model.",
+        "convert_button_preview": "🖥️ Show interactive preview (rotate with mouse)",
+        "convert_info_preview": "💡 Rotate the model 360° with mouse or touchpad",
+        "convert_warning_format": "⚠️ The **.{format}** format cannot be converted to other formats.",
+        "convert_info_formats": "💡 Convertible formats are: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF**.",
+        "convert_warning_no_target": "⚠️ No target format available for this file.",
+        "convert_warning_no_preview": "⚠️ Unable to load model for preview. Make sure the file is a valid 3D model.",
+        "convert_file_type": "Type: {type} | Extension: .{ext}",
+        
+        # --- ARTIFIX PROJECT ---
+        "project_header": "🚀 ArtiFix Project",
+        "project_text": """**ArtiFix** is a professional platform for repairing, converting, and visualizing CAD/CAM files.
+This project is constantly evolving. For information, collaborations, or technical support, contact us.""",
+        "project_contact": "📧 Contact Us",
+        "project_contact_text": "Send a request to info@artifix.it",
+        "project_form_name": "Your name",
+        "project_form_email": "Your email",
+        "project_form_message": "Message",
+        "project_form_submit": "Send",
+        "project_success": "Email sent successfully!",
+        "project_error": "Error: {error}",
+        "project_warning": "Fill in all fields before sending.",
+        
+        # --- BECOME A SPONSOR ---
+        "sponsor_header": "🤝 Become an ArtiFix Sponsor",
+        "sponsor_intro": """**ArtiFix** is an independent project offering free tools for repairing, converting, and visualizing CAD/CAM files.
+
+Every day hundreds of professionals, students, and enthusiasts use ArtiFix services. If you also believe in this project and want to support it, you can become a **sponsor**.""",
+        "sponsor_format_title": "📐 Required banner format",
+        "sponsor_format_text": """- **Dimensions:** 300 × 100 px
+- **File format:** PNG (preferred) or JPG
+- **Background:** transparent or neutral
+- **Maximum size:** 200 KB
+- **Content:** company logo + optional short tagline""",
+        "sponsor_how_title": "💶 How it works",
+        "sponsor_how_text": """1. You make a **free donation** via the PayPal button below.
+2. You fill out the form with your brand details (name, website, email, logo).
+3. Within 24-48h your banner is published in the ArtiFix sidebar for **30 days**.
+4. After 30 days, if you wish to renew, you can donate again.""",
+        "sponsor_donate_button": "💙 Donate with PayPal",
+        "sponsor_form_title": "📤 Send your request",
+        "sponsor_form_caption": "After making the donation, fill out this form with your brand details.",
+        "sponsor_form_brand": "Brand/company name *",
+        "sponsor_form_email": "Contact email *",
+        "sponsor_form_site": "Website (full URL, e.g. https://www.mysite.com) *",
+        "sponsor_form_logo": "Public logo URL (Postimages, Imgur, etc.) *",
+        "sponsor_form_message": "Optional message (short business description)",
+        "sponsor_form_submit": "Send sponsor request",
+        "sponsor_form_success": "✅ Request sent! We will contact you within 48h.",
+        "sponsor_form_error": "Send error: {error}",
+        "sponsor_form_warning": "Fill in all required fields (*).",
+        "sponsor_form_info": "💡 After donating, send the request via this form. Your banner will be active within 24-48h.",
+        
+        # --- PRIVACY POLICY ---
+        "privacy_header": "🔒 Privacy Policy",
+        "privacy_subtitle": "**ArtiFix - Universal CAD/CAM Repair**",
+        "privacy_updated": "Last updated: September 9, 2026",
+        "privacy_back": "← Back to Dashboard",
+        "privacy_content": """This Privacy Policy is provided pursuant to Art. 13 of Regulation (EU) 2016/679 (GDPR), concerning the protection of natural persons with regard to the processing of personal data.
+
+### 1. Data Controller
+The Data Controller is **ArtiFix**, based in Italy. For any request, you can contact the Controller at: **info@artifix.it**.
+
+### 2. Data collected and purposes
+**Data voluntarily provided by the user**: Through the "Contact Us" form, name, email address, and message are collected to respond to requests received.
+**Navigation data**: The site uses technical cookies (for operation) and analytics cookies (optional) as described in the Cookie Policy.
+
+### 3. Legal basis
+Processing is based on user consent (Art. 6, para. 1, lett. a GDPR) and on the performance of pre-contractual measures requested by the user (Art. 6, para. 1, lett. b GDPR).
+
+### 4. Data subject rights
+Pursuant to Arts. 15-22 of the GDPR, the user has the right to:
+*   Access, rectification, and deletion of their data.
+*   Restriction and objection to processing.
+*   Data portability.
+*   Withdrawal of consent at any time.
+
+To exercise these rights, contact the Controller at: **info@artifix.it**. You may also lodge a complaint with the Italian Data Protection Authority.
+
+### 5. Retention period
+Data collected via the contact form is retained for the time strictly necessary to respond to the request and, in any case, for a maximum of 24 months.
+
+### 6. Communication and dissemination
+Data will not be transferred to third parties for marketing purposes or sold. They will be processed exclusively by the Controller.""",
+        
+        # --- COOKIE POLICY ---
+        "cookie_policy_header": "🍪 Cookie Policy",
+        "cookie_policy_subtitle": "**ArtiFix - Universal CAD/CAM Repair**",
+        "cookie_policy_updated": "Last updated: September 9, 2026",
+        "cookie_policy_back": "← Back to Dashboard",
+        "cookie_policy_content": """This Cookie Policy is provided pursuant to Art. 13 of Regulation (EU) 2016/679 (GDPR) and the Italian Data Protection Authority Provision of June 10, 2021.
+
+### 1. Data Controller
+The Data Controller is **ArtiFix**, based in Italy. For any request, you can contact the Controller at: **info@artifix.it**.
+
+### 2. What are Cookies
+Cookies are small text files that websites send and record on the user's computer or mobile device, to be retransmitted to the same sites on subsequent visits. They are used to remember the user's actions and preferences.
+
+### 3. Types of Cookies used
+This site uses exclusively **Technical Cookies (or strictly necessary)**. These cookies are essential for the operation of the site and do not require the user's prior consent.
+
+*   **Session Cookies**: Automatically deleted when the browser is closed. They are used to keep the browsing session active and remember choices made (e.g., cookie consent).
+*   **Functional Cookies**: Allow remembering user choices to improve the browsing experience, such as the upload limit set (5GB).
+
+**Third-party / Profiling Cookies**: This site **does not use** profiling, marketing, or third-party cookies (such as Google Analytics or social media pixels) to send personalized advertising.
+
+### 4. Consent Management
+On first access, the user can choose whether to accept or reject cookies via the appropriate banner. The choice is recorded and stored in the browser. You can change your choice at any time by clearing your browser's browsing data or reloading the page.
+
+### 5. How to disable Cookies via Browser
+Users can manage cookie preferences through their browser settings. Disabling some cookies may compromise the correct functioning of some sections of the site.
+
+*   **Google Chrome**: [Instructions](https://support.google.com/chrome/answer/95647)
+*   **Mozilla Firefox**: [Instructions](https://support.mozilla.org/kb/block-websites-storing-cookies)
+*   **Microsoft Edge**: [Instructions](https://support.microsoft.com/microsoft-edge/delete-cookies-in-microsoft-edge)
+*   **Safari**: [Instructions](https://support.apple.com/guide/safari/manage-cookies)
+
+### 6. Data Subject Rights
+Pursuant to Arts. 15-22 of the GDPR, the user has the right to access, rectify, delete, restrict, object to, and port their personal data. To exercise these rights, contact **info@artifix.it**. You may also lodge a complaint with the supervisory authority (Italian Data Protection Authority - [www.garanteprivacy.it](http://www.garanteprivacy.it)).
+
+### 7. Updates
+This Cookie Policy may be subject to updates. The updated version will always be available on this page.""",
+        
+        # --- FOOTER ---
+        "footer": "© 2026 ArtiFix | All rights reserved",
+    }
+}
+
+# Funzione helper per recuperare una traduzione
+def get_text(key, lang="it", **kwargs):
+    lang = lang if lang in TRANSLATIONS else "it"
+    text = TRANSLATIONS[lang].get(key, key)
+    if kwargs:
+        try:
+            text = text.format(**kwargs)
+        except (KeyError, IndexError):
+            pass
+    return text
+
+# Rilevamento lingua browser
+def detect_browser_language():
+    try:
+        import streamlit as st
+        browser_lang = st.context.headers.get('Accept-Language', 'it')
+        if browser_lang:
+            primary_lang = browser_lang.split(',')[0].split(';')[0].split('-')[0].lower()
+            if primary_lang == 'en':
+                return 'en'
+        return 'it'
     except Exception:
-        return None
-
-def convert_mesh(mesh, target_format):
-    try:
-        target_format = target_format.lower().replace('.', '')
-        
-        if target_format == 'pdf':
-            import matplotlib
-            matplotlib.use('Agg')
-            import matplotlib.pyplot as plt
-            from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-            
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
-            
-            tri_arrays = mesh.vertices[mesh.faces]
-            poly3d = Poly3DCollection(tri_arrays, alpha=0.1, edgecolor='k', facecolor='#1f77b4')
-            ax.add_collection3d(poly3d)
-            
-            scale = mesh.vertices.flatten()
-            ax.auto_scale_xyz(scale, scale, scale)
-            
-            plt.savefig("converted_3d.pdf", format='pdf', bbox_inches='tight')
-            plt.close()
-            
-            with open("converted_3d.pdf", "rb") as f:
-                return f.read()
-        
-        elif target_format == 'stl':
-            return trimesh.exchange.stl.export_stl(mesh)
-        elif target_format == 'obj':
-            return trimesh.exchange.obj.export_obj(mesh)
-        elif target_format == 'ply':
-            return trimesh.exchange.ply.export_ply(mesh)
-        elif target_format == 'glb':
-            return trimesh.exchange.gltf.export_glb(mesh)
-        elif target_format == 'gltf':
-            return trimesh.exchange.gltf.export_gltf(mesh)
-        elif target_format == 'fbx':
-            return trimesh.exchange.fbx.export_fbx(mesh)
-        elif target_format == '3mf':
-            return trimesh.exchange.threeMF.export_3mf(mesh)
-        elif target_format == 'dae':
-            return trimesh.exchange.dae.export_dae(mesh)
-        elif target_format == 'wrl':
-            return trimesh.exchange.vrml.export_vrml(mesh)
-        elif target_format == 'off':
-            return trimesh.exchange.off.export_off(mesh)
-        elif target_format == 'dxf':
-            if mesh.vertices is not None and len(mesh.vertices) > 0:
-                vertices_2d = mesh.vertices[:, :2]
-                dxf_doc = ezdxf.new()
-                msp = dxf_doc.modelspace()
-                for face in mesh.faces:
-                    for i in range(len(face)):
-                        v1 = vertices_2d[face[i]]
-                        v2 = vertices_2d[face[(i + 1) % len(face)]]
-                        msp.add_line(v1, v2)
-                return dxf_doc.write()
-            return None
-        else:
-            return None
-    except Exception:
-        return None
-
-def process_file(file_bytes, file_name):
-    file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
-    file_type, icon = detect_file_type(file_extension)
-    result = {"success": False, "message": "", "type": file_type, "icon": icon, "info": {}}
-    
-    try:
-        if file_extension == 'pdf':
-            if PDF_AVAILABLE:
-                pdf_reader = PdfReader(io.BytesIO(file_bytes))
-                result["success"] = True
-                result["message"] = f"✅ PDF: {len(pdf_reader.pages)} pagine"
-                result["info"] = {"pages": len(pdf_reader.pages)}
-            else:
-                result["message"] = "Libreria PDF non disponibile."
-        
-        elif file_extension == 'dxf':
-            dxf_doc = ezdxf.read(io.BytesIO(file_bytes))
-            entities = len(dxf_doc.entities)
-            layers = set(e.dxf.layer for e in dxf_doc.entities if hasattr(e.dxf, 'layer'))
-            result["success"] = True
-            result["message"] = f"✅ DXF: {entities} entità, {len(layers)} layer"
-            result["info"] = {"entities": entities, "layers": list(layers)[:10]}
-        
-        elif file_extension in ['stl','obj','ply','glb','gltf','fbx','3mf','dae','wrl','off','u3d']:
-            mesh = load_3d_file(file_bytes, file_extension)
-            if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                result["success"] = True
-                result["message"] = f"✅ Mesh: {len(mesh.vertices)} vertici, {len(mesh.faces)} facce"
-                result["info"] = {"vertices": len(mesh.vertices), "faces": len(mesh.faces), "mesh": mesh}
-            else:
-                result["message"] = "⚠️ File 3D non valido o formato non supportato."
-        
-        elif file_extension == 'ifc' and IFC_AVAILABLE:
-            with tempfile.NamedTemporaryFile(suffix='.ifc', delete=False) as tmp_ifc:
-                tmp_ifc.write(file_bytes)
-                tmp_ifc_path = tmp_ifc.name
-            try:
-                ifc_file = ifcopenshell.open(tmp_ifc_path)
-                projects = ifc_file.by_type('IfcProject')
-                result["success"] = True
-                result["message"] = f"✅ IFC: {len(projects)} progetti"
-                result["info"] = {"projects": len(projects)}
-            finally:
-                try:
-                    os.unlink(tmp_ifc_path)
-                except:
-                    pass
-        
-        elif file_extension in ['shp','geojson','kml','gpx'] and GEOPANDAS_AVAILABLE:
-            if file_extension == 'shp':
-                with tempfile.NamedTemporaryFile(suffix='.shp', delete=False) as tmp:
-                    tmp.write(file_bytes); tmp_path = tmp.name
-                gdf = gpd.read_file(tmp_path); os.unlink(tmp_path)
-            else:
-                gdf = gpd.read_file(io.BytesIO(file_bytes))
-            result["success"] = True
-            result["message"] = f"✅ Geodati: {len(gdf)} features"
-            result["info"] = {"features": len(gdf)}
-        
-        else:
-            result["message"] = f"⚠️ Formato {file_extension} non supportato."
-    
-    except Exception as e:
-        result["message"] = f"❌ Errore: {str(e)}"
-    
-    return result
-
-def invia_email(nome, email_utente, messaggio):
-    smtp_server = st.secrets["SMTP_SERVER"]
-    smtp_port = st.secrets["SMTP_PORT"]
-    mittente = st.secrets["EMAIL_ADDRESS"]
-    password = st.secrets["EMAIL_PASSWORD"]
-    destinatario = st.secrets["RECIPIENT_EMAIL"]
-
-    msg = MIMEMultipart()
-    msg['From'] = mittente
-    msg['To'] = destinatario
-    msg['Subject'] = f"Nuovo messaggio da {nome}"
-    
-    corpo = f"Da: {nome} ({email_utente})\n\n{messaggio}"
-    msg.attach(MIMEText(corpo, 'plain'))
-
-    try:
-        server = smtplib.SMTP_SSL(smtp_server, smtp_port)
-        server.login(mittente, password)
-        server.sendmail(mittente, destinatario, msg.as_string())
-        server.quit()
-        return True
-    except Exception as e:
-        return str(e)
+        return 'it'
