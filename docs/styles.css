@@ -1121,3 +1121,37 @@ a:hover {
         width: 100%;
     }
 }
+
+/* ============================================
+   FIX PULSANTI NELLE PAGINE GUIDA SEO
+   ============================================ */
+.guide-cta .btn,
+.guide-cta .btn-primary,
+.guide-cta a.btn,
+.guide-cta a.btn-primary,
+.guide-cta a.btn:visited,
+.guide-cta a.btn:link {
+    color: #ffffff !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+}
+
+.guide-cta .btn:hover,
+.guide-cta .btn-primary:hover,
+.guide-cta a.btn:hover,
+.guide-cta a.btn-primary:hover {
+    color: #ffffff !important;
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+    text-decoration: none !important;
+}
+
+/* Fix generale pulsanti (visibilità visited) */
+.btn,
+.btn:visited,
+.btn:link,
+.btn:focus {
+    text-decoration: none;
+}
