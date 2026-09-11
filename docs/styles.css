@@ -906,3 +906,217 @@ a:hover {
     white-space: nowrap;
     border: 0;
 }
+
+/* ============================================
+   CONVERSIONI PIÙ RICHIESTE
+   ============================================ */
+.section-conversions {
+    background: var(--bg);
+}
+
+.conversions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.conversion-card {
+    display: block;
+    background: #fff;
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+    transition: all var(--transition);
+    position: relative;
+}
+
+.conversion-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+}
+
+.conversion-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.conversion-card h3 {
+    font-size: 1.2rem;
+    color: var(--bg-dark);
+    margin-bottom: 8px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.conversion-card p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin-bottom: 14px;
+}
+
+.conversion-link {
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.conversions-cta {
+    text-align: center;
+    padding: 32px 20px 0;
+    border-top: 1px solid var(--border);
+}
+
+.conversions-cta p {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+/* ============================================
+   FORMATI PROPRIETARI
+   ============================================ */
+.section-proprietary {
+    background: linear-gradient(135deg, #f8fbff 0%, #eef4fb 100%);
+}
+
+.proprietary-banner {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 48px 40px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+}
+
+.proprietary-icon {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 20px;
+    line-height: 1;
+}
+
+.proprietary-content h2 {
+    font-size: 2rem;
+    color: var(--bg-dark);
+    text-align: center;
+    margin-bottom: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.proprietary-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 36px;
+    line-height: 1.7;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.proprietary-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 36px;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.proprietary-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary);
+}
+
+.step-number {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.step-content {
+    color: var(--text);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    padding-top: 4px;
+}
+
+.step-content strong {
+    color: var(--bg-dark);
+}
+
+.proprietary-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.proprietary-note {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    text-align: center;
+    line-height: 1.6;
+    padding-top: 20px;
+    border-top: 1px dashed var(--border);
+}
+
+/* ============================================
+   RESPONSIVE (nuove sezioni)
+   ============================================ */
+@media (max-width: 992px) {
+    .conversions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .conversions-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .proprietary-banner {
+        padding: 32px 24px;
+    }
+
+    .proprietary-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .proprietary-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .proprietary-actions {
+        flex-direction: column;
+    }
+
+    .proprietary-actions .btn {
+        width: 100%;
+    }
+}
