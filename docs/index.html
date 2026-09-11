@@ -119,6 +119,14 @@
                 "@type": "Answer",
                 "text": "No. ArtiFix funziona interamente nel browser. Carichi il file, scegli il formato di destinazione e scarichi il risultato. Nessuna installazione richiesta."
               }
+            },
+            {
+              "@type": "Question",
+              "name": "ArtiFix supporta file DWG, SKP o RVT?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "ArtiFix non può aprire direttamente i formati proprietari (DWG, SKP, RVT) perché richiedono librerie commerciali. Tuttavia basta esportare il file in DAE (Collada) o OBJ dal software originale (AutoCAD, SketchUp, Revit) per accedere a tutti i servizi di ArtiFix, inclusa la conversione in STL, 3D PDF e altri formati."
+              }
             }
           ]
         }
@@ -136,8 +144,8 @@
         </a>
         <nav class="main-nav" aria-label="Menu principale">
             <a href="#funzionalita">Funzionalità</a>
+            <a href="#conversioni">Conversioni</a>
             <a href="#formati">Formati</a>
-            <a href="#perche">Perché ArtiFix</a>
             <a href="#sponsor">Sponsor</a>
             <a href="#contatti">Contatti</a>
             <a href="https://artifix.streamlit.app/" class="btn-nav-cta" target="_blank" rel="noopener">Apri ArtiFix →</a>
@@ -174,6 +182,107 @@
         </div>
         <div class="hero-image">
             <img src="images/ArchiFix_cubo-logo.png" alt="ArtiFix — Cubo 3D" loading="eager">
+        </div>
+    </div>
+</section>
+
+<!-- CONVERSIONI PIÙ RICHIESTE -->
+<section id="conversioni" class="section section-conversions">
+    <div class="container">
+        <div class="section-header">
+            <h2>Le conversioni <span class="highlight">più richieste</span></h2>
+            <p class="section-subtitle">Scorciatoie rapide verso le conversioni più cercate dai nostri utenti. Clicca per la guida completa.</p>
+        </div>
+        <div class="conversions-grid">
+            <a href="convertire-stl-in-obj.html" class="conversion-card">
+                <div class="conversion-icon">🔄</div>
+                <h3>STL → OBJ</h3>
+                <p>Converti file STL in OBJ gratis, online, senza installare software.</p>
+                <span class="conversion-link">Scopri come →</span>
+            </a>
+            <a href="convertire-dxf-in-pdf.html" class="conversion-card">
+                <div class="conversion-icon">📄</div>
+                <h3>DXF → PDF</h3>
+                <p>Trasforma i tuoi disegni CAD DXF in PDF pronti da condividere.</p>
+                <span class="conversion-link">Scopri come →</span>
+            </a>
+            <a href="convertire-stl-in-3d-pdf.html" class="conversion-card">
+                <div class="conversion-icon">🧊</div>
+                <h3>STL → 3D PDF</h3>
+                <p>Crea 3D PDF interattivi dai tuoi modelli STL, senza software CAD.</p>
+                <span class="conversion-link">Scopri come →</span>
+            </a>
+            <a href="convertire-obj-in-stl.html" class="conversion-card">
+                <div class="conversion-icon">🔁</div>
+                <h3>OBJ → STL</h3>
+                <p>Converti OBJ in STL per la stampa 3D in pochi secondi.</p>
+                <span class="conversion-link">Scopri come →</span>
+            </a>
+            <a href="riparare-file-stl.html" class="conversion-card">
+                <div class="conversion-icon">🛠️</div>
+                <h3>Ripara file STL</h3>
+                <p>Ripristina file STL danneggiati o corrotti con ArtiFix.</p>
+                <span class="conversion-link">Scopri come →</span>
+            </a>
+            <a href="viewer-3d-online-gratis.html" class="conversion-card">
+                <div class="conversion-icon">🖥️</div>
+                <h3>Viewer 3D online</h3>
+                <p>Visualizza modelli 3D direttamente dal browser, gratis.</p>
+                <span class="conversion-link">Scopri come →</span>
+            </a>
+        </div>
+        <div class="conversions-cta">
+            <p>Cerchi un'altra conversione?</p>
+            <a href="https://artifix.streamlit.app/" class="btn btn-primary btn-large" target="_blank" rel="noopener">
+                🚀 Apri ArtiFix — 50+ formati supportati
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- FORMATI PROPRIETARI -->
+<section id="formati-proprietari" class="section section-proprietary">
+    <div class="container">
+        <div class="proprietary-banner">
+            <div class="proprietary-icon">🔓</div>
+            <div class="proprietary-content">
+                <h2>Hai un file <span class="highlight">DWG, SKP o RVT</span>?</h2>
+                <p class="proprietary-subtitle">
+                    Nessun problema! ArtiFix supporta <strong>tutti i formati CAD più comuni</strong>. 
+                    Basta una semplice esportazione dal tuo software per accedere a tutti i servizi ArtiFix.
+                </p>
+                <div class="proprietary-steps">
+                    <div class="proprietary-step">
+                        <span class="step-number">1</span>
+                        <div class="step-content">
+                            <strong>Apri il file</strong> nel software originale (AutoCAD, SketchUp, Revit, ecc.)
+                        </div>
+                    </div>
+                    <div class="proprietary-step">
+                        <span class="step-number">2</span>
+                        <div class="step-content">
+                            <strong>Esporta in DAE (Collada)</strong> o <strong>OBJ</strong> — formati universali e gratuiti
+                        </div>
+                    </div>
+                    <div class="proprietary-step">
+                        <span class="step-number">3</span>
+                        <div class="step-content">
+                            <strong>Carica su ArtiFix</strong> e converti in qualsiasi formato (STL, 3D PDF, DXF, ecc.)
+                        </div>
+                    </div>
+                </div>
+                <div class="proprietary-actions">
+                    <a href="esportare-dwg-in-dae.html" class="btn btn-primary btn-large">
+                        📖 Guida: esportare DWG in DAE
+                    </a>
+                    <a href="https://artifix.streamlit.app/" class="btn btn-secondary btn-large" target="_blank" rel="noopener">
+                        Apri ArtiFix →
+                    </a>
+                </div>
+                <p class="proprietary-note">
+                    💡 <strong>DAE (Collada)</strong> e <strong>OBJ</strong> sono formati universali che possono essere esportati dalla quasi totalità dei software CAD 3D presenti sul mercato.
+                </p>
+            </div>
         </div>
     </div>
 </section>
@@ -321,6 +430,10 @@
                 <p>ArtiFix supporta oltre 50 estensioni di file. Puoi convertire tra STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF e esportare in 3D PDF. Supporta anche DXF (CAD 2D), IFC (BIM), formati geospaziali (SHP, GeoJSON, KML, GPX), SVG e documenti.</p>
             </details>
             <details>
+                <summary>ArtiFix supporta file DWG, SKP o RVT?</summary>
+                <p>ArtiFix non può aprire direttamente i formati proprietari (DWG, SKP, RVT) perché richiedono librerie commerciali. Tuttavia basta esportare il file in <strong>DAE (Collada)</strong> o <strong>OBJ</strong> dal software originale (AutoCAD, SketchUp, Revit) per accedere a tutti i servizi di ArtiFix, inclusa la conversione in STL, 3D PDF e altri formati. <a href="#formati-proprietari">Scopri come fare →</a></p>
+            </details>
+            <details>
                 <summary>Devo installare qualcosa sul mio computer?</summary>
                 <p>No. ArtiFix funziona interamente nel browser. Carichi il file, scegli il formato di destinazione e scarichi il risultato. Nessuna installazione richiesta, funziona anche da tablet e smartphone.</p>
             </details>
@@ -386,6 +499,18 @@
                 <li><a href="#sponsor">Sponsor</a></li>
                 <li><a href="#faq">FAQ</a></li>
                 <li><a href="#contatti">Contatti</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Guide</h4>
+            <ul>
+                <li><a href="convertire-stl-in-obj.html">Convertire STL in OBJ</a></li>
+                <li><a href="convertire-dxf-in-pdf.html">Convertire DXF in PDF</a></li>
+                <li><a href="convertire-stl-in-3d-pdf.html">Convertire STL in 3D PDF</a></li>
+                <li><a href="convertire-obj-in-stl.html">Convertire OBJ in STL</a></li>
+                <li><a href="riparare-file-stl.html">Riparare file STL</a></li>
+                <li><a href="viewer-3d-online-gratis.html">Viewer 3D online</a></li>
+                <li><a href="esportare-dwg-in-dae.html">Esportare DWG in DAE</a></li>
             </ul>
         </div>
         <div class="footer-col">
