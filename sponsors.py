@@ -14,6 +14,29 @@ MAX_VISIBLE = 6
 SCROLL_DURATION = 40  # secondi per un ciclo completo (più alto = più lento)
 
 
+# --- DIZIONARIO TRADUZIONI SPONSOR (IT/EN) ---
+SPONSOR_TEXTS = {
+    "it": {
+        "band_title": "Sponsor ArtiFix",
+        "empty_title": "Spazio sponsor",
+        "empty_text": "Vuoi il tuo logo qui?",
+        "become_sponsor": "Diventa sponsor",
+    },
+    "en": {
+        "band_title": "ArtiFix Sponsors",
+        "empty_title": "Sponsor space",
+        "empty_text": "Want your logo here?",
+        "become_sponsor": "Become a sponsor",
+    }
+}
+
+
+def _get_sponsor_text(key, lang="it"):
+    """Recupera una traduzione dal dizionario sponsor."""
+    lang = lang if lang in SPONSOR_TEXTS else "it"
+    return SPONSOR_TEXTS[lang].get(key, key)
+
+
 @st.cache_data(ttl=300)  # cache 5 minuti
 def load_sponsors():
     """Legge il Google Sheet pubblicato come CSV e restituisce gli sponsor attivi e non scaduti."""
@@ -89,13 +112,13 @@ def load_sponsors():
     return attivi
 
 
-def render_sponsor_band():
+def render_sponsor_band(lang="it"):
     """Renderizza la banda laterale destra con i banner sponsor in scorrimento verticale fluido."""
     sponsors = load_sponsors()
 
     if not sponsors:
         st.markdown(
-            """
+            f"""
             <div style="
                 border: 1px dashed #c8c8c8;
                 border-radius: 10px;
@@ -104,9 +127,9 @@ def render_sponsor_band():
                 color: #888;
                 font-size: 0.8rem;
                 background: #fafafa;">
-                <strong>Spazio sponsor</strong><br>
+                <strong>{_get_sponsor_text('empty_title', lang)}</strong><br>
                 <span style="font-size: 0.72rem;">
-                Vuoi il tuo logo qui?<br>
+                {_get_sponsor_text('empty_text', lang)}<br>
                 <a href="mailto:info@artifix.it" style="color:#2a6df4;">info@artifix.it</a>
                 </span>
             </div>
@@ -131,6 +154,8 @@ def render_sponsor_band():
                 <img src="{s['logo_url']}" alt="{s['nome']}" loading="lazy">
             </a>
         """
+
+    band_title = _get_sponsor_text('band_title', lang)
 
     # HTML completo con animazione CSS
     html = f"""
@@ -218,7 +243,7 @@ def render_sponsor_band():
     </style>
     </head>
     <body>
-        <div class="band-title">Sponsor ArtiFix</div>
+        <div class="band-title">{band_title}</div>
         <div class="scroll-viewport">
             <div class="scroll-content">
                 {banners_html}
@@ -232,9 +257,9 @@ def render_sponsor_band():
     components.html(html, height=iframe_height, scrolling=False)
 
 
-def sponsor_band_placeholder():
+def sponsor_band_placeholder(lang="it"):
     st.markdown(
-        """
+        f"""
         <div style="
             margin-top: 12px;
             padding: 10px;
@@ -244,7 +269,7 @@ def sponsor_band_placeholder():
             text-align: center;
             font-size: 0.72rem;
             color: #555;">
-            <div style="font-weight: 600; margin-bottom: 4px;">Diventa sponsor</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">{_get_sponsor_text('become_sponsor', lang)}</div>
             <a href="mailto:info@artifix.it?subject=Sponsorizzazione%20ArtiFix"
                style="color: #2a6df4; text-decoration: none; font-weight: 600;">
                info@artifix.it
