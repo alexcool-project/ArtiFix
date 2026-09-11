@@ -1,70 +1,211 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
-    <!-- Homepage -->
-    <url>
-        <loc>https://www.artifix.it/</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>1.0</priority>
-    </url>
+  <!-- ==================== HOMEPAGE IT ==================== -->
+  <url>
+    <loc>https://www.artifix.it/</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/" />
+  </url>
 
-    <!-- Pagine legali -->
-    <url>
-        <loc>https://www.artifix.it/privacy.html</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.3</priority>
-    </url>
-    <url>
-        <loc>https://www.artifix.it/cookie.html</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.3</priority>
-    </url>
+  <!-- ==================== HOMEPAGE EN ==================== -->
+  <url>
+    <loc>https://www.artifix.it/en/</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/" />
+  </url>
 
-    <!-- Guide SEO -->
-    <url>
-        <loc>https://www.artifix.it/convertire-stl-in-obj.html</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.9</priority>
-    </url>
-    <url>
-        <loc>https://www.artifix.it/convertire-dxf-in-pdf.html</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.9</priority>
-    </url>
-    <url>
-        <loc>https://www.artifix.it/convertire-stl-in-3d-pdf.html</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://www.artifix.it/convertire-obj-in-stl.html</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://www.artifix.it/riparare-file-stl.html</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://www.artifix.it/viewer-3d-online-gratis.html</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://www.artifix.it/esportare-dwg-in-dae.html</loc>
-        <lastmod>2026-09-11</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
+  <!-- ==================== GUIDE IT ==================== -->
+  <url>
+    <loc>https://www.artifix.it/convertire-stl-in-obj.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/convertire-stl-in-obj.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/convert-stl-to-obj.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/convertire-stl-in-obj.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/convertire-dxf-in-pdf.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/convertire-dxf-in-pdf.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/convert-dxf-to-pdf.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/convertire-dxf-in-pdf.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/convertire-stl-in-3d-pdf.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/convertire-stl-in-3d-pdf.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/convert-stl-to-3d-pdf.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/convertire-stl-in-3d-pdf.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/convertire-obj-in-stl.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/convertire-obj-in-stl.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/convert-obj-to-stl.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/convertire-obj-in-stl.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/riparare-file-stl.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/riparare-file-stl.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/repair-stl-file.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/riparare-file-stl.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/viewer-3d-online-gratis.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/viewer-3d-online-gratis.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/free-online-3d-viewer.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/viewer-3d-online-gratis.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/esportare-dwg-in-dae.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/esportare-dwg-in-dae.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/export-dwg-to-dae.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/esportare-dwg-in-dae.html" />
+  </url>
+
+  <!-- ==================== GUIDE EN ==================== -->
+  <url>
+    <loc>https://www.artifix.it/en/convert-stl-to-obj.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/convertire-stl-in-obj.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/convert-stl-to-obj.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/convertire-stl-in-obj.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/en/convert-dxf-to-pdf.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/convertire-dxf-in-pdf.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/convert-dxf-to-pdf.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/convertire-dxf-in-pdf.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/en/convert-stl-to-3d-pdf.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/convertire-stl-in-3d-pdf.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/convert-stl-to-3d-pdf.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/convertire-stl-in-3d-pdf.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/en/convert-obj-to-stl.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/convertire-obj-in-stl.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/convert-obj-to-stl.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/convertire-obj-in-stl.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/en/repair-stl-file.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/riparare-file-stl.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/repair-stl-file.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/riparare-file-stl.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/en/free-online-3d-viewer.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/viewer-3d-online-gratis.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/free-online-3d-viewer.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/viewer-3d-online-gratis.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/en/export-dwg-to-dae.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/esportare-dwg-in-dae.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/export-dwg-to-dae.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/esportare-dwg-in-dae.html" />
+  </url>
+
+  <!-- ==================== LEGAL IT ==================== -->
+  <url>
+    <loc>https://www.artifix.it/privacy.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/privacy.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/privacy.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/privacy.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/cookie.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/cookie.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/cookie.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/cookie.html" />
+  </url>
+
+  <!-- ==================== LEGAL EN ==================== -->
+  <url>
+    <loc>https://www.artifix.it/en/privacy.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/privacy.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/privacy.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/privacy.html" />
+  </url>
+
+  <url>
+    <loc>https://www.artifix.it/en/cookie.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.artifix.it/cookie.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.artifix.it/en/cookie.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.artifix.it/cookie.html" />
+  </url>
 
 </urlset>
