@@ -1,0 +1,27 @@
+name: Keep ArtiFix Alive
+
+on:
+  schedule:
+    # Ogni 12 ore: 00:00 e 12:00 UTC
+    - cron: '0 0,12 * * *'
+  workflow_dispatch:  # Esecuzione manuale dal tab Actions
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake up ArtiFix app
+        run: |
+          echo "Svegliando ArtiFix..."
+          echo "Timestamp: $(date -u)"
+          HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+            --max-time 90 \
+            -L \
+            https://artifix.streamlit.app)
+          echo "HTTP Status Code: $HTTP_CODE"
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ ArtiFix è UP e reattiva"
+          else
+            echo "⚠️ ArtiFix ha restituito status $HTTP_CODE"
+          fi
