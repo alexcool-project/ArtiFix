@@ -14,14 +14,35 @@ jobs:
         run: |
           echo "Svegliando ArtiFix..."
           echo "Timestamp: $(date -u)"
+          
+          # Prima richiesta: NON segue redirect, accetta qualsiasi status
+          # Il solo "toccare" l'URL attiva il container Streamlit
           HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            --max-time 60 \
+            --max-redirs 0 \
+            --connect-timeout 30 \
+            https://artifix.streamlit.app || echo "000")
+          
+          echo "HTTP Status Code (prima richiesta): $HTTP_CODE"
+          
+          # Seconda richiesta dopo 5 secondi (per essere sicuri)
+          sleep 5
+          
+          HTTP_CODE_2=$(curl -sS -o /dev/null -w "%{http_code}" \
             -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
-            --max-time 90 \
-            -L \
-            https://artifix.streamlit.app)
-          echo "HTTP Status Code: $HTTP_CODE"
-          if [ "$HTTP_CODE" -eq 200 ]; then
-            echo "✅ ArtiFix è UP e reattiva"
+            --max-time 60 \
+            --max-redirs 0 \
+            --connect-timeout 30 \
+            https://artifix.streamlit.app || echo "000")
+          
+          echo "HTTP Status Code (seconda richiesta): $HTTP_CODE_2"
+          
+          # Considera il job "successo" se almeno una richiesta è arrivata
+          if [ "$HTTP_CODE" != "000" ] || [ "$HTTP_CODE_2" != "000" ]; then
+            echo "✅ ArtiFix ha ricevuto il ping ed è stata svegliata"
+            exit 0
           else
-            echo "⚠️ ArtiFix ha restituito status $HTTP_CODE"
+            echo "⚠️ ArtiFix non ha risposto al ping"
+            exit 1
           fi
