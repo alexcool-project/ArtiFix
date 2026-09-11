@@ -16,6 +16,9 @@ import time
 # --- MODULO SPONSOR (Google Sheets) ---
 from sponsors import load_sponsors, render_sponsor_band, sponsor_band_placeholder
 
+# --- MODULO TRADUZIONI (IT/EN) ---
+from translations import TRANSLATIONS, get_text, detect_browser_language
+
 # --- LIBRERIA COOKIE (OPZIONALE) ---
 try:
     from streamlit_cookies_controller import CookieController
@@ -24,12 +27,21 @@ try:
 except ImportError:
     COOKIE_LIB = False
 
-# --- LINK DIRETTI DELLE IMMAGINI (da Postimages) ---
+# --- LINK DIRETTI DELLE IMMAGINI ---
 CUBO_URL = "https://i.postimg.cc/bvp2nKwt/Archi-Fix-cubo-logo.png"
 LOGO_URL = "https://i.postimg.cc/KYf3DJ1d/Artifix-logo.png"
 
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
+
+# --- STATO LINGUA (RILEVAMENTO BROWSER) ---
+if 'lang' not in st.session_state:
+    st.session_state.lang = detect_browser_language()
+
+# --- FUNZIONE HELPER PER TRADUZIONE ---
+def t(key, **kwargs):
+    """Shortcut per get_text con la lingua corrente."""
+    return get_text(key, st.session_state.lang, **kwargs)
 
 # --- SEO META TAG ---
 st.markdown("""
@@ -66,7 +78,7 @@ st.markdown("""
     .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
     .sidebar-logo img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
     .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
-        .stButton>button[kind="primary"],
+    .stButton>button[kind="primary"],
     .stButton>button[kind="primaryFormSubmit"],
     div[data-testid="stButton"] button[kind="primary"],
     div[data-testid="stButton"] button[kind="primaryFormSubmit"],
@@ -79,7 +91,7 @@ st.markdown("""
         color: white !important;
         border-color: #1f77b4 !important;
     }
-        .stButton>button[kind="primary"]:hover,
+    .stButton>button[kind="primary"]:hover,
     .stButton>button[kind="primaryFormSubmit"]:hover,
     div[data-testid="stButton"] button[kind="primary"]:hover,
     div[data-testid="stButton"] button[kind="primaryFormSubmit"]:hover,
@@ -95,7 +107,7 @@ st.markdown("""
     .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
     .metric-label { font-size: 0.85rem; color: #555; }
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
-        footer {visibility: hidden;}
+    footer {visibility: hidden;}
 
     .footer-artifix {
         position: fixed;
@@ -111,9 +123,13 @@ st.markdown("""
         z-index: 999;
     }
 
-    /* Spazio per non coprire il contenuto con il footer fisso */
     .main .block-container {
         padding-bottom: 80px !important;
+    }
+
+    .lang-selector {
+        padding: 8px 0;
+        margin-bottom: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -174,14 +190,14 @@ if 'cookie_consent' not in st.session_state:
 # --- CONFIGURAZIONE PAGINA ---
 if CUBO_URL:
     st.set_page_config(
-        page_title="ArtiFix - Riparazione CAD/CAM Universale",
+        page_title=t("app_title"),
         page_icon=CUBO_URL,
         layout="wide",
         initial_sidebar_state="expanded"
     )
 else:
     st.set_page_config(
-        page_title="ArtiFix - Riparazione CAD/CAM Universale",
+        page_title=t("app_title"),
         page_icon="📐",
         layout="wide",
         initial_sidebar_state="expanded"
@@ -430,16 +446,52 @@ with st.sidebar:
     else:
         st.markdown('<div class="sidebar-logo"><h3 style="color:#1f77b4;margin:0;">🔧 ARTIFIX</h3></div>', unsafe_allow_html=True)
     
-    st.markdown("---")
-    st.markdown("## Navigazione")
+    # --- SELETTORE LINGUA ---
+    st.markdown('<div class="lang-selector">', unsafe_allow_html=True)
+    lang_options = {"it": "🇮🇹 Italiano", "en": "🇬🇧 English"}
+    current_lang_index = 0 if st.session_state.lang == "it" else 1
+    selected_lang = st.selectbox(
+        t("sidebar_lang_select"),
+        options=list(lang_options.keys()),
+        format_func=lambda x: lang_options[x],
+        index=current_lang_index,
+        key="lang_selector"
+    )
+    if selected_lang != st.session_state.lang:
+        st.session_state.lang = selected_lang
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.session_state.page_attuale == "Cookie Policy" or st.session_state.page_attuale == "Privacy Policy":
+    st.markdown("---")
+    st.markdown(f"## {t('sidebar_navigation')}")
+    
+    if st.session_state.page_attuale in ["Cookie Policy", "Privacy Policy"]:
         st.session_state.navigation = "Dashboard"
-        st.markdown(f"📍 **Sei nella pagina: {st.session_state.page_attuale}**")
+        st.markdown(f"📍 **{st.session_state.page_attuale}**")
     else:
+        # Mappatura pagine IT -> chiavi traduzione
+        PAGE_KEYS = {
+            "Dashboard": "nav_dashboard",
+            "Ripara File": "nav_repair",
+            "Viewer 3D": "nav_viewer",
+            "Converti Formati": "nav_convert",
+            "Progetto ArtiFix": "nav_project",
+            "Diventa Sponsor": "nav_sponsor",
+        }
+        PAGE_ORDER = ["Dashboard", "Ripara File", "Viewer 3D", "Converti Formati", "Progetto ArtiFix", "Diventa Sponsor"]
+        
+        # Trova l'indice della pagina corrente
+        current_index = 0
+        for idx, p in enumerate(PAGE_ORDER):
+            if p == st.session_state.page_attuale:
+                current_index = idx
+                break
+        
         page = st.radio(
-            "Vai a:",
-            ["Dashboard", "Ripara File", "Viewer 3D", "Converti Formati", "Progetto ArtiFix", "Diventa Sponsor"],
+            t("sidebar_navigation"),
+            PAGE_ORDER,
+            format_func=lambda x: t(PAGE_KEYS.get(x, x)),
+            index=current_index,
             key="navigation",
             label_visibility="collapsed"
         )
@@ -447,31 +499,31 @@ with st.sidebar:
     
     st.markdown("---")
     
-    if st.button("🔒 Privacy Policy", key="privacy_link", use_container_width=True):
+    if st.button(t("nav_privacy"), key="privacy_link", use_container_width=True):
         st.session_state.page_attuale = "Privacy Policy"
         st.rerun()
     
-    if st.button("🍪 Cookie Policy", key="cookie_link", use_container_width=True):
+    if st.button(t("nav_cookie"), key="cookie_link", use_container_width=True):
         st.session_state.page_attuale = "Cookie Policy"
         st.rerun()
     
     st.markdown(
         f"""
         <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
-            💙 Dona con PayPal
+            {t("nav_donate")}
         </a>
         """,
         unsafe_allow_html=True
     )
     
     st.markdown(
-        """
+        f"""
         <a href="mailto:info@artifix.it?subject=Sponsorizzazione%20ArtiFix" 
            style="display:block; text-align:center; background:#fff4e6; color:#c26a00; 
                   padding:8px; border-radius:6px; text-decoration:none; 
                   font-weight:600; font-size:13px; margin-top:8px;
                   border:1px solid #ffd9a8;">
-            🤝 Diventa Sponsor
+            {t("nav_become_sponsor")}
         </a>
         """,
         unsafe_allow_html=True
@@ -489,28 +541,26 @@ else:
 if st.session_state.cookie_consent is None:
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     with st.container(border=True):
-        st.markdown("""
-        <h3 style="color: #1f77b4; text-align: center; margin-bottom: 15px;">🍪 Cookie Policy</h3>
+        st.markdown(f"""
+        <h3 style="color: #1f77b4; text-align: center; margin-bottom: 15px;">{t("cookie_title")}</h3>
         <p style="font-size: 15px; line-height: 1.8;">
-            Noi e terze parti selezionate utilizziamo cookie o tecnologie simili per finalità tecniche e, con il tuo consenso, anche per altre finalità come specificato nella cookie policy. 
-            Il rifiuto del consenso può rendere non disponibili le relative funzioni. Usa il pulsante "Accetta tutti i cookie" per acconsentire. 
-            Usa il pulsante "Accetta solo i cookie necessari" per continuare senza accettare.
+            {t("cookie_text")}
         </p>
         """, unsafe_allow_html=True)
         
-        st.markdown("""
+        st.markdown(f"""
         <div style="text-align: center; margin-bottom: 15px;">
-            <strong style="color: #333;">Consulta la Privacy Policy tramite il pulsante apposito</strong>
+            <strong style="color: #333;">{t("cookie_check_privacy")}</strong>
         </div>
         """, unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Accetta solo i cookie necessari", key="decline_cookies", use_container_width=True):
+            if st.button(t("cookie_accept_necessary"), key="decline_cookies", use_container_width=True):
                 st.session_state.cookie_consent = "declined"
                 st.rerun()
         with col2:
-            if st.button("Accetta tutti i cookie", key="accept_cookies", type="primary", use_container_width=True):
+            if st.button(t("cookie_accept_all"), key="accept_cookies", type="primary", use_container_width=True):
                 st.session_state.cookie_consent = "accepted"
                 st.rerun()
     
@@ -520,89 +570,87 @@ if page == "Dashboard":
     with col_main:
         st.markdown('<div class="logo-container"><img src="' + LOGO_URL + '" alt="Logo ArtiFix"></div>', unsafe_allow_html=True)
         
-        st.header("📊 Dashboard")
+        st.header(t("dash_header"))
         cols = st.columns(4)
-        metrics = [("14,280", "File Riparati"), ("38,910", "Conversioni"), ("50+", "Formati"), ("🟢", "Online")]
+        metrics = [("14,280", t("dash_metric_repaired")), ("38,910", t("dash_metric_conversions")), ("50+", t("dash_metric_formats")), ("🟢", t("dash_metric_online"))]
         for col, (val, label) in zip(cols, metrics):
             col.markdown(f'<div class="metric-card"><div class="metric-value">{val}</div><div class="metric-label">{label}</div></div>', unsafe_allow_html=True)
         
         st.markdown("---")
-        st.subheader("📁 Formati Supportati (50+ estensioni)")
+        st.subheader(t("dash_supported_formats"))
         cols = st.columns(4)
         for idx, (category, info) in enumerate(SUPPORTED_FORMATS.items()):
             with cols[idx % 4]:
                 st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
-        st.info("👈 Seleziona una funzionalità dal menu.")
+        st.info(t("dash_info_select"))
     with col_side:
         render_sponsor_band()
         sponsor_band_placeholder()
-
 
 # --- RIPARA FILE ---
 elif page == "Ripara File":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        st.header("🛠️ Centro Riparazione File")
-        uploaded_file = st.file_uploader("Seleziona un file", type=[ext[1:] for ext in ALL_EXTENSIONS], key="repair")
+        st.header(t("repair_header"))
+        uploaded_file = st.file_uploader(t("repair_upload"), type=[ext[1:] for ext in ALL_EXTENSIONS], key="repair")
         if uploaded_file:
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            status_text.text("Analisi del file in corso... (30%)")
+            status_text.text(t("repair_status_analyzing"))
             progress_bar.progress(30)
             time.sleep(0.5)
             
             result = process_file(uploaded_file.getvalue(), uploaded_file.name)
             
-            status_text.text("Verifica del risultato... (60%)")
+            status_text.text(t("repair_status_verifying"))
             progress_bar.progress(60)
             time.sleep(0.5)
             
             if result["success"]:
-                status_text.text("Completamento... (100%)")
+                status_text.text(t("repair_status_completing"))
                 progress_bar.progress(100)
                 time.sleep(0.5)
                 st.success(result["message"])
                 if result.get("info"):
-                    st.subheader("Dettagli")
+                    st.subheader(t("repair_details"))
                     for key, value in result["info"].items():
                         if key != 'mesh':
                             st.metric(key.capitalize(), str(value)[:50])
-                if st.button("🔧 Ripara"):
-                    st.success("✅ Riparato!")
-                    st.download_button("📥 Scarica", data=uploaded_file.getvalue(), file_name=f"repaired_{uploaded_file.name}")
+                if st.button(t("repair_button_repair")):
+                    st.success(t("repair_success"))
+                    st.download_button(t("repair_button_download"), data=uploaded_file.getvalue(), file_name=f"repaired_{uploaded_file.name}")
             else:
-                status_text.text("Errore durante l'analisi")
+                status_text.text(t("repair_status_error"))
                 progress_bar.progress(100)
                 st.error(result["message"])
     with col_side:
         render_sponsor_band()
         sponsor_band_placeholder()
 
-
 # --- VIEWER 3D ---
 elif page == "Viewer 3D":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        st.header("🖥️ Viewer 3D")
-        viewer_file = st.file_uploader("Carica modello 3D", type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
+        st.header(t("viewer_header"))
+        viewer_file = st.file_uploader(t("viewer_upload"), type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
         if viewer_file:
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            status_text.text("Caricamento del modello... (30%)")
+            status_text.text(t("viewer_status_loading"))
             progress_bar.progress(30)
             time.sleep(0.5)
             
             try:
                 mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
                 
-                status_text.text("Elaborazione vertici e facce... (60%)")
+                status_text.text(t("viewer_status_processing"))
                 progress_bar.progress(60)
                 time.sleep(0.5)
                 
                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                    st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
+                    st.success(t("viewer_success", vertices=len(mesh.vertices), faces=len(mesh.faces)))
                     
                     try:
                         if len(mesh.vertices) > 65000:
@@ -617,7 +665,7 @@ elif page == "Viewer 3D":
                         pass
                     
                     if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
-                        st.error("❌ Errore nel processamento della mesh.")
+                        st.error(t("viewer_error_processing"))
                     else:
                         bounds = mesh.bounds
                         min_y = bounds[0][1]
@@ -629,7 +677,7 @@ elif page == "Viewer 3D":
                         mesh_data = {"vertices": vertices.tolist(), "faces": mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()}
                         mesh_json = json.dumps(mesh_data)
                         
-                        status_text.text("Costruzione della vista 3D... (100%)")
+                        status_text.text(t("viewer_status_building"))
                         progress_bar.progress(100)
                         time.sleep(0.5)
                         
@@ -640,7 +688,7 @@ elif page == "Viewer 3D":
                         </head><body>
                         <div id="c"></div>
                         <div class="legend"><span class="axis-x"></span> X <span class="axis-y"></span> Y <span class="axis-z"></span> Z</div>
-                        <div id="info">🔄 Trascina per ruotare | 🖱️ Tasto destro per spostare | 🖱️ Rotella per zoom</div>
+                        <div id="info">""" + t("viewer_legend") + """</div>
                         <script>
                         const data = """ + mesh_json + """;
                         const container = document.getElementById('c');
@@ -697,9 +745,9 @@ elif page == "Viewer 3D":
                         """
                         st.components.v1.html(viewer_html, height=550)
                 else:
-                    st.warning("⚠️ Impossibile caricare il modello.")
+                    st.warning(t("viewer_warning_no_model"))
             except Exception as e:
-                st.error(f"❌ Errore: {e}")
+                st.error(t("viewer_error_generic", error=e))
     with col_side:
         render_sponsor_band()
         sponsor_band_placeholder()
@@ -708,22 +756,13 @@ elif page == "Viewer 3D":
 elif page == "Converti Formati":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        st.header("🔄 Conversione Formati Universale")
-        st.markdown("Converti file tra **tutti i formati** supportati con **tutte le combinazioni** possibili.")
+        st.header(t("convert_header"))
+        st.markdown(t("convert_subtitle"))
         
-        with st.expander("ℹ️ Nota sui formati proprietari e a pagamento"):
-            st.markdown("""
-            **ArtiFix non può leggere direttamente i formati proprietari e a pagamento** (come DWG, SKP, RVT, STEP, IGES, ecc.) perché richiedono librerie commerciali e server dedicati. 
-            
-            **Come risolvere?** Se il tuo file è in un formato proprietario, ti consigliamo di:
-            1. Aprire il file nel software con cui è stato creato (es. AutoCAD, SketchUp, Revit).
-            2. Utilizzare la funzione **"Esporta"** o **"Salva con nome"** per convertirlo in **DAE (Collada)** o **OBJ**. 
-            3. Caricare il file DAE o OBJ su ArtiFix e convertirlo qui in qualsiasi altro formato mesh (STL, PLY, GLB, GLTF, ecc.) o 3D PDF.
-            
-            *DAE (Collada) e OBJ sono formati universali e gratuiti che possono essere esportati dalla quasi totalità dei software CAD 3D presenti sul mercato.*
-            """)
+        with st.expander(t("convert_expander_note")):
+            st.markdown(t("convert_note_text"))
         
-        with st.expander("📋 Matrice delle conversioni disponibili"):
+        with st.expander(t("convert_expander_matrix")):
             st.markdown("""
             | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |
             |--------|-----|-----|-----|-----|------|-----|------|-----|-----|-----|-----|-----|
@@ -739,10 +778,10 @@ elif page == "Converti Formati":
             | **OFF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
             | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
             """)
-            st.caption("✅ = Conversione supportata | ❌ = Conversione non supportata")
+            st.caption(t("convert_caption_matrix"))
         
-        uploaded_file = st.file_uploader("Carica un file da convertire", type=[ext[1:] for ext in ALL_EXTENSIONS], key="convert")
-        st.caption("💡 Clicca per cercare il file sul tuo computer, oppure trascina e rilascia il file qui.")
+        uploaded_file = st.file_uploader(t("convert_upload"), type=[ext[1:] for ext in ALL_EXTENSIONS], key="convert")
+        st.caption(t("convert_upload_hint"))
         
         if uploaded_file:
             file_name = uploaded_file.name
@@ -750,44 +789,44 @@ elif page == "Converti Formati":
             file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
             file_type, icon = detect_file_type(file_extension)
             
-            st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">Tipo: {file_type} | Estensione: .{file_extension}</div></div></div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">{t("convert_file_type", type=file_type, ext=file_extension)}</div></div></div></div>', unsafe_allow_html=True)
             
             convertibili = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off", "dxf", "pdf"]
             
             if file_extension not in convertibili:
-                st.warning(f"⚠️ Il formato **.{file_extension.upper()}** non può essere convertito in altri formati.")
-                st.info("💡 I formati convertibili sono: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF**.")
+                st.warning(t("convert_warning_format", format=file_extension.upper()))
+                st.info(t("convert_info_formats"))
             else:
                 target_formats = CONVERSION_MATRIX.get(file_extension, [])
                 target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
                 
                 if not target_options:
-                    st.warning("⚠️ Nessun formato di destinazione disponibile per questo file.")
+                    st.warning(t("convert_warning_no_target"))
                 else:
-                    target_selected = st.selectbox("Formato di destinazione", target_options)
+                    target_selected = st.selectbox(t("convert_target_format"), target_options)
                     target_ext = target_selected.split(".")[1].replace(")", "").strip()
                     
-                    if st.button(f"🔄 Converti in {target_selected.split(' ')[0]}", type="primary", use_container_width=True):
+                    if st.button(t("convert_button_convert", format=target_selected.split(' ')[0]), type="primary", use_container_width=True):
                         progress_bar = st.progress(0)
                         status_text = st.empty()
                         
-                        status_text.text("Caricamento e analisi del modello... (20%)")
+                        status_text.text(t("convert_status_loading"))
                         progress_bar.progress(20)
                         time.sleep(0.5)
                         mesh = load_3d_file(file_bytes, file_extension)
                         
                         if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                            status_text.text("Conversione in corso... (70%)")
+                            status_text.text(t("convert_status_converting"))
                             progress_bar.progress(70)
                             time.sleep(0.5)
                             result_bytes = convert_mesh(mesh, target_ext)
                             
-                            status_text.text("Salvataggio del file... (100%)")
+                            status_text.text(t("convert_status_saving"))
                             progress_bar.progress(100)
                             time.sleep(0.5)
                             
                             if result_bytes:
-                                st.success(f"✅ Conversione in {target_selected.split(' ')[0]} completata!")
+                                st.success(t("convert_success", format=target_selected.split(' ')[0]))
                                 mime_types = {
                                     'stl': 'application/octet-stream',
                                     'obj': 'text/plain',
@@ -802,23 +841,23 @@ elif page == "Converti Formati":
                                     'dxf': 'application/dxf',
                                     'pdf': 'application/pdf'
                                 }
-                                st.info("📥 Il file è pronto! Stiamo preparando il download, attendi qualche secondo...")
+                                st.info(t("convert_info_ready"))
                                 time.sleep(1)
                                 st.download_button(
-                                    label=f"📥 Scarica .{target_ext}",
+                                    label=t("convert_button_download", format=target_ext),
                                     data=result_bytes,
                                     file_name=f"converted.{target_ext}",
                                     mime=mime_types.get(target_ext, 'application/octet-stream'),
                                     use_container_width=True
                                 )
                             else:
-                                st.error(f"❌ Conversione in {target_selected.split(' ')[0]} fallita. Riprova con un altro formato.")
+                                st.error(t("convert_error", format=target_selected.split(' ')[0]))
                         else:
-                            st.error("❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
+                            st.error(t("convert_error_load"))
                     
                     st.markdown("---")
-                    if st.button("🖥️ Mostra anteprima interattiva (ruota con il mouse)"):
-                        st.info("💡 Ruota il modello a 360° con il mouse o il touchpad")
+                    if st.button(t("convert_button_preview")):
+                        st.info(t("convert_info_preview"))
                         mesh_preview = load_3d_file(file_bytes, file_extension)
                         if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
                             try:
@@ -834,7 +873,7 @@ elif page == "Converti Formati":
                                 pass
                             
                             if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
-                                st.error("❌ Errore nel processamento della mesh.")
+                                st.error(t("viewer_error_processing"))
                             else:
                                 bounds = mesh_preview.bounds
                                 min_y = bounds[0][1]
@@ -901,79 +940,55 @@ elif page == "Converti Formati":
                                 """
                                 st.components.v1.html(viewer_html, height=400)
                         else:
-                            st.warning("⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.")
+                            st.warning(t("convert_warning_no_preview"))
     with col_side:
         render_sponsor_band()
         sponsor_band_placeholder()
-
 
 # --- PROGETTO ARTIFIX ---
 elif page == "Progetto ArtiFix":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        st.header("🚀 Progetto ArtiFix")
-        st.markdown("""
-        **ArtiFix** è una piattaforma professionale per la riparazione, conversione e visualizzazione di file CAD/CAM. 
-        Questo progetto è in continua evoluzione. Per richieste di informazioni, collaborazioni o assistenza tecnica, contattaci.
-        """)
+        st.header(t("project_header"))
+        st.markdown(t("project_text"))
         
         st.divider()
-        st.subheader("📧 Contattaci")
-        st.write("Invia una richiesta a info@artifix.it")
+        st.subheader(t("project_contact"))
+        st.write(t("project_contact_text"))
         
         with st.form("contatti"):
-            nome_input = st.text_input("Il tuo nome")
-            email_input = st.text_input("La tua email")
-            messaggio_input = st.text_area("Messaggio")
-            inviato = st.form_submit_button("Invia")
+            nome_input = st.text_input(t("project_form_name"))
+            email_input = st.text_input(t("project_form_email"))
+            messaggio_input = st.text_area(t("project_form_message"))
+            inviato = st.form_submit_button(t("project_form_submit"))
 
             if inviato:
                 if nome_input and email_input and messaggio_input:
                     risultato = invia_email(nome_input, email_input, messaggio_input)
                     if risultato == True:
-                        st.success("Email inviata con successo!")
+                        st.success(t("project_success"))
                     else:
-                        st.error(f"Errore: {risultato}")
+                        st.error(t("project_error", error=risultato))
                 else:
-                    st.warning("Compila tutti i campi prima di inviare.")
+                    st.warning(t("project_warning"))
     with col_side:
         render_sponsor_band()
         sponsor_band_placeholder()
-
 
 # --- DIVENTA SPONSOR ---
 elif page == "Diventa Sponsor":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        st.header("🤝 Diventa Sponsor di ArtiFix")
-        st.markdown("""
-        **ArtiFix** è un progetto indipendente che offre strumenti gratuiti per la 
-        riparazione, conversione e visualizzazione di file CAD/CAM.
-
-        Ogni giorno centinaia di professionisti, studenti e appassionati utilizzano 
-        i servizi di ArtiFix. Se anche tu credi in questo progetto e vuoi sostenerlo, 
-        puoi diventare **sponsor**.
-        """)
+        st.header(t("sponsor_header"))
+        st.markdown(t("sponsor_intro"))
 
         st.divider()
-        st.subheader("📐 Formato banner richiesto")
-        st.markdown("""
-        - **Dimensioni:** 300 × 100 px
-        - **Formato file:** PNG (preferito) o JPG
-        - **Sfondo:** trasparente o neutro
-        - **Peso massimo:** 200 KB
-        - **Contenuto:** logo aziendale + eventuale payoff breve
-        """)
+        st.subheader(t("sponsor_format_title"))
+        st.markdown(t("sponsor_format_text"))
 
         st.divider()
-        st.subheader("💶 Come funziona")
-        st.markdown("""
-        1. Effettui una **donazione liberale** tramite il pulsante PayPal qui sotto.
-        2. Compili il form con i dati del tuo brand (nome, sito, email, logo).
-        3. Entro 24-48h il tuo banner viene pubblicato nella banda laterale di ArtiFix 
-           per **30 giorni**.
-        4. Al termine dei 30 giorni, se desideri rinnovare, puoi donare nuovamente.
-        """)
+        st.subheader(t("sponsor_how_title"))
+        st.markdown(t("sponsor_how_text"))
 
         st.markdown(
             f"""
@@ -983,7 +998,7 @@ elif page == "Diventa Sponsor":
                           padding:14px 28px; border-radius:8px; text-decoration:none; 
                           font-weight:700; font-size:16px;
                           box-shadow: 0 4px 12px rgba(0,112,186,0.3);">
-                    💙 Dona con PayPal
+                    {t("sponsor_donate_button")}
                 </a>
             </div>
             """,
@@ -991,16 +1006,16 @@ elif page == "Diventa Sponsor":
         )
 
         st.divider()
-        st.subheader("📤 Invia la tua richiesta")
-        st.caption("Dopo aver effettuato la donazione, compila questo form con i dati del tuo brand.")
+        st.subheader(t("sponsor_form_title"))
+        st.caption(t("sponsor_form_caption"))
 
         with st.form("sponsor_form"):
-            nome_brand = st.text_input("Nome brand/azienda *")
-            email_ref = st.text_input("Email di riferimento *")
-            sito = st.text_input("Sito web (URL completo, es. https://www.miosito.it) *")
-            logo_url = st.text_input("URL pubblico del logo (Postimages, Imgur, ecc.) *")
-            messaggio = st.text_area("Messaggio opzionale (breve descrizione attività)")
-            invia = st.form_submit_button("Invia richiesta sponsor", type="primary")
+            nome_brand = st.text_input(t("sponsor_form_brand"))
+            email_ref = st.text_input(t("sponsor_form_email"))
+            sito = st.text_input(t("sponsor_form_site"))
+            logo_url = st.text_input(t("sponsor_form_logo"))
+            messaggio = st.text_area(t("sponsor_form_message"))
+            invia = st.form_submit_button(t("sponsor_form_submit"), type="primary")
 
         if invia:
             if nome_brand and email_ref and sito and logo_url:
@@ -1015,123 +1030,60 @@ Nuova richiesta sponsor:
                 """
                 esito = invia_email(nome_brand, email_ref, corpo)
                 if esito is True:
-                    st.success("✅ Richiesta inviata! Ti contatteremo entro 48h.")
+                    st.success(t("sponsor_form_success"))
                 else:
-                    st.error(f"Errore invio: {esito}")
+                    st.error(t("sponsor_form_error", error=esito))
             else:
-                st.warning("Compila tutti i campi obbligatori (*).")
+                st.warning(t("sponsor_form_warning"))
 
-        st.info("💡 Dopo la donazione, invia la richiesta tramite questo form. "
-                "Il tuo banner sarà attivo entro 24-48h.")
+        st.info(t("sponsor_form_info"))
     with col_side:
         render_sponsor_band()
         sponsor_band_placeholder()
 
-
 # --- PRIVACY POLICY ---
 elif page == "Privacy Policy":
-    st.header("🔒 Privacy Policy")
-    st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
-    st.caption("Ultimo aggiornamento: 9 settembre 2026")
+    st.header(t("privacy_header"))
+    st.markdown(t("privacy_subtitle"))
+    st.caption(t("privacy_updated"))
     
-    if st.button("← Torna alla Dashboard", key="torna_dashboard_privacy"):
+    if st.button(t("privacy_back"), key="torna_dashboard_privacy"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
     
     st.markdown("---")
     
-    st.markdown("""
-    La presente Privacy Policy è resa ai sensi dell'Art. 13 del Regolamento (UE) 2016/679 (GDPR), relativo alla protezione delle persone fisiche con riguardo al trattamento dei dati personali.
-
-    ### 1. Titolare del Trattamento
-    Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
-
-    ### 2. Dati raccolti e finalità
-    **Dati forniti volontariamente dall'utente**: Attraverso il form "Contattaci" vengono raccolti nome, indirizzo email e messaggio, al fine di rispondere alle richieste pervenute.
-    **Dati di navigazione**: Il sito utilizza cookie tecnici (per il funzionamento) e cookie di analytics (facoltativi) come descritto nella Cookie Policy.
-
-    ### 3. Base giuridica
-    Il trattamento si basa sul consenso dell'utente (Art. 6, par. 1, lett. a GDPR) e sull'esecuzione di misure precontrattuali richieste dall'utente (Art. 6, par. 1, lett. b GDPR).
-
-    ### 4. Diritti dell'interessato
-    Ai sensi degli Artt. 15-22 del GDPR, l'utente ha il diritto di:
-    *   Accesso, rettifica e cancellazione dei propri dati.
-    *   Limitazione e opposizione al trattamento.
-    *   Portabilità dei dati.
-    *   Revoca del consenso in qualsiasi momento.
-    
-    Per esercitare tali diritti, contattare il Titolare all'indirizzo: **info@artifix.it**. È inoltre possibile proporre reclamo al Garante per la Protezione dei Dati Personali.
-
-    ### 5. Durata della conservazione
-    I dati raccolti tramite il form di contatto vengono conservati per il tempo strettamente necessario a rispondere alla richiesta e, comunque, per un periodo massimo di 24 mesi.
-
-    ### 6. Comunicazione e diffusione
-    I dati non saranno ceduti a terzi per finalità di marketing o venduti. Saranno trattati esclusivamente dal Titolare.
-    """)
+    st.markdown(t("privacy_content"))
 
     st.markdown("---")
     
-    if st.button("← Torna alla Dashboard", key="torna_dashboard_privacy_basso"):
+    if st.button(t("privacy_back"), key="torna_dashboard_privacy_basso"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
-
 
 # --- COOKIE POLICY ---
 elif page == "Cookie Policy":
-    st.header("🍪 Cookie Policy")
-    st.markdown("**ArtiFix - Riparazione File CAD/CAM Universale**")
-    st.caption("Ultimo aggiornamento: 9 settembre 2026")
+    st.header(t("cookie_policy_header"))
+    st.markdown(t("cookie_policy_subtitle"))
+    st.caption(t("cookie_policy_updated"))
     
-    if st.button("← Torna alla Dashboard", key="torna_dashboard_alto"):
+    if st.button(t("cookie_policy_back"), key="torna_dashboard_alto"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
     
     st.markdown("---")
     
-    st.markdown("""
-    La presente Cookie Policy è resa ai sensi dell'art. 13 del Regolamento (UE) 2016/679 (GDPR) e del Provvedimento del Garante per la Protezione dei Dati Personali del 10 giugno 2021.
-
-    ### 1. Titolare del Trattamento
-    Il Titolare del trattamento dei dati è **ArtiFix**, con sede in Italia. Per qualsiasi richiesta è possibile contattare il Titolare all'indirizzo email: **info@artifix.it**.
-
-    ### 2. Cosa sono i Cookie
-    I cookie sono piccoli file di testo che i siti web inviano e registrano sul computer o dispositivo mobile dell'utente, per essere poi ritrasmessi agli stessi siti alle visite successive. Servono a ricordare le azioni e le preferenze dell'utente.
-
-    ### 3. Tipologie di Cookie utilizzate
-    Questo sito utilizza esclusivamente **Cookie Tecnici (o strettamente necessari)**. Questi cookie sono essenziali per il funzionamento del sito e non richiedono il consenso preventivo dell'utente.
-
-    *   **Cookie di Sessione**: Vengono eliminati automaticamente alla chiusura del browser. Sono utilizzati per mantenere attiva la sessione di navigazione e ricordare le scelte effettuate (es. il consenso ai cookie).
-    *   **Cookie di Funzionalità**: Permettono di ricordare le scelte dell'utente per migliorare l'esperienza di navigazione, come ad esempio il limite di upload impostato (5GB).
-
-    **Cookie di Terze Parti / Profilazione**: Questo sito **non utilizza** cookie di profilazione, di marketing o di terze parti (come Google Analytics o pixel di social media) per inviare pubblicità personalizzata.
-
-    ### 4. Gestione del Consenso
-    Al primo accesso, l'utente può scegliere se accettare o rifiutare i cookie tramite l'apposito banner. La scelta viene registrata e memorizzata nel browser. È possibile modificare la propria scelta in qualsiasi momento cancellando i dati di navigazione del browser o reimpostando la pagina.
-
-    ### 5. Come disabilitare i Cookie tramite il Browser
-    L'utente può gestire le preferenze sui cookie tramite le impostazioni del proprio browser. La disabilitazione di alcuni cookie potrebbe compromettere il corretto funzionamento di alcune sezioni del sito.
-
-    *   **Google Chrome**: [Istruzioni](https://support.google.com/chrome/answer/95647)
-    *   **Mozilla Firefox**: [Istruzioni](https://support.mozilla.org/kb/block-websites-storing-cookies)
-    *   **Microsoft Edge**: [Istruzioni](https://support.microsoft.com/microsoft-edge/delete-cookies-in-microsoft-edge)
-    *   **Safari**: [Istruzioni](https://support.apple.com/guide/safari/manage-cookies)
-
-    ### 6. Diritti dell'Interessato
-    Ai sensi degli artt. 15-22 del GDPR, l'utente ha il diritto di accesso, rettifica, cancellazione, limitazione, opposizione e portabilità dei propri dati personali. Per esercitare tali diritti, contattare l'email **info@artifix.it**. È inoltre possibile proporre reclamo all'Autorità di controllo (Garante per la Protezione dei Dati Personali - [www.garanteprivacy.it](http://www.garanteprivacy.it)).
-
-    ### 7. Aggiornamenti
-    La presente Cookie Policy può essere soggetta ad aggiornamenti. La versione aggiornata sarà sempre disponibile su questa pagina.
-    """)
+    st.markdown(t("cookie_policy_content"))
 
     st.markdown("---")
     
-    if st.button("← Torna alla Dashboard", key="torna_dashboard_basso"):
+    if st.button(t("cookie_policy_back"), key="torna_dashboard_basso"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
 
-# --- FOOTER GLOBALE (appare a fondo di ogni pagina) ---
+# --- FOOTER GLOBALE ---
 st.markdown("---")
 st.markdown(
-    '<div class="footer-artifix">© 2026 ArtiFix | Tutti i diritti riservati</div>',
+    f'<div class="footer-artifix">{t("footer")}</div>',
     unsafe_allow_html=True
 )
