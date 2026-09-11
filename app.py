@@ -760,7 +760,7 @@ elif page == "Converti Formati":
         with st.expander(t("convert_expander_note")):
             st.markdown(t("convert_note_text"))
         
-                with st.expander(t("convert_expander_matrix")):
+        with st.expander(t("convert_expander_matrix")):
             # Intestazione tabella dinamica (IT/EN)
             if st.session_state.lang == "it":
                 matrix_header = "| Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |"
