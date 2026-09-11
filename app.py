@@ -469,7 +469,6 @@ with st.sidebar:
         st.session_state.navigation = "Dashboard"
         st.markdown(f"📍 **{st.session_state.page_attuale}**")
     else:
-        # Mappatura pagine IT -> chiavi traduzione
         PAGE_KEYS = {
             "Dashboard": "nav_dashboard",
             "Ripara File": "nav_repair",
@@ -480,7 +479,6 @@ with st.sidebar:
         }
         PAGE_ORDER = ["Dashboard", "Ripara File", "Viewer 3D", "Converti Formati", "Progetto ArtiFix", "Diventa Sponsor"]
         
-        # Trova l'indice della pagina corrente
         current_index = 0
         for idx, p in enumerate(PAGE_ORDER):
             if p == st.session_state.page_attuale:
@@ -584,8 +582,8 @@ if page == "Dashboard":
                 st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
         st.info(t("dash_info_select"))
     with col_side:
-        render_sponsor_band()
-        sponsor_band_placeholder()
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
 
 # --- RIPARA FILE ---
 elif page == "Ripara File":
@@ -625,8 +623,8 @@ elif page == "Ripara File":
                 progress_bar.progress(100)
                 st.error(result["message"])
     with col_side:
-        render_sponsor_band()
-        sponsor_band_placeholder()
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
 
 # --- VIEWER 3D ---
 elif page == "Viewer 3D":
@@ -749,8 +747,8 @@ elif page == "Viewer 3D":
             except Exception as e:
                 st.error(t("viewer_error_generic", error=e))
     with col_side:
-        render_sponsor_band()
-        sponsor_band_placeholder()
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
     
 # --- CONVERTI FORMATI ---
 elif page == "Converti Formati":
@@ -942,8 +940,8 @@ elif page == "Converti Formati":
                         else:
                             st.warning(t("convert_warning_no_preview"))
     with col_side:
-        render_sponsor_band()
-        sponsor_band_placeholder()
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
 
 # --- PROGETTO ARTIFIX ---
 elif page == "Progetto ArtiFix":
@@ -972,8 +970,8 @@ elif page == "Progetto ArtiFix":
                 else:
                     st.warning(t("project_warning"))
     with col_side:
-        render_sponsor_band()
-        sponsor_band_placeholder()
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
 
 # --- DIVENTA SPONSOR ---
 elif page == "Diventa Sponsor":
@@ -1038,8 +1036,8 @@ Nuova richiesta sponsor:
 
         st.info(t("sponsor_form_info"))
     with col_side:
-        render_sponsor_band()
-        sponsor_band_placeholder()
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
 
 # --- PRIVACY POLICY ---
 elif page == "Privacy Policy":
