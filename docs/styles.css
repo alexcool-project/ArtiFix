@@ -1155,3 +1155,46 @@ a:hover {
 .btn:focus {
     text-decoration: none;
 }
+
+/* ============================================
+   FIX PULSANTI PAGINE GUIDA — v2
+   Deve sovrascrivere .guide-page a
+   ============================================ */
+
+.guide-page .btn,
+.guide-page .btn:link,
+.guide-page .btn:visited,
+.guide-page .btn:focus,
+.guide-page .btn:active,
+.guide-page .btn-primary,
+.guide-page a.btn,
+.guide-page a.btn-primary {
+    color: #ffffff !important;
+    background-color: #1f77b4 !important;
+    background: #1f77b4 !important;
+    border: 2px solid #1f77b4 !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+    padding: 16px 32px !important;
+    border-radius: 8px !important;
+    display: inline-block !important;
+}
+
+.guide-page .btn:hover,
+.guide-page .btn-primary:hover,
+.guide-page a.btn:hover,
+.guide-page a.btn-primary:hover {
+    color: #ffffff !important;
+    background-color: #1565a0 !important;
+    background: #1565a0 !important;
+    border-color: #1565a0 !important;
+    text-decoration: none !important;
+}
+
+/* Forza il testo dentro anche se ci sono span/strong annidati */
+.guide-page .btn *,
+.guide-page .btn-primary *,
+.guide-page a.btn * {
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
