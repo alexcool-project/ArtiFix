@@ -2,9 +2,9 @@ name: Keep ArtiFix Alive
 
 on:
   schedule:
-    # Ogni 12 ore: 00:00 e 12:00 UTC
-    - cron: '0 0,12 * * *'
-  workflow_dispatch:  # Esecuzione manuale dal tab Actions
+    # Every 3 hours (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
 
 jobs:
   keep-alive:
@@ -14,32 +14,17 @@ jobs:
         run: |
           echo "Svegliando ArtiFix..."
           echo "Timestamp: $(date -u)"
-          
-          # Prima richiesta: NON segue redirect, accetta qualsiasi status
-          # Il solo "toccare" l'URL attiva il container Streamlit
+
           HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
             -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
             --max-time 60 \
             --max-redirs 0 \
             --connect-timeout 30 \
             https://artifix.streamlit.app || echo "000")
-          
-          echo "HTTP Status Code (prima richiesta): $HTTP_CODE"
-          
-          # Seconda richiesta dopo 5 secondi (per essere sicuri)
-          sleep 5
-          
-          HTTP_CODE_2=$(curl -sS -o /dev/null -w "%{http_code}" \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
-            --max-time 60 \
-            --max-redirs 0 \
-            --connect-timeout 30 \
-            https://artifix.streamlit.app || echo "000")
-          
-          echo "HTTP Status Code (seconda richiesta): $HTTP_CODE_2"
-          
-          # Considera il job "successo" se almeno una richiesta è arrivata
-          if [ "$HTTP_CODE" != "000" ] || [ "$HTTP_CODE_2" != "000" ]; then
+
+          echo "HTTP Status Code: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "000" ]; then
             echo "✅ ArtiFix ha ricevuto il ping ed è stata svegliata"
             exit 0
           else
