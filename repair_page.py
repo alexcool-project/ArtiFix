@@ -11,6 +11,7 @@ from translations import get_text
 
 
 # Formati che non possono essere "riparati" come mesh 3D
+# NOTA: i valori devono corrispondere alle chiavi di traduzione per il messaggio multilingua
 NON_MESH_FORMATS = {
     '.svg': 'grafica vettoriale 2D',
     '.pdf': 'documento PDF',
@@ -82,10 +83,9 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     if file_ext_check in NON_MESH_FORMATS:
         tipo = NON_MESH_FORMATS[file_ext_check]
         st.error(
-            f"❌ **Formato non supportato per la riparazione.**\n\n"
-            f"Il file `{file_ext_check}` è un file di **{tipo}**, non una mesh 3D. "
-            f"La riparazione è disponibile solo per file di geometria 3D (STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D).\n\n"
-            f"💡 Per lavorare con file {tipo}, usa la sezione **Converti Formati** o il **Viewer 3D**."
+            f"{t('repair_error_non_mesh_title')}\n\n"
+            f"{t('repair_error_non_mesh_desc', ext=file_ext_check, tipo=tipo)}\n\n"
+            f"💡 {t('repair_error_non_mesh_hint', tipo=tipo)}"
         )
         return
 
@@ -158,10 +158,9 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         if not is_valid_mesh:
             step_placeholders["lettura"].markdown(f"❌ 📖 Lettura fallita")
             st.error(
-                f"❌ **Impossibile riparare questo file.**\n\n"
-                f"Il file `.{file_extension}` non contiene una mesh 3D valida con vertici e facce. "
-                f"La riparazione è disponibile solo per file di geometria 3D.\n\n"
-                f"💡 Formati supportati per la riparazione: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**."
+                f"{t('repair_error_invalid_mesh_title')}\n\n"
+                f"{t('repair_error_invalid_mesh_desc', ext=file_extension)}\n\n"
+                f"💡 {t('repair_error_invalid_mesh_hint')}"
             )
             return
 
