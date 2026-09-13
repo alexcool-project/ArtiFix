@@ -20,37 +20,27 @@ def analyze_mesh(mesh):
         return None
     
     report = {
-        # Metriche di base
         "vertices": 0,
         "faces": 0,
         "edges": 0,
-        
-        # Metriche geometriche
         "volume": 0.0,
         "area": 0.0,
         "is_watertight": False,
         "is_winding_consistent": False,
         "is_volume": False,
-        
-        # Problemi rilevati
         "non_manifold_edges": 0,
         "degenerate_faces": 0,
         "duplicate_vertices": 0,
         "holes": 0,
         "connected_components": 0,
         "flipped_normals": 0,
-        
-        # Bounding box
         "bbox_min": [0.0, 0.0, 0.0],
         "bbox_max": [0.0, 0.0, 0.0],
         "bbox_size": [0.0, 0.0, 0.0],
-        
-        # Info extra
         "is_empty": False,
     }
     
     try:
-        # --- METRICHE DI BASE ---
         report["vertices"] = len(mesh.vertices) if hasattr(mesh, 'vertices') else 0
         report["faces"] = len(mesh.faces) if hasattr(mesh, 'faces') else 0
         report["edges"] = len(mesh.edges) if hasattr(mesh, 'edges') else 0
@@ -59,7 +49,6 @@ def analyze_mesh(mesh):
             report["is_empty"] = True
             return report
         
-        # --- METRICHE GEOMETRICHE ---
         try:
             report["volume"] = float(abs(mesh.volume)) if mesh.is_volume else 0.0
         except Exception:
@@ -74,10 +63,6 @@ def analyze_mesh(mesh):
         report["is_winding_consistent"] = bool(mesh.is_winding_consistent) if hasattr(mesh, 'is_winding_consistent') else False
         report["is_volume"] = bool(mesh.is_volume) if hasattr(mesh, 'is_volume') else False
         
-        # --- PROBLEMI RILEVATI ---
-        # Non-manifold edges (calcolo corretto)
-        # Uno spigolo è manifold se ha ESATTAMENTE 2 facce adiacenti.
-        # Non-manifold = spigoli con 1 faccia (bordo aperto) o >2 facce (T-junction).
         try:
             unique_edges, counts = np.unique(mesh.edges_sorted, axis=0, return_counts=True)
             non_manifold_count = int(np.sum(counts != 2))
@@ -85,14 +70,12 @@ def analyze_mesh(mesh):
         except Exception:
             report["non_manifold_edges"] = 0
         
-        # Componenti connessi
         try:
             components = mesh.split(only_watertight=False)
             report["connected_components"] = len(components) if components else 1
         except Exception:
             report["connected_components"] = 1
         
-        # Buchi rilevati
         try:
             if not mesh.is_watertight:
                 unique_edges, counts = np.unique(mesh.edges_sorted, axis=0, return_counts=True)
@@ -103,21 +86,18 @@ def analyze_mesh(mesh):
         except Exception:
             report["holes"] = 0
         
-        # Triangoli degeneri (area ~ 0)
         try:
             face_areas = mesh.area_faces
             report["degenerate_faces"] = int(np.sum(face_areas < 1e-10))
         except Exception:
             report["degenerate_faces"] = 0
         
-        # Vertici duplicati
         try:
             unique_vertices = trimesh.grouping.unique_rows(mesh.vertices)[0]
             report["duplicate_vertices"] = max(0, len(mesh.vertices) - len(unique_vertices))
         except Exception:
             report["duplicate_vertices"] = 0
         
-        # Normali invertite
         try:
             if not mesh.is_winding_consistent:
                 report["flipped_normals"] = report["faces"] // 2
@@ -126,7 +106,6 @@ def analyze_mesh(mesh):
         except Exception:
             report["flipped_normals"] = 0
         
-        # --- BOUNDING BOX ---
         try:
             bounds = mesh.bounds
             report["bbox_min"] = [float(x) for x in bounds[0]]
@@ -145,31 +124,12 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
     """
     Analizza il report di una mesh e restituisce una diagnosi testuale
     con suggerimenti pratici per l'utente.
-    
-    Args:
-        report_before: dict da analyze_mesh() prima della riparazione
-        report_after: dict da analyze_mesh() dopo la riparazione (opzionale)
-        lang: 'it' o 'en'
-        
-    Returns:
-        dict: {
-            'severity': 'ok' | 'warning' | 'critical',
-            'title': str,
-            'description': str,
-            'issues': list[str],
-            'suggestions': list[str],
-            'technical_details': list[str],
-            'suggestion_header': str,
-            'details_header': str,
-        }
     """
     if report_before is None:
         return None
     
-    # Usa report_after se disponibile, altrimenti report_before
     report = report_after if report_after is not None else report_before
     
-    # --- TESTI TRADOTTI ---
     T = {
         "it": {
             "ok_title": "✅ Mesh valida",
@@ -178,7 +138,6 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
             "warning_desc": "La mesh è riparabile ma presenta alcune imperfezioni. I problemi minori sono stati corretti.",
             "critical_title": "🔴 Mesh non riparabile automaticamente",
             "critical_desc": "La mesh presenta problemi strutturali che richiedono un intervento manuale in un software CAD/solid modeler.",
-            
             "issue_multi_component": "Mesh composta da {n} componenti separati (non è un solido unico)",
             "issue_not_watertight": "Mesh aperta (non watertight) - ci sono superfici non chiuse",
             "issue_volume_zero": "Volume nullo - la mesh non forma un solido chiuso",
@@ -187,7 +146,6 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
             "issue_flipped_normals": "Normali invertite in alcune facce",
             "issue_degenerate_faces": "{n} triangoli degeneri (area ~ 0)",
             "issue_duplicate_vertices": "{n} vertici duplicati",
-            
             "suggestion_blender": "Apri la mesh in **Blender** (gratuito), applica 'Merge by distance' (M → By Distance) per unire i vertici, poi 'Fill holes' (Edge → Fill Holes) per chiudere i buchi",
             "suggestion_freecad": "Apri la mesh in **FreeCAD** (gratuito), usa la workbench 'Mesh' → 'Analyze' → 'Repair' per unire i componenti e chiudere i buchi",
             "suggestion_meshmixer": "Apri la mesh in **Meshmixer** (gratuito, Windows/Mac), usa 'Edit' → 'Make Solid' per ricostruire un solido chiuso",
@@ -195,7 +153,6 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
             "suggestion_sketchup": "Se esporti da **SketchUp**: esporta in OBJ invece che STL, poi unisci i vertici in Blender prima di esportare in STL",
             "suggestion_unions": "Se il modello ha pezzi separati per errore, uniscili nel CAD prima dell'esportazione (operazione 'boolean union' o 'merge')",
             "suggestion_export": "Verifica le **impostazioni di esportazione** del tuo CAD: scegli 'solido' o 'watertight' invece di 'superficie' o 'mesh'",
-            
             "suggestion_header": "Come risolvere",
             "details_header": "Dettagli tecnici",
         },
@@ -206,7 +163,6 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
             "warning_desc": "The mesh is repairable but has some imperfections. Minor issues have been corrected.",
             "critical_title": "🔴 Mesh not automatically repairable",
             "critical_desc": "The mesh has structural issues that require manual intervention in a CAD/solid modeler software.",
-            
             "issue_multi_component": "Mesh made of {n} separate components (not a single solid)",
             "issue_not_watertight": "Open mesh (not watertight) - there are non-closed surfaces",
             "issue_volume_zero": "Zero volume - the mesh does not form a closed solid",
@@ -215,7 +171,6 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
             "issue_flipped_normals": "Inverted normals in some faces",
             "issue_degenerate_faces": "{n} degenerate triangles (area ~ 0)",
             "issue_duplicate_vertices": "{n} duplicate vertices",
-            
             "suggestion_blender": "Open the mesh in **Blender** (free), apply 'Merge by distance' (M → By Distance) to merge vertices, then 'Fill holes' (Edge → Fill Holes) to close holes",
             "suggestion_freecad": "Open the mesh in **FreeCAD** (free), use 'Mesh' workbench → 'Analyze' → 'Repair' to merge components and close holes",
             "suggestion_meshmixer": "Open the mesh in **Meshmixer** (free, Windows/Mac), use 'Edit' → 'Make Solid' to rebuild a closed solid",
@@ -223,7 +178,6 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
             "suggestion_sketchup": "If exporting from **SketchUp**: export to OBJ instead of STL, then merge vertices in Blender before exporting to STL",
             "suggestion_unions": "If the model has separated parts by mistake, merge them in the CAD before export ('boolean union' or 'merge' operation)",
             "suggestion_export": "Check your **CAD export settings**: choose 'solid' or 'watertight' instead of 'surface' or 'mesh'",
-            
             "suggestion_header": "How to fix",
             "details_header": "Technical details",
         }
@@ -231,7 +185,6 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
     
     tr = T.get(lang, T["it"])
     
-    # --- ANALISI DIAGNOSTICA ---
     issues = []
     suggestions = []
     technical_details = []
@@ -245,11 +198,9 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
     degenerate = report.get("degenerate_faces", 0)
     duplicates = report.get("duplicate_vertices", 0)
     
-    # --- RILEVAMENTO PROBLEMI ---
     has_critical = False
     has_warning = False
     
-    # Multi-componente (esploso o mesh frammentata)
     if components > 1:
         issues.append(tr["issue_multi_component"].format(n=components))
         technical_details.append(f"Connected components: {components}")
@@ -261,14 +212,12 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
             has_warning = True
             suggestions.append(tr["suggestion_blender"])
     
-    # Non watertight
     if not is_watertight:
         issues.append(tr["issue_not_watertight"])
         technical_details.append(f"Watertight: No")
         has_critical = True
         suggestions.append(tr["suggestion_meshmixer"])
     
-    # Volume zero
     if volume <= 0.001:
         issues.append(tr["issue_volume_zero"])
         technical_details.append(f"Volume: {volume:.2f}")
@@ -276,7 +225,6 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
         if tr["suggestion_solid_modeler"] not in suggestions:
             suggestions.append(tr["suggestion_solid_modeler"])
     
-    # Buchi
     if holes > 0:
         issues.append(tr["issue_many_holes"].format(n=holes))
         technical_details.append(f"Holes: {holes}")
@@ -285,37 +233,31 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
             if tr["suggestion_blender"] not in suggestions:
                 suggestions.append(tr["suggestion_blender"])
     
-    # Spigoli non-manifold
     if non_manifold > 0:
         issues.append(tr["issue_non_manifold"].format(n=non_manifold))
         technical_details.append(f"Non-manifold edges: {non_manifold}")
         has_warning = True
     
-    # Normali invertite
     if flipped > 0:
         issues.append(tr["issue_flipped_normals"])
         technical_details.append(f"Flipped normals: {flipped}")
         has_warning = True
     
-    # Triangoli degeneri
     if degenerate > 0:
         issues.append(tr["issue_degenerate_faces"].format(n=degenerate))
         technical_details.append(f"Degenerate faces: {degenerate}")
         has_warning = True
     
-    # Vertici duplicati
     if duplicates > 0:
         issues.append(tr["issue_duplicate_vertices"].format(n=duplicates))
         technical_details.append(f"Duplicate vertices: {duplicates}")
         has_warning = True
     
-    # --- SUGGERIMENTI AGGIUNTIVI ---
     if has_critical and tr["suggestion_export"] not in suggestions:
         suggestions.append(tr["suggestion_export"])
     if has_critical and components > 1 and tr["suggestion_sketchup"] not in suggestions:
         suggestions.append(tr["suggestion_sketchup"])
     
-    # --- DETERMINAZIONE SEVERITÀ ---
     if has_critical:
         severity = "critical"
         title = tr["critical_title"]
@@ -344,20 +286,10 @@ def diagnose_mesh(report_before, report_after=None, lang="it"):
 def repair_mesh(mesh):
     """
     Ripara una mesh applicando le correzioni necessarie.
-    Restituisce la mesh riparata e un report delle azioni applicate.
-    
-    Args:
-        mesh: oggetto trimesh.Trimesh
-        
-    Returns:
-        tuple: (mesh_riparata, dict_azioni)
     """
     if mesh is None:
         return None, {}
     
-    # ⚠️ FIX CRITICO: crea una COPIA della mesh prima di modificarla.
-    # Senza questa copia, mesh_before e mesh_after puntano allo stesso oggetto
-    # e le metriche Prima/Dopo risulterebbero identiche.
     mesh = mesh.copy()
     
     actions = {
@@ -372,7 +304,6 @@ def repair_mesh(mesh):
     }
     
     try:
-        # --- 1. MERGE VERTICI DUPLICATI ---
         try:
             before_vertices = len(mesh.vertices)
             mesh.merge_vertices()
@@ -381,7 +312,6 @@ def repair_mesh(mesh):
         except Exception:
             pass
         
-        # --- 2. RIMOZIONE TRIANGOLI DEGENERI ---
         try:
             before_faces = len(mesh.faces)
             mask = mesh.nondegenerate_faces()
@@ -391,7 +321,6 @@ def repair_mesh(mesh):
         except Exception:
             pass
         
-        # --- 3. RIMOZIONE FACCE DUPLICATE ---
         try:
             before_faces = len(mesh.faces)
             mesh.update_faces(mesh.unique_faces())
@@ -400,7 +329,6 @@ def repair_mesh(mesh):
         except Exception:
             pass
         
-        # --- 4. RIMOZIONE VERTICI NON REFERENZIATI ---
         try:
             before_vertices = len(mesh.vertices)
             mesh.remove_unreferenced_vertices()
@@ -409,7 +337,6 @@ def repair_mesh(mesh):
         except Exception:
             pass
         
-        # --- 5. CORREZIONE NORMALI INVERTITE ---
         try:
             if not mesh.is_winding_consistent:
                 trimesh.repair.fix_winding(mesh)
@@ -421,7 +348,6 @@ def repair_mesh(mesh):
         except Exception:
             pass
         
-        # --- 6. CORREZIONE INVERSIONE ---
         try:
             if not mesh.is_volume:
                 trimesh.repair.fix_inversion(mesh)
@@ -429,7 +355,6 @@ def repair_mesh(mesh):
         except Exception:
             pass
         
-        # --- 7. CHIUSURA BUCHI ---
         try:
             if not mesh.is_watertight:
                 trimesh.repair.fill_holes(mesh)
@@ -446,15 +371,7 @@ def repair_mesh(mesh):
 def generate_report_data(mesh_before, mesh_after, actions, lang="it"):
     """
     Genera i dati strutturati per il report di riparazione.
-    
-    Args:
-        mesh_before: mesh prima della riparazione
-        mesh_after: mesh dopo la riparazione
-        actions: dizionario con azioni applicate
-        lang: lingua ('it' o 'en')
-        
-    Returns:
-        dict: dati pronti per essere visualizzati
+    Include anche la diagnosi intelligente.
     """
     before = analyze_mesh(mesh_before)
     after = analyze_mesh(mesh_after)
@@ -469,10 +386,10 @@ def generate_report_data(mesh_before, mesh_after, actions, lang="it"):
             "watertight_before": before["is_watertight"] if before else False,
             "watertight_after": after["is_watertight"] if after else False,
             "issues_fixed": 0,
-        }
+        },
+        "diagnosis": None,
     }
     
-    # Conta problemi risolti
     issues_fixed = 0
     if actions.get("merged_vertices", 0) > 0:
         issues_fixed += 1
@@ -489,20 +406,19 @@ def generate_report_data(mesh_before, mesh_after, actions, lang="it"):
     
     report["summary"]["issues_fixed"] = issues_fixed
     
+    # Genera la diagnosi intelligente e la include nel report
+    try:
+        report["diagnosis"] = diagnose_mesh(before, after, lang=lang)
+    except Exception:
+        report["diagnosis"] = None
+    
     return report
 
 
 def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.pdf"):
     """
     Genera un PDF con il report di riparazione.
-    
-    Args:
-        report_data: dizionario da generate_report_data()
-        lang: lingua ('it' o 'en')
-        filename: nome del file PDF da generare
-        
-    Returns:
-        bytes: contenuto del PDF
+    Include la diagnosi intelligente all'inizio se severity != 'ok'.
     """
     try:
         from reportlab.lib.pagesizes import A4
@@ -510,7 +426,7 @@ def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.
         from reportlab.lib.units import mm
         from reportlab.lib import colors
         from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
         )
         from reportlab.lib.enums import TA_CENTER, TA_LEFT
         from io import BytesIO
@@ -518,7 +434,6 @@ def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.
     except ImportError:
         return None
     
-    # --- TRADUZIONI DEL PDF ---
     T = {
         "it": {
             "title": "Report Riparazione ArtiFix",
@@ -537,13 +452,11 @@ def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.
             "area": "Area Superficiale",
             "watertight": "Watertight (chiusa)",
             "winding": "Normali coerenti",
-            "is_volume": "Volume valido",
             "non_manifold": "Spigoli non-manifold",
             "degenerate": "Triangoli degeneri",
             "duplicates": "Vertici duplicati",
             "holes": "Buchi rilevati",
             "components": "Componenti connessi",
-            "flipped": "Normali invertite",
             "bbox": "Dimensioni bounding box",
             "yes": "Sì",
             "no": "No",
@@ -579,13 +492,11 @@ def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.
             "area": "Surface Area",
             "watertight": "Watertight",
             "winding": "Consistent normals",
-            "is_volume": "Valid volume",
             "non_manifold": "Non-manifold edges",
             "degenerate": "Degenerate triangles",
             "duplicates": "Duplicate vertices",
             "holes": "Detected holes",
             "components": "Connected components",
-            "flipped": "Flipped normals",
             "bbox": "Bounding box size",
             "yes": "Yes",
             "no": "No",
@@ -658,6 +569,47 @@ def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.
         alignment=TA_CENTER,
     )
     
+    # --- STILI DIAGNOSI ---
+    diagnosis_title_critical = ParagraphStyle(
+        'DiagCriticalTitle',
+        parent=styles['Heading2'],
+        fontSize=13,
+        textColor=colors.HexColor('#dc2626'),
+        spaceBefore=6,
+        spaceAfter=8,
+    )
+    diagnosis_title_warning = ParagraphStyle(
+        'DiagWarningTitle',
+        parent=styles['Heading2'],
+        fontSize=13,
+        textColor=colors.HexColor('#d97706'),
+        spaceBefore=6,
+        spaceAfter=8,
+    )
+    diagnosis_title_ok = ParagraphStyle(
+        'DiagOkTitle',
+        parent=styles['Heading2'],
+        fontSize=13,
+        textColor=colors.HexColor('#16a34a'),
+        spaceBefore=6,
+        spaceAfter=8,
+    )
+    diagnosis_body = ParagraphStyle(
+        'DiagBody',
+        parent=styles['Normal'],
+        fontSize=10,
+        leading=14,
+        spaceAfter=6,
+    )
+    diagnosis_list = ParagraphStyle(
+        'DiagList',
+        parent=styles['Normal'],
+        fontSize=9,
+        leading=13,
+        leftIndent=12,
+        spaceAfter=3,
+    )
+    
     story = []
     
     # --- TITOLO ---
@@ -668,6 +620,41 @@ def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.
         normal_style
     ))
     story.append(Spacer(1, 10*mm))
+    
+    # --- DIAGNOSI INTELLIGENTE (all'inizio, se severity != ok) ---
+    diagnosis = report_data.get("diagnosis")
+    if diagnosis and diagnosis.get("severity") != "ok":
+        if diagnosis["severity"] == "critical":
+            story.append(Paragraph(diagnosis["title"], diagnosis_title_critical))
+        elif diagnosis["severity"] == "warning":
+            story.append(Paragraph(diagnosis["title"], diagnosis_title_warning))
+        else:
+            story.append(Paragraph(diagnosis["title"], diagnosis_title_ok))
+        
+        story.append(Paragraph(diagnosis["description"], diagnosis_body))
+        story.append(Spacer(1, 4*mm))
+        
+        if diagnosis.get("issues"):
+            story.append(Paragraph("<b>🔍 " + ("Problemi rilevati:" if lang == "it" else "Issues detected:") + "</b>", diagnosis_body))
+            for issue in diagnosis["issues"]:
+                story.append(Paragraph(f"• {issue}", diagnosis_list))
+            story.append(Spacer(1, 4*mm))
+        
+        if diagnosis.get("suggestions"):
+            story.append(Paragraph(f"<b>💡 {diagnosis['suggestion_header']}:</b>", diagnosis_body))
+            for i, suggestion in enumerate(diagnosis["suggestions"], 1):
+                clean_suggestion = suggestion.replace("**", "")
+                story.append(Paragraph(f"{i}. {clean_suggestion}", diagnosis_list))
+            story.append(Spacer(1, 4*mm))
+        
+        if diagnosis.get("technical_details"):
+            story.append(Paragraph(f"<b>🔧 {diagnosis['details_header']}:</b>", diagnosis_body))
+            for detail in diagnosis["technical_details"]:
+                story.append(Paragraph(f"• {detail}", diagnosis_list))
+        
+        story.append(Spacer(1, 8*mm))
+        story.append(Paragraph("—" * 40, normal_style))
+        story.append(Spacer(1, 6*mm))
     
     # --- TABELLA ANALISI (PRIMA) ---
     if report_data.get("before"):
@@ -748,78 +735,4 @@ def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.
     # --- AZIONI DI RIPARAZIONE ---
     if report_data.get("actions"):
         story.append(Paragraph(tr["section_actions"], section_style))
-        actions = report_data["actions"]
-        action_rows = [[tr["action"], tr["result"]]]
-        
-        if actions.get("merged_vertices", 0) > 0:
-            action_rows.append([tr["merged_v"], f'{actions["merged_vertices"]:,}'])
-        if actions.get("removed_degenerate_faces", 0) > 0:
-            action_rows.append([tr["removed_degen"], f'{actions["removed_degenerate_faces"]:,}'])
-        if actions.get("removed_duplicate_faces", 0) > 0:
-            action_rows.append([tr["removed_dup_faces"], f'{actions["removed_duplicate_faces"]:,}'])
-        if actions.get("removed_unreferenced", 0) > 0:
-            action_rows.append([tr["removed_unref"], f'{actions["removed_unreferenced"]:,}'])
-        if actions.get("fixed_normals"):
-            action_rows.append([tr["fixed_normals"], tr["yes"]])
-        if actions.get("filled_holes"):
-            action_rows.append([tr["filled_holes"], tr["yes"]])
-        if actions.get("fix_inversion"):
-            action_rows.append([tr["fix_inversion"], tr["yes"]])
-        
-        if len(action_rows) == 1:
-            action_rows.append(["—", tr["no"]])
-        
-        t = Table(action_rows, colWidths=[110*mm, 40*mm])
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dddddd')),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ]))
-        story.append(t)
-        story.append(Spacer(1, 8*mm))
-    
-    # --- RIEPILOGO ---
-    if report_data.get("summary"):
-        story.append(Paragraph(tr["section_summary"], section_style))
-        summary = report_data["summary"]
-        summary_data = [
-            [tr["issues_fixed"], f'{summary["issues_fixed"]}'],
-            [tr["vertices_delta"], f'{summary["vertices_delta"]:+,}'],
-            [tr["faces_delta"], f'{summary["faces_delta"]:+,}'],
-            [tr["watertight"], f'{tr["no"]} → {tr["yes"] if summary["watertight_after"] else tr["no"]}'],
-        ]
-        t = Table(summary_data, colWidths=[110*mm, 40*mm])
-        t.setStyle(TableStyle([
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dddddd')),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f0f7ff')),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ]))
-        story.append(t)
-        story.append(Spacer(1, 8*mm))
-        
-        story.append(Paragraph(tr["conclusion_ok"], normal_style))
-    
-    story.append(Spacer(1, 15*mm))
-    story.append(Paragraph(tr["footer"], footer_style))
-    
-    doc.build(story)
-    buffer.seek(0)
-    return buffer.getvalue()
+        actions = report_data
