@@ -1,5 +1,5 @@
 # repair_page.py
-# Logica completa per la pagina "Ripara File" con step-by-step progress (FASE A.1)
+# Logica completa per la pagina "Ripara File" con step-by-step progress (FASE A.2)
 
 import streamlit as st
 import trimesh
@@ -10,9 +10,20 @@ from mesh_analyzer import analyze_mesh, repair_mesh, generate_report_data, gener
 from translations import get_text
 
 
+# Formati che non possono essere "riparati" come mesh 3D
+NON_MESH_FORMATS = {
+    '.svg': 'grafica vettoriale 2D',
+    '.pdf': 'documento PDF',
+    '.docx': 'documento Word',
+    '.xlsx': 'foglio di calcolo Excel',
+    '.dxf': 'disegno CAD 2D',
+    '.dwg': 'disegno CAD 2D proprietario',
+}
+
+
 def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     """
-    Renderizza l'intera pagina "Ripara File" con sistema step-by-step (FASE A.1).
+    Renderizza l'intera pagina "Ripara File" con sistema step-by-step (FASE A.2).
     """
     def t(key, **kwargs):
         return get_text(key, st.session_state.lang, **kwargs)
@@ -65,6 +76,19 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             'uploaded_file_id': current_file_id
         }
 
+    # --- CONTROLLO PREVENTIVO: FORMATI NON-MESH ---
+    file_name_check = st.session_state.repair_state['file_name']
+    file_ext_check = os.path.splitext(file_name_check)[1].lower()
+    if file_ext_check in NON_MESH_FORMATS:
+        tipo = NON_MESH_FORMATS[file_ext_check]
+        st.error(
+            f"❌ **Formato non supportato per la riparazione.**\n\n"
+            f"Il file `.svg` è un file di **{tipo}**, non una mesh 3D. "
+            f"La riparazione è disponibile solo per file di geometria 3D (STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D).\n\n"
+            f"💡 Per lavorare con file {tipo}, usa la sezione **Converti Formati** o il **Viewer 3D**."
+        )
+        return
+
     # --- SE NON ELABORATO, ESEGUI ---
     if not st.session_state.repair_state['processing_done']:
         file_bytes = st.session_state.repair_state['file_bytes']
@@ -75,7 +99,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         # --- COMPONENTI UI ---
         progress_bar = st.progress(0, text="0%")
 
-        # Riquadro informazioni tempo (messaggio onesto, senza numeri fuorvianti)
+        # Riquadro informazioni tempo (messaggio onesto)
         time_info_placeholder = st.empty()
         time_info_placeholder.info(
             "⏱️ **Elaborazione in corso.** Il tempo di riparazione varia in base alla complessità del file "
@@ -113,11 +137,32 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         step_placeholders["lettura"].markdown(f"🔄 📖 Lettura struttura mesh — in corso (0%)")
         time.sleep(0.3)
 
-        mesh_before = load_3d_file_func(file_bytes, file_extension)
-
-        if mesh_before is None:
+        try:
+            mesh_before = load_3d_file_func(file_bytes, file_extension)
+        except Exception as e:
             step_placeholders["lettura"].markdown(f"❌ 📖 Lettura fallita")
-            st.error(f"❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
+            st.error(f"❌ Errore durante la lettura del file: {str(e)}")
+            return
+
+        # --- CONTROLLO ROBUSTO: VERIFICA CHE SIA UNA MESH 3D VALIDA ---
+        is_valid_mesh = (
+            mesh_before is not None
+            and hasattr(mesh_before, 'vertices')
+            and hasattr(mesh_before, 'faces')
+            and mesh_before.vertices is not None
+            and mesh_before.faces is not None
+            and len(mesh_before.vertices) > 0
+            and len(mesh_before.faces) > 0
+        )
+
+        if not is_valid_mesh:
+            step_placeholders["lettura"].markdown(f"❌ 📖 Lettura fallita")
+            st.error(
+                f"❌ **Impossibile riparare questo file.**\n\n"
+                f"Il file `.{file_extension}` non contiene una mesh 3D valida con vertici e facce. "
+                f"La riparazione è disponibile solo per file di geometria 3D.\n\n"
+                f"💡 Formati supportati per la riparazione: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**."
+            )
             return
 
         step_placeholders["lettura"].markdown(
@@ -152,11 +197,10 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         progress_bar.progress(50, text="50%")
         time.sleep(0.2)
 
-        # --- STEP 5: RIPARAZIONE (il più pesante) ---
+        # --- STEP 5: RIPARAZIONE ---
         step_placeholders["riparazione"].markdown(f"🔄 🔧 Riparazione mesh — in corso (0%)")
         time.sleep(0.3)
 
-        # Operazione bloccante (Streamlit si ferma qui)
         mesh_after, actions = repair_mesh(mesh_before)
 
         step_placeholders["riparazione"].markdown(f"✅ 🔧 Riparazione mesh completata")
