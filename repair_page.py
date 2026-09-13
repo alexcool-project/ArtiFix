@@ -36,23 +36,34 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         key="repair"
     )
     
-    # --- RESET SE NUOVO FILE ---
-    if uploaded_file is not None:
-        current_file_id = f"{uploaded_file.name}_{uploaded_file.size}"
-        if st.session_state.repair_state['uploaded_file_id'] != current_file_id:
+    # --- SE L'UTENTE HA RIMOSSO IL FILE, RESETTA TUTTO ---
+    if uploaded_file is None:
+        # Se c'erano dati elaborati, resetta lo stato
+        if st.session_state.repair_state['uploaded_file_id'] is not None:
             st.session_state.repair_state = {
                 'processing_done': False,
-                'file_name': uploaded_file.name,
-                'file_bytes': uploaded_file.getvalue(),
+                'file_name': None,
+                'file_bytes': None,
                 'mesh_after': None,
                 'report_data': None,
                 'pdf_bytes': None,
-                'uploaded_file_id': current_file_id
+                'uploaded_file_id': None
             }
-    
-    # --- SE NESSUN FILE IN MEMORIA, ESCI ---
-    if st.session_state.repair_state['file_bytes'] is None:
+            st.rerun()
         return
+    
+    # --- RESET SE NUOVO FILE ---
+    current_file_id = f"{uploaded_file.name}_{uploaded_file.size}"
+    if st.session_state.repair_state['uploaded_file_id'] != current_file_id:
+        st.session_state.repair_state = {
+            'processing_done': False,
+            'file_name': uploaded_file.name,
+            'file_bytes': uploaded_file.getvalue(),
+            'mesh_after': None,
+            'report_data': None,
+            'pdf_bytes': None,
+            'uploaded_file_id': current_file_id
+        }
     
     # --- SE NON ELABORATO, ESEGUI ---
     if not st.session_state.repair_state['processing_done']:
