@@ -1,5 +1,5 @@
 # repair_page.py
-# Logica completa per la pagina "Ripara File" con step-by-step progress (FASE A)
+# Logica completa per la pagina "Ripara File" con step-by-step progress (FASE A.1)
 
 import streamlit as st
 import trimesh
@@ -10,37 +10,9 @@ from mesh_analyzer import analyze_mesh, repair_mesh, generate_report_data, gener
 from translations import get_text
 
 
-def estimate_processing_time(file_size_mb, vertices, faces):
-    """
-    Stima il tempo di elaborazione in secondi basandosi sulla complessità del file.
-    Formula empirica basata su test reali.
-    """
-    # Fattori di peso (in secondi)
-    time_io = file_size_mb * 0.5           # I/O del file
-    time_vertices = (vertices / 10000) * 0.3  # Elaborazione vertici
-    time_faces = (faces / 10000) * 0.5        # Elaborazione facce (più pesante)
-
-    total = time_io + time_vertices + time_faces
-
-    # Aggiungi un margine di sicurezza del 30%
-    return max(10, int(total * 1.3))
-
-
-def format_time(seconds):
-    """Formatta i secondi in formato leggibile MM:SS o 'X minuti'."""
-    if seconds < 60:
-        return f"{seconds}s"
-    else:
-        minutes = seconds // 60
-        secs = seconds % 60
-        if secs > 0:
-            return f"{minutes}m {secs}s"
-        return f"{minutes} minuti"
-
-
 def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     """
-    Renderizza l'intera pagina "Ripara File" con sistema step-by-step (FASE A).
+    Renderizza l'intera pagina "Ripara File" con sistema step-by-step (FASE A.1).
     """
     def t(key, **kwargs):
         return get_text(key, st.session_state.lang, **kwargs)
@@ -100,17 +72,17 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
         file_size_mb = len(file_bytes) / (1024 * 1024)
 
-        # --- STIMA TEMPO INIZIALE ---
-        # Stima approssimativa basata sulla dimensione file
-        # (verrà raffinata dopo il caricamento della mesh)
-        estimated_initial = int(file_size_mb * 3)
-
         # --- COMPONENTI UI ---
         progress_bar = st.progress(0, text="0%")
 
-        # Riquadro tempo stimato
+        # Riquadro informazioni tempo (messaggio onesto, senza numeri fuorvianti)
         time_info_placeholder = st.empty()
-        time_info_placeholder.info(f"⏱️ **Tempo stimato:** circa {format_time(estimated_initial)}. Il tempo effettivo dipende dalla complessità del file.")
+        time_info_placeholder.info(
+            "⏱️ **Elaborazione in corso.** Il tempo di riparazione varia in base alla complessità del file "
+            "(numero di vertici, facce, presenza di errori geometrici). Per file di grandi dimensioni "
+            "l'operazione può richiedere **diversi minuti**. La pagina potrebbe non aggiornarsi per alcuni istanti, "
+            "ma il processo è attivo. **Attendere prego.**"
+        )
 
         st.markdown("##### 📋 Processi in corso")
         step_container = st.container()
@@ -138,7 +110,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
 
         # --- STEP 2: LETTURA ---
         progress_bar.progress(15, text="15%")
-        step_placeholders["lettura"].markdown(f"🔄 📖 Lettura struttura mesh — 0%")
+        step_placeholders["lettura"].markdown(f"🔄 📖 Lettura struttura mesh — in corso (0%)")
         time.sleep(0.3)
 
         mesh_before = load_3d_file_func(file_bytes, file_extension)
@@ -152,25 +124,10 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             f"✅ 📖 Lettura struttura mesh ({len(mesh_before.vertices):,} vertici, {len(mesh_before.faces):,} facce)"
         )
 
-        # --- RAFFINA STIMA TEMPO IN BASE AL CONTENUTO ---
-        estimated_refined = estimate_processing_time(
-            file_size_mb,
-            len(mesh_before.vertices),
-            len(mesh_before.faces)
-        )
-        time_info_placeholder.info(
-            f"⏱️ **Tempo stimato:** circa {format_time(estimated_refined)}. "
-            f"Basato su {len(mesh_before.vertices):,} vertici e {len(mesh_before.faces):,} facce."
-        )
-
         # --- STEP 3: ANALISI INIZIALE ---
         progress_bar.progress(30, text="30%")
-        step_placeholders["analisi_iniziale"].markdown(f"🔄 🔍 Analisi iniziale — 0%")
-        time.sleep(0.2)
-        step_placeholders["analisi_iniziale"].markdown(f"🔄 🔍 Analisi iniziale — 30%")
-        time.sleep(0.2)
-        step_placeholders["analisi_iniziale"].markdown(f"🔄 🔍 Analisi iniziale — 60%")
-        time.sleep(0.2)
+        step_placeholders["analisi_iniziale"].markdown(f"🔄 🔍 Analisi iniziale — in corso (0%)")
+        time.sleep(0.3)
 
         report_before = analyze_mesh(mesh_before)
 
@@ -179,10 +136,8 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         time.sleep(0.2)
 
         # --- STEP 4: RILEVAMENTO ---
-        step_placeholders["rilevamento"].markdown(f"🔄 🔎 Rilevamento problemi — 0%")
-        time.sleep(0.2)
-        step_placeholders["rilevamento"].markdown(f"🔄 🔎 Rilevamento problemi — 50%")
-        time.sleep(0.2)
+        step_placeholders["rilevamento"].markdown(f"🔄 🔎 Rilevamento problemi — in corso (0%)")
+        time.sleep(0.3)
 
         problemi_totali = (
             report_before.get("non_manifold_edges", 0) +
@@ -198,19 +153,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         time.sleep(0.2)
 
         # --- STEP 5: RIPARAZIONE (il più pesante) ---
-        step_placeholders["riparazione"].markdown(f"🔄 🔧 Riparazione mesh — avvio...")
-
-        # Messaggio onesto ma non allarmante
-        st.info(
-            "⏳ **Elaborazione in corso.** Questa è la fase più impegnativa. "
-            "La pagina potrebbe non aggiornarsi per alcuni istanti mentre il server elabora la geometria. "
-            "Attendere prego, il processo è attivo."
-        )
-
-        # Simulazione progressione visiva PRIMA dell'operazione bloccante
-        step_placeholders["riparazione"].markdown(f"🔄 🔧 Riparazione mesh — 10%")
-        time.sleep(0.3)
-        step_placeholders["riparazione"].markdown(f"🔄 🔧 Riparazione mesh — 25%")
+        step_placeholders["riparazione"].markdown(f"🔄 🔧 Riparazione mesh — in corso (0%)")
         time.sleep(0.3)
 
         # Operazione bloccante (Streamlit si ferma qui)
@@ -221,10 +164,8 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         time.sleep(0.3)
 
         # --- STEP 6: ANALISI FINALE ---
-        step_placeholders["analisi_finale"].markdown(f"🔄 📊 Analisi finale — 0%")
-        time.sleep(0.2)
-        step_placeholders["analisi_finale"].markdown(f"🔄 📊 Analisi finale — 50%")
-        time.sleep(0.2)
+        step_placeholders["analisi_finale"].markdown(f"🔄 📊 Analisi finale — in corso (0%)")
+        time.sleep(0.3)
 
         report_after = analyze_mesh(mesh_after)
 
@@ -233,15 +174,10 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         time.sleep(0.2)
 
         # --- STEP 7: REPORT ---
-        step_placeholders["report"].markdown(f"🔄 📄 Generazione report — 0%")
-        time.sleep(0.2)
-        step_placeholders["report"].markdown(f"🔄 📄 Generazione report — 30%")
-        time.sleep(0.2)
+        step_placeholders["report"].markdown(f"🔄 📄 Generazione report — in corso (0%)")
+        time.sleep(0.3)
 
         report_data = generate_report_data(mesh_before, mesh_after, actions, lang=st.session_state.lang)
-        step_placeholders["report"].markdown(f"🔄 📄 Generazione report — 70%")
-        time.sleep(0.2)
-
         pdf_bytes = generate_pdf_report(report_data, lang=st.session_state.lang)
 
         step_placeholders["report"].markdown(f"✅ 📄 Report generato")
