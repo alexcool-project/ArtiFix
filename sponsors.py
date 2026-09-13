@@ -254,6 +254,25 @@ def render_sponsor_band(lang="it"):
     </html>
     """
 
+    # ============================================================
+    # NOTA MANUTENZIONE FUTURA
+    # ============================================================
+    # st.components.v1.html è deprecato ma ancora funzionante.
+    # Streamlit ha annunciato la rimozione dopo il 2026-06-01,
+    # ma al momento attuale la funzione è ancora supportata.
+    #
+    # Perché non usiamo st.iframe / components.iframe?
+    # Perché queste API supportano solo URL esterni (src=...),
+    # NON HTML+JavaScript inline come serve alla sponsor band.
+    #
+    # QUANDO MIGRARE:
+    # Quando Streamlit rilascerà st.iframe con supporto srcdoc
+    # (iframe HTML5), potremo sostituire questa chiamata con:
+    #     st.iframe(srcdoc=html, height=iframe_height)
+    #
+    # Il warning nel log è puramente informativo e non blocca
+    # il funzionamento della sponsor band.
+    # ============================================================
     components.html(html, height=iframe_height, scrolling=False)
 
 
