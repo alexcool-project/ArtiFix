@@ -34,6 +34,23 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
+# --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
+# ✅ NOVITÀ: ora include il corpo email con tutti i campi da compilare
+SPONSOR_MAILTO = (
+    "mailto:info@artifix.it"
+    "?subject=Richiesta%20Sponsorizzazione%20ArtiFix"
+    "&body=Buongiorno%20Team%20ArtiFix%2C%0D%0A%0D%0A"
+    "Sono%20interessato%2Fa%20alla%20sponsorizzazione%20di%20ArtiFix.%0D%0A%0D%0A"
+    "Ecco%20i%20miei%20dati%3A%0D%0A%0D%0A"
+    "%F0%9F%8F%A2%20Nome%20Azienda%3A%20%0D%0A"
+    "%F0%9F%8C%90%20Sito%20Web%3A%20%0D%0A"
+    "%F0%9F%93%A7%20Email%3A%20%0D%0A"
+    "%F0%9F%93%9E%20Telefono%3A%20%0D%0A"
+    "%F0%9F%96%BC%EF%B8%8F%20Logo%20(URL%20GitHub%20Raw%20o%20allegato)%3A%20%0D%0A%0D%0A"
+    "%F0%9F%92%AC%20Messaggio%3A%0D%0A%0D%0A"
+    "Grazie%2C%0D%0A%5BNome%20e%20Cognome%5D"
+)
+
 # --- CONFIGURAZIONE PAGINA (DEVE ESSERE LA PRIMA ISTRUZIONE STREAMLIT) ---
 if CUBO_URL:
     st.set_page_config(
@@ -520,9 +537,10 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
+    # ✅ MODIFICA 1: pulsante sponsor con template email precompilato
     st.markdown(
         f"""
-        <a href="mailto:info@artifix.it?subject=Sponsorizzazione%20ArtiFix" style="display:block; text-align:center; background:#fff4e6; color:#c26a00; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px; border:1px solid #ffd9a8;">
+        <a href="{SPONSOR_MAILTO}" style="display:block; text-align:center; background:#fff4e6; color:#c26a00; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px; border:1px solid #ffd9a8;">
             {t("nav_become_sponsor")}
         </a>
         """,
@@ -1217,7 +1235,11 @@ elif page == "Diventa Sponsor":
             nome_brand = st.text_input(t("sponsor_form_brand"))
             email_ref = st.text_input(t("sponsor_form_email"))
             sito = st.text_input(t("sponsor_form_site"))
-            logo_url = st.text_input(t("sponsor_form_logo"))
+            # ✅ MODIFICA 2: campo logo con placeholder GitHub Raw
+            logo_url = st.text_input(
+                t("sponsor_form_logo"),
+                placeholder="https://raw.githubusercontent.com/..."
+            )
             messaggio = st.text_area(t("sponsor_form_message"))
             invia = st.form_submit_button(t("sponsor_form_submit"), type="primary")
 
