@@ -50,6 +50,14 @@ TRANSLATIONS = {
         "repair_button_download": "📥 Scarica",
         "repair_success": "✅ Riparato!",
 
+        # --- ERRORI RIPARAZIONE ---
+        "repair_error_non_mesh_title": "❌ **Formato non supportato per la riparazione.**",
+        "repair_error_non_mesh_desc": "Il file `{ext}` è un file di **{tipo}**, non una mesh 3D.",
+        "repair_error_non_mesh_hint": "Per lavorare con file {tipo}, usa la sezione **Converti Formati** o il **Viewer 3D**.",
+        "repair_error_invalid_mesh_title": "❌ **Impossibile riparare questo file.**",
+        "repair_error_invalid_mesh_desc": "Il file `{ext}` non contiene una mesh 3D valida con vertici e facce.",
+        "repair_error_invalid_mesh_hint": "Formati supportati: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**.",
+
         # --- REPORT RIPARAZIONE ---
         "report_header": "📊 Report Riparazione Dettagliato",
         "report_subtitle": "Analisi completa delle modifiche apportate al file.",
@@ -291,6 +299,14 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti. La versione agg
         "repair_button_repair": "🔧 Repair",
         "repair_button_download": "📥 Download",
         "repair_success": "✅ Repaired!",
+
+        # --- REPAIR ERRORS ---
+        "repair_error_non_mesh_title": "❌ **Format not supported for repair.**",
+        "repair_error_non_mesh_desc": "The file `{ext}` is a **{tipo}** file, not a 3D mesh.",
+        "repair_error_non_mesh_hint": "To work with {tipo} files, use the **Format Conversion** or **3D Viewer** section.",
+        "repair_error_invalid_mesh_title": "❌ **Cannot repair this file.**",
+        "repair_error_invalid_mesh_desc": "The file `{ext}` does not contain a valid 3D mesh with vertices and faces.",
+        "repair_error_invalid_mesh_hint": "Supported formats: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**.",
 
         # --- REPAIR REPORT ---
         "report_header": "📊 Detailed Repair Report",
