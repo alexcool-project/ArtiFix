@@ -58,6 +58,14 @@ TRANSLATIONS = {
         "repair_error_invalid_mesh_desc": "Il file `{ext}` non contiene una mesh 3D valida con vertici e facce.",
         "repair_error_invalid_mesh_hint": "Formati supportati: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**.",
 
+        # --- TIPI DI FORMATO NON-MESH ---
+        "type_svg": "grafica vettoriale 2D",
+        "type_pdf": "documento PDF",
+        "type_docx": "documento Word",
+        "type_xlsx": "foglio di calcolo Excel",
+        "type_dxf": "disegno CAD 2D",
+        "type_dwg": "disegno CAD 2D proprietario",
+
         # --- REPORT RIPARAZIONE ---
         "report_header": "📊 Report Riparazione Dettagliato",
         "report_subtitle": "Analisi completa delle modifiche apportate al file.",
@@ -307,6 +315,14 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti. La versione agg
         "repair_error_invalid_mesh_title": "❌ **Cannot repair this file.**",
         "repair_error_invalid_mesh_desc": "The file `{ext}` does not contain a valid 3D mesh with vertices and faces.",
         "repair_error_invalid_mesh_hint": "Supported formats: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**.",
+
+        # --- NON-MESH FORMAT TYPES ---
+        "type_svg": "2D vector graphics",
+        "type_pdf": "PDF document",
+        "type_docx": "Word document",
+        "type_xlsx": "spreadsheet",
+        "type_dxf": "2D CAD drawing",
+        "type_dwg": "proprietary 2D CAD drawing",
 
         # --- REPAIR REPORT ---
         "report_header": "📊 Detailed Repair Report",
