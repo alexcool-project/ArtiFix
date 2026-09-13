@@ -43,3 +43,4 @@ streamlit-cookies-controller
 trimesh[all]
 PyPDF2
 pymeshlab
+reportlab
