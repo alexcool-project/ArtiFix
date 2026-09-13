@@ -487,12 +487,16 @@ with st.sidebar:
                 current_index = idx
                 break
 
+        # ✅ FIX: key univoca per lingua, così Streamlit non perde la selezione
+        # quando l'utente cambia lingua IT → EN → IT
+        nav_key = f"navigation_{st.session_state.lang}"
+
         page = st.radio(
             t("sidebar_navigation"),
             PAGE_ORDER,
             format_func=lambda x: t(PAGE_KEYS.get(x, x)),
             index=current_index,
-            key="navigation",
+            key=nav_key,
             label_visibility="collapsed"
         )
         st.session_state.page_attuale = page
