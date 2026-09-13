@@ -871,10 +871,13 @@ elif page == "Converti Formati":
                                 }
                                 st.info(t("convert_info_ready"))
                                 time.sleep(1)
+                                # ✅ FIX: usa il nome originale del file con la nuova estensione
+                                original_name = os.path.splitext(file_name)[0]
+                                converted_filename = f"{original_name}.{target_ext}"
                                 st.download_button(
                                     label=t("convert_button_download", format=target_ext),
                                     data=result_bytes,
-                                    file_name=f"converted.{target_ext}",
+                                    file_name=converted_filename,
                                     mime=mime_types.get(target_ext, 'application/octet-stream'),
                                     use_container_width=True
                                 )
