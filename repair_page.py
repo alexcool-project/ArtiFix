@@ -6,7 +6,13 @@ import trimesh
 import os
 import time
 import io
-from mesh_analyzer import analyze_mesh, repair_mesh, generate_report_data, generate_pdf_report
+from mesh_analyzer import (
+    analyze_mesh,
+    repair_mesh,
+    generate_report_data,
+    generate_pdf_report,
+    diagnose_mesh,
+)
 from translations import get_text
 
 
@@ -243,6 +249,66 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     file_name = st.session_state.repair_state['file_name']
 
     st.success(t("repair_success"))
+
+    # ============================================================
+    # DIAGNOSI INTELLIGENTE
+    # ============================================================
+    diagnosis = diagnose_mesh(
+        report_data.get('before') if report_data else None,
+        report_data.get('after') if report_data else None,
+        lang=st.session_state.lang
+    )
+
+    if diagnosis:
+        if diagnosis['severity'] == 'critical':
+            st.error(f"### {diagnosis['title']}")
+            st.markdown(diagnosis['description'])
+
+            if diagnosis['issues']:
+                st.markdown("**🔍 Problemi rilevati:**")
+                for issue in diagnosis['issues']:
+                    st.markdown(f"- {issue}")
+
+            if diagnosis['suggestions']:
+                with st.expander(f"💡 {diagnosis['suggestion_header']}", expanded=True):
+                    for i, suggestion in enumerate(diagnosis['suggestions'], 1):
+                        st.markdown(f"**{i}.** {suggestion}")
+
+            if diagnosis['technical_details']:
+                with st.expander(f"🔧 {diagnosis['details_header']}"):
+                    for detail in diagnosis['technical_details']:
+                        st.markdown(f"- `{detail}`")
+
+            st.markdown("---")
+
+        elif diagnosis['severity'] == 'warning':
+            st.warning(f"### {diagnosis['title']}")
+            st.markdown(diagnosis['description'])
+
+            if diagnosis['issues']:
+                st.markdown("**🔍 Problemi rilevati:**")
+                for issue in diagnosis['issues']:
+                    st.markdown(f"- {issue}")
+
+            if diagnosis['suggestions']:
+                with st.expander(f"💡 {diagnosis['suggestion_header']}", expanded=False):
+                    for i, suggestion in enumerate(diagnosis['suggestions'], 1):
+                        st.markdown(f"**{i}.** {suggestion}")
+
+            if diagnosis['technical_details']:
+                with st.expander(f"🔧 {diagnosis['details_header']}"):
+                    for detail in diagnosis['technical_details']:
+                        st.markdown(f"- `{detail}`")
+
+            st.markdown("---")
+
+        else:  # ok
+            st.success(f"### {diagnosis['title']}")
+            st.markdown(diagnosis['description'])
+            st.markdown("---")
+    # ============================================================
+    # FINE DIAGNOSI INTELLIGENTE
+    # ============================================================
 
     # --- VISUALIZZAZIONE DEL REPORT ---
     st.subheader(t("report_header"))
