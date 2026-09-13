@@ -1,5 +1,5 @@
 # repair_page.py
-# Logica completa per la pagina "Ripara File" con persistenza in session_state
+# Logica completa per la pagina "Ripara File" con step-by-step progress
 
 import streamlit as st
 import trimesh
@@ -11,12 +11,8 @@ from translations import get_text
 
 def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     """
-    Renderizza l'intera pagina "Ripara File".
-    Args:
-        load_3d_file_func: La funzione load_3d_file definita in app.py
-        ALL_EXTENSIONS: La lista di tutte le estensioni supportate
+    Renderizza l'intera pagina "Ripara File" con sistema step-by-step.
     """
-    # Funzione helper per la traduzione, che usa la lingua corrente
     def t(key, **kwargs):
         return get_text(key, st.session_state.lang, **kwargs)
 
@@ -40,11 +36,10 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         key="repair"
     )
     
-    # --- SE È STATO CARICATO UN NUOVO FILE, RESETTA LO STATO ---
+    # --- RESET SE NUOVO FILE ---
     if uploaded_file is not None:
         current_file_id = f"{uploaded_file.name}_{uploaded_file.size}"
         if st.session_state.repair_state['uploaded_file_id'] != current_file_id:
-            # Nuovo file caricato, resetta lo stato
             st.session_state.repair_state = {
                 'processing_done': False,
                 'file_name': uploaded_file.name,
@@ -55,69 +50,116 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
                 'uploaded_file_id': current_file_id
             }
     
-    # --- SE NON C'È UN FILE IN MEMORIA, ESCI ---
+    # --- SE NESSUN FILE IN MEMORIA, ESCI ---
     if st.session_state.repair_state['file_bytes'] is None:
         return
     
-    # --- SE IL FILE È STATO CARICATO MA NON ELABORATO, ELABORALO ---
+    # --- SE NON ELABORATO, ESEGUI ---
     if not st.session_state.repair_state['processing_done']:
         file_bytes = st.session_state.repair_state['file_bytes']
         file_name = st.session_state.repair_state['file_name']
         file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
+        file_size_mb = len(file_bytes) / (1024 * 1024)
 
-        # --- AVANZAMENTO STEP-BY-STEP ---
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+        # --- COMPONENTI UI ---
+        # Barra di avanzamento + percentuale (SEMPRE VISIBILE)
+        progress_bar = st.progress(0, text="0%")
         
-        # Step 1: Analisi
-        status_text.text(t("repair_status_analyzing"))
-        progress_bar.progress(10)
+        # Contenitore per l'elenco step-by-step
+        st.markdown("##### 📋 Processi in corso")
+        step_container = st.container()
+        step_placeholders = {}
+        
+        # Definisci gli step
+        steps = [
+            ("ricezione", "📂 Ricezione del file"),
+            ("lettura", "📖 Lettura struttura mesh"),
+            ("analisi_iniziale", "🔍 Analisi iniziale"),
+            ("rilevamento", "🔎 Rilevamento problemi geometrici"),
+            ("riparazione", "🔧 Riparazione mesh"),
+            ("analisi_finale", "📊 Analisi finale"),
+            ("report", "📄 Generazione report"),
+        ]
+        
+        # Crea placeholder per ogni step
+        with step_container:
+            for key, label in steps:
+                step_placeholders[key] = st.empty()
+                step_placeholders[key].markdown(f"⏸️ {label}")
+        
+        # --- STEP 1: RICEZIONE ---
+        progress_bar.progress(5, text="5%")
+        step_placeholders["ricezione"].markdown(f"✅ 📂 Ricezione del file ({file_size_mb:.1f} MB)")
         time.sleep(0.3)
         
-        # Step 2: Caricamento mesh
-        status_text.text("📖 Lettura del file in corso...")
-        progress_bar.progress(25)
+        # --- STEP 2: LETTURA ---
+        progress_bar.progress(15, text="15%")
+        step_placeholders["lettura"].markdown(f"🔄 📖 Lettura struttura mesh...")
         time.sleep(0.3)
         
         mesh_before = load_3d_file_func(file_bytes, file_extension)
         
         if mesh_before is None:
+            step_placeholders["lettura"].markdown(f"❌ 📖 Lettura fallita")
             st.error(f"❌ Impossibile caricare il modello. Assicurati che il file sia un modello 3D valido.")
-            progress_bar.empty()
-            status_text.empty()
             return
         
-        # Step 3: Analisi iniziale
-        status_text.text("🔍 Analisi struttura mesh...")
-        progress_bar.progress(40)
+        step_placeholders["lettura"].markdown(f"✅ 📖 Lettura struttura mesh ({len(mesh_before.vertices):,} vertici, {len(mesh_before.faces):,} facce)")
+        
+        # --- STEP 3: ANALISI INIZIALE ---
+        progress_bar.progress(30, text="30%")
+        step_placeholders["analisi_iniziale"].markdown(f"🔄 🔍 Analisi iniziale in corso...")
         time.sleep(0.3)
         
         report_before = analyze_mesh(mesh_before)
         
-        # Step 4: Riparazione
-        status_text.text(t("repair_status_verifying"))
-        progress_bar.progress(55)
+        step_placeholders["analisi_iniziale"].markdown(f"✅ 🔍 Analisi iniziale completata")
+        progress_bar.progress(40, text="40%")
         time.sleep(0.3)
+        
+        # --- STEP 4: RILEVAMENTO ---
+        step_placeholders["rilevamento"].markdown(f"🔄 🔎 Rilevamento problemi geometrici...")
+        time.sleep(0.3)
+        
+        problemi_totali = (
+            report_before.get("non_manifold_edges", 0) +
+            report_before.get("degenerate_faces", 0) +
+            report_before.get("duplicate_vertices", 0) +
+            report_before.get("holes", 0)
+        )
+        step_placeholders["rilevamento"].markdown(f"✅ 🔎 Rilevamento problemi ({problemi_totali:,} problemi trovati)")
+        progress_bar.progress(50, text="50%")
+        time.sleep(0.3)
+        
+        # --- STEP 5: RIPARAZIONE ---
+        step_placeholders["riparazione"].markdown(f"🔄 🔧 Riparazione mesh in corso...")
+        st.info("⏳ **Elaborazione in corso.** Per file di grandi dimensioni, questa operazione può richiedere 30-60 secondi. La pagina sembrerà bloccata, ma sta lavorando.")
         
         mesh_after, actions = repair_mesh(mesh_before)
         
-        # Step 5: Analisi finale
-        status_text.text("⚙️ Verifica del risultato...")
-        progress_bar.progress(75)
+        step_placeholders["riparazione"].markdown(f"✅ 🔧 Riparazione mesh completata")
+        progress_bar.progress(70, text="70%")
+        time.sleep(0.3)
+        
+        # --- STEP 6: ANALISI FINALE ---
+        step_placeholders["analisi_finale"].markdown(f"🔄 📊 Analisi finale in corso...")
         time.sleep(0.3)
         
         report_after = analyze_mesh(mesh_after)
         
-        # Step 6: Generazione report
-        status_text.text(t("repair_status_completing"))
-        progress_bar.progress(90)
+        step_placeholders["analisi_finale"].markdown(f"✅ 📊 Analisi finale completata")
+        progress_bar.progress(85, text="85%")
+        time.sleep(0.3)
+        
+        # --- STEP 7: REPORT ---
+        step_placeholders["report"].markdown(f"🔄 📄 Generazione report in corso...")
         time.sleep(0.3)
         
         report_data = generate_report_data(mesh_before, mesh_after, actions, lang=st.session_state.lang)
         pdf_bytes = generate_pdf_report(report_data, lang=st.session_state.lang)
         
-        # Step 7: Completato
-        progress_bar.progress(100)
+        step_placeholders["report"].markdown(f"✅ 📄 Report generato")
+        progress_bar.progress(100, text="100%")
         time.sleep(0.3)
         
         # Salva in session_state
@@ -126,12 +168,9 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         st.session_state.repair_state['report_data'] = report_data
         st.session_state.repair_state['pdf_bytes'] = pdf_bytes
         
-        progress_bar.empty()
-        status_text.empty()
-        
         st.rerun()
     
-    # --- MOSTRA IL REPORT (dati già pronti in session_state) ---
+    # --- MOSTRA IL REPORT (dati già pronti) ---
     report_data = st.session_state.repair_state['report_data']
     mesh_after = st.session_state.repair_state['mesh_after']
     pdf_bytes = st.session_state.repair_state['pdf_bytes']
