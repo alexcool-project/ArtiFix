@@ -79,23 +79,11 @@ def analyze_mesh(mesh):
         # Uno spigolo è manifold se ha ESATTAMENTE 2 facce adiacenti.
         # Non-manifold = spigoli con 1 faccia (bordo aperto) o >2 facce (T-junction).
         try:
-            # Conta quanti edge hanno esattamente 2 facce adiacenti
-            edge_counts = trimesh.grouping.group_rows(mesh.edges_sorted, require_count=None)
-            # raggruppa per contare le occorrenze
             unique_edges, counts = np.unique(mesh.edges_sorted, axis=0, return_counts=True)
-            # Spigoli non-manifold = quelli con count != 2
             non_manifold_count = int(np.sum(counts != 2))
             report["non_manifold_edges"] = non_manifold_count
         except Exception:
-            # Fallback: se il calcolo fallisce, usa un'approssimazione
-            try:
-                if not mesh.is_watertight:
-                    # Se non è watertight, ci sono almeno degli spigoli di bordo
-                    report["non_manifold_edges"] = 0
-                else:
-                    report["non_manifold_edges"] = 0
-            except Exception:
-                report["non_manifold_edges"] = 0
+            report["non_manifold_edges"] = 0
         
         # Componenti connessi
         try:
@@ -104,15 +92,11 @@ def analyze_mesh(mesh):
         except Exception:
             report["connected_components"] = 1
         
-        # Buchi rilevati (usando l'algoritmo di trimesh)
+        # Buchi rilevati
         try:
             if not mesh.is_watertight:
-                # Usa trimesh.repair.broken_faces per capire se ci sono buchi
-                # Alternativa: conta gli spigoli di bordo (edge con 1 sola faccia)
                 unique_edges, counts = np.unique(mesh.edges_sorted, axis=0, return_counts=True)
                 boundary_edges = int(np.sum(counts == 1))
-                # Ogni buco è composto da almeno 3 edge di bordo
-                # Stima il numero di buchi come boundary_edges / 3 (approssimazione)
                 report["holes"] = max(1 if boundary_edges > 0 else 0, boundary_edges // 3)
             else:
                 report["holes"] = 0
@@ -155,6 +139,206 @@ def analyze_mesh(mesh):
         report["error"] = str(e)
     
     return report
+
+
+def diagnose_mesh(report_before, report_after=None, lang="it"):
+    """
+    Analizza il report di una mesh e restituisce una diagnosi testuale
+    con suggerimenti pratici per l'utente.
+    
+    Args:
+        report_before: dict da analyze_mesh() prima della riparazione
+        report_after: dict da analyze_mesh() dopo la riparazione (opzionale)
+        lang: 'it' o 'en'
+        
+    Returns:
+        dict: {
+            'severity': 'ok' | 'warning' | 'critical',
+            'title': str,
+            'description': str,
+            'issues': list[str],
+            'suggestions': list[str],
+            'technical_details': list[str],
+            'suggestion_header': str,
+            'details_header': str,
+        }
+    """
+    if report_before is None:
+        return None
+    
+    # Usa report_after se disponibile, altrimenti report_before
+    report = report_after if report_after is not None else report_before
+    
+    # --- TESTI TRADOTTI ---
+    T = {
+        "it": {
+            "ok_title": "✅ Mesh valida",
+            "ok_desc": "La mesh è un solido chiuso e watertight. Nessun intervento strutturale necessario.",
+            "warning_title": "⚠️ Mesh funzionante con anomalie minori",
+            "warning_desc": "La mesh è riparabile ma presenta alcune imperfezioni. I problemi minori sono stati corretti.",
+            "critical_title": "🔴 Mesh non riparabile automaticamente",
+            "critical_desc": "La mesh presenta problemi strutturali che richiedono un intervento manuale in un software CAD/solid modeler.",
+            
+            "issue_multi_component": "Mesh composta da {n} componenti separati (non è un solido unico)",
+            "issue_not_watertight": "Mesh aperta (non watertight) - ci sono superfici non chiuse",
+            "issue_volume_zero": "Volume nullo - la mesh non forma un solido chiuso",
+            "issue_many_holes": "{n} buchi rilevati nella superficie",
+            "issue_non_manifold": "{n} spigoli non-manifold (T-junction o bordi aperti)",
+            "issue_flipped_normals": "Normali invertite in alcune facce",
+            "issue_degenerate_faces": "{n} triangoli degeneri (area ~ 0)",
+            "issue_duplicate_vertices": "{n} vertici duplicati",
+            
+            "suggestion_blender": "Apri la mesh in **Blender** (gratuito), applica 'Merge by distance' (M → By Distance) per unire i vertici, poi 'Fill holes' (Edge → Fill Holes) per chiudere i buchi",
+            "suggestion_freecad": "Apri la mesh in **FreeCAD** (gratuito), usa la workbench 'Mesh' → 'Analyze' → 'Repair' per unire i componenti e chiudere i buchi",
+            "suggestion_meshmixer": "Apri la mesh in **Meshmixer** (gratuito, Windows/Mac), usa 'Edit' → 'Make Solid' per ricostruire un solido chiuso",
+            "suggestion_solid_modeler": "Usa un **solid modeler** (Fusion 360, FreeCAD, OpenSCAD, SolidWorks) per creare il modello nativamente come solido e esportare in STL/OBJ pulito",
+            "suggestion_sketchup": "Se esporti da **SketchUp**: esporta in OBJ invece che STL, poi unisci i vertici in Blender prima di esportare in STL",
+            "suggestion_unions": "Se il modello ha pezzi separati per errore, uniscili nel CAD prima dell'esportazione (operazione 'boolean union' o 'merge')",
+            "suggestion_export": "Verifica le **impostazioni di esportazione** del tuo CAD: scegli 'solido' o 'watertight' invece di 'superficie' o 'mesh'",
+            
+            "suggestion_header": "Come risolvere",
+            "details_header": "Dettagli tecnici",
+        },
+        "en": {
+            "ok_title": "✅ Valid mesh",
+            "ok_desc": "The mesh is a closed watertight solid. No structural intervention needed.",
+            "warning_title": "⚠️ Working mesh with minor anomalies",
+            "warning_desc": "The mesh is repairable but has some imperfections. Minor issues have been corrected.",
+            "critical_title": "🔴 Mesh not automatically repairable",
+            "critical_desc": "The mesh has structural issues that require manual intervention in a CAD/solid modeler software.",
+            
+            "issue_multi_component": "Mesh made of {n} separate components (not a single solid)",
+            "issue_not_watertight": "Open mesh (not watertight) - there are non-closed surfaces",
+            "issue_volume_zero": "Zero volume - the mesh does not form a closed solid",
+            "issue_many_holes": "{n} holes detected in the surface",
+            "issue_non_manifold": "{n} non-manifold edges (T-junctions or open borders)",
+            "issue_flipped_normals": "Inverted normals in some faces",
+            "issue_degenerate_faces": "{n} degenerate triangles (area ~ 0)",
+            "issue_duplicate_vertices": "{n} duplicate vertices",
+            
+            "suggestion_blender": "Open the mesh in **Blender** (free), apply 'Merge by distance' (M → By Distance) to merge vertices, then 'Fill holes' (Edge → Fill Holes) to close holes",
+            "suggestion_freecad": "Open the mesh in **FreeCAD** (free), use 'Mesh' workbench → 'Analyze' → 'Repair' to merge components and close holes",
+            "suggestion_meshmixer": "Open the mesh in **Meshmixer** (free, Windows/Mac), use 'Edit' → 'Make Solid' to rebuild a closed solid",
+            "suggestion_solid_modeler": "Use a **solid modeler** (Fusion 360, FreeCAD, OpenSCAD, SolidWorks) to create the model natively as a solid and export to clean STL/OBJ",
+            "suggestion_sketchup": "If exporting from **SketchUp**: export to OBJ instead of STL, then merge vertices in Blender before exporting to STL",
+            "suggestion_unions": "If the model has separated parts by mistake, merge them in the CAD before export ('boolean union' or 'merge' operation)",
+            "suggestion_export": "Check your **CAD export settings**: choose 'solid' or 'watertight' instead of 'surface' or 'mesh'",
+            
+            "suggestion_header": "How to fix",
+            "details_header": "Technical details",
+        }
+    }
+    
+    tr = T.get(lang, T["it"])
+    
+    # --- ANALISI DIAGNOSTICA ---
+    issues = []
+    suggestions = []
+    technical_details = []
+    
+    components = report.get("connected_components", 1)
+    is_watertight = report.get("is_watertight", False)
+    volume = report.get("volume", 0)
+    holes = report.get("holes", 0)
+    non_manifold = report.get("non_manifold_edges", 0)
+    flipped = report.get("flipped_normals", 0)
+    degenerate = report.get("degenerate_faces", 0)
+    duplicates = report.get("duplicate_vertices", 0)
+    
+    # --- RILEVAMENTO PROBLEMI ---
+    has_critical = False
+    has_warning = False
+    
+    # Multi-componente (esploso o mesh frammentata)
+    if components > 1:
+        issues.append(tr["issue_multi_component"].format(n=components))
+        technical_details.append(f"Connected components: {components}")
+        if components > 5:
+            has_critical = True
+            suggestions.append(tr["suggestion_solid_modeler"])
+            suggestions.append(tr["suggestion_unions"])
+        else:
+            has_warning = True
+            suggestions.append(tr["suggestion_blender"])
+    
+    # Non watertight
+    if not is_watertight:
+        issues.append(tr["issue_not_watertight"])
+        technical_details.append(f"Watertight: No")
+        has_critical = True
+        suggestions.append(tr["suggestion_meshmixer"])
+    
+    # Volume zero
+    if volume <= 0.001:
+        issues.append(tr["issue_volume_zero"])
+        technical_details.append(f"Volume: {volume:.2f}")
+        has_critical = True
+        if tr["suggestion_solid_modeler"] not in suggestions:
+            suggestions.append(tr["suggestion_solid_modeler"])
+    
+    # Buchi
+    if holes > 0:
+        issues.append(tr["issue_many_holes"].format(n=holes))
+        technical_details.append(f"Holes: {holes}")
+        if holes > 10:
+            has_warning = True
+            if tr["suggestion_blender"] not in suggestions:
+                suggestions.append(tr["suggestion_blender"])
+    
+    # Spigoli non-manifold
+    if non_manifold > 0:
+        issues.append(tr["issue_non_manifold"].format(n=non_manifold))
+        technical_details.append(f"Non-manifold edges: {non_manifold}")
+        has_warning = True
+    
+    # Normali invertite
+    if flipped > 0:
+        issues.append(tr["issue_flipped_normals"])
+        technical_details.append(f"Flipped normals: {flipped}")
+        has_warning = True
+    
+    # Triangoli degeneri
+    if degenerate > 0:
+        issues.append(tr["issue_degenerate_faces"].format(n=degenerate))
+        technical_details.append(f"Degenerate faces: {degenerate}")
+        has_warning = True
+    
+    # Vertici duplicati
+    if duplicates > 0:
+        issues.append(tr["issue_duplicate_vertices"].format(n=duplicates))
+        technical_details.append(f"Duplicate vertices: {duplicates}")
+        has_warning = True
+    
+    # --- SUGGERIMENTI AGGIUNTIVI ---
+    if has_critical and tr["suggestion_export"] not in suggestions:
+        suggestions.append(tr["suggestion_export"])
+    if has_critical and components > 1 and tr["suggestion_sketchup"] not in suggestions:
+        suggestions.append(tr["suggestion_sketchup"])
+    
+    # --- DETERMINAZIONE SEVERITÀ ---
+    if has_critical:
+        severity = "critical"
+        title = tr["critical_title"]
+        description = tr["critical_desc"]
+    elif has_warning:
+        severity = "warning"
+        title = tr["warning_title"]
+        description = tr["warning_desc"]
+    else:
+        severity = "ok"
+        title = tr["ok_title"]
+        description = tr["ok_desc"]
+    
+    return {
+        "severity": severity,
+        "title": title,
+        "description": description,
+        "issues": issues,
+        "suggestions": suggestions,
+        "technical_details": technical_details,
+        "suggestion_header": tr["suggestion_header"],
+        "details_header": tr["details_header"],
+    }
 
 
 def repair_mesh(mesh):
@@ -436,7 +620,6 @@ def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.
     
     styles = getSampleStyleSheet()
     
-    # Stili personalizzati
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
