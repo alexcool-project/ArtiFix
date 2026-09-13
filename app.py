@@ -1,8 +1,4 @@
 import streamlit as st
-
-# DEBUG 1: Streamlit importato
-st.write("🟢 DEBUG 1: Streamlit importato correttamente")
-
 import ezdxf
 import trimesh
 import io
@@ -17,26 +13,19 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import time
 
-# DEBUG 2: librerie base
-st.write("🟢 DEBUG 2: Librerie base importate")
-
 # --- MODULO SPONSOR (Google Sheets) ---
 from sponsors import load_sponsors, render_sponsor_band, sponsor_band_placeholder
-st.write("🟢 DEBUG 3: Modulo sponsors importato")
 
 # --- MODULO TRADUZIONI (IT/EN) ---
 from translations import TRANSLATIONS, get_text, detect_browser_language
-st.write("🟢 DEBUG 4: Modulo translations importato")
 
 # --- LIBRERIA COOKIE (OPZIONALE) ---
 try:
     from streamlit_cookies_controller import CookieController
     cookie_controller = CookieController()
     COOKIE_LIB = True
-    st.write("🟢 DEBUG 5: CookieController OK")
 except ImportError:
     COOKIE_LIB = False
-    st.write("🟡 DEBUG 5: CookieController non disponibile (fallback)")
 
 # --- LINK DIRETTI DELLE IMMAGINI (GitHub Raw) ---
 CUBO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs/images/ArchiFix_cubo-logo.png"
@@ -45,39 +34,33 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
-# DEBUG 6: prima di set_page_config
-st.write("🟢 DEBUG 6: Arrivato prima di set_page_config")
-
 # --- CONFIGURAZIONE PAGINA (DEVE ESSERE LA PRIMA ISTRUZIONE STREAMLIT) ---
-try:
+if CUBO_URL:
     st.set_page_config(
         page_title="ArtiFix - Universal CAD/CAM Repair",
         page_icon=CUBO_URL,
         layout="wide",
         initial_sidebar_state="expanded"
     )
-except Exception as e:
-    st.error(f"❌ ERRORE in set_page_config: {e}")
-
-# DEBUG 7: dopo set_page_config
-st.write("🟢 DEBUG 7: set_page_config completato")
+else:
+    st.set_page_config(
+        page_title="ArtiFix - Universal CAD/CAM Repair",
+        page_icon="🔧",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
 
 # --- STATO LINGUA (RILEVAMENTO BROWSER) ---
-try:
-    if 'lang' not in st.session_state:
+if 'lang' not in st.session_state:
+    try:
         st.session_state.lang = detect_browser_language()
-    st.write(f"🟢 DEBUG 8: Lingua rilevata = {st.session_state.lang}")
-except Exception as e:
-    st.error(f"❌ ERRORE in detect_browser_language: {e}")
-    st.session_state.lang = "it"
+    except Exception:
+        st.session_state.lang = "it"
 
 # --- FUNZIONE HELPER PER TRADUZIONE ---
 def t(key, **kwargs):
     """Shortcut per get_text con la lingua corrente."""
     return get_text(key, st.session_state.lang, **kwargs)
-
-# DEBUG 9: tutto ok fino a qui
-st.write("🟢 DEBUG 9: Pronto per il resto dell'app")
 
 # --- SEO META TAG ---
 st.markdown("""
@@ -104,8 +87,6 @@ st.markdown("""
 }
 </script>
 """, unsafe_allow_html=True)
-
-st.write("🟢 DEBUG 10: SEO caricato, ora eseguo il resto di app.py")
 
 # --- CSS MINIMALE E PULITO ---
 st.markdown("""
@@ -172,8 +153,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.write("🟢 DEBUG 11: CSS caricato")
-
 # --- TENTATIVO IMPORT LIBRERIE ---
 try:
     import ifcopenshell
@@ -217,8 +196,6 @@ try:
 except (ImportError, OSError):
     SVG_AVAILABLE = False
 
-st.write("🟢 DEBUG 12: Import opzionali completati")
-
 # --- STATO PAGINE E COOKIE ---
 if 'page_attuale' not in st.session_state:
     st.session_state.page_attuale = "Dashboard"
@@ -228,8 +205,6 @@ if 'cookie_consent' not in st.session_state:
         st.session_state.cookie_consent = cookie_controller.get('cookie_consent')
     else:
         st.session_state.cookie_consent = None
-
-st.write("🟢 DEBUG 13: Stato pagine inizializzato")
 
 # --- DEFINIZIONE VARIABILI ---
 SUPPORTED_FORMATS = {
@@ -274,8 +249,6 @@ FORMAT_NAMES = {
     'dxf': 'DXF (.dxf)',
     'pdf': '3D PDF (.pdf)'
 }
-
-st.write("🟢 DEBUG 14: Variabili globali definite")
 
 def detect_file_type(file_extension):
     file_extension = file_extension.lower().replace('.', '')
@@ -469,8 +442,6 @@ def invia_email(nome, email_utente, messaggio):
     except Exception as e:
         return str(e)
 
-st.write("🟢 DEBUG 15: Funzioni utility definite")
-
 # --- BARRA LATERALE ---
 with st.sidebar:
     if LOGO_URL:
@@ -554,8 +525,6 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
-st.write("🟢 DEBUG 16: Sidebar renderizzata")
-
 # --- LOGICA PAGINE ---
 if st.session_state.page_attuale == "Privacy Policy":
     page = "Privacy Policy"
@@ -590,8 +559,6 @@ if st.session_state.cookie_consent is None:
             if st.button(t("cookie_accept_all"), key="accept_cookies", type="primary", use_container_width=True):
                 st.session_state.cookie_consent = "accepted"
                 st.rerun()
-
-st.write("🟢 DEBUG 17: Cookie banner gestito")
 
 # --- DASHBOARD ---
 if page == "Dashboard":
@@ -1298,5 +1265,3 @@ st.markdown(
     f'<div class="footer-artifix">{t("footer")}</div>',
     unsafe_allow_html=True
 )
-
-st.write("🟢 DEBUG 999: app.py eseguito fino in fondo con successo!")
