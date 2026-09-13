@@ -34,6 +34,22 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
+# --- CONFIGURAZIONE PAGINA (DEVE ESSERE LA PRIMA ISTRUZIONE STREAMLIT) ---
+if CUBO_URL:
+    st.set_page_config(
+        page_title="ArtiFix - Universal CAD/CAM Repair",
+        page_icon=CUBO_URL,
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+else:
+    st.set_page_config(
+        page_title="ArtiFix - Universal CAD/CAM Repair",
+        page_icon="🔧",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+
 # --- STATO LINGUA (RILEVAMENTO BROWSER) ---
 if 'lang' not in st.session_state:
     st.session_state.lang = detect_browser_language()
