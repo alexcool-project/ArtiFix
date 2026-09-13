@@ -87,7 +87,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     file_name_check = st.session_state.repair_state['file_name']
     file_ext_check = os.path.splitext(file_name_check)[1].lower()
     if file_ext_check in NON_MESH_FORMATS:
-        # Traduce il tipo di formato (es. "type_pdf" → "PDF document" o "documento PDF")
         tipo = t(NON_MESH_FORMATS[file_ext_check])
         st.error(
             f"{t('repair_error_non_mesh_title')}\n\n"
@@ -103,10 +102,8 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
         file_size_mb = len(file_bytes) / (1024 * 1024)
 
-        # --- COMPONENTI UI ---
         progress_bar = st.progress(0, text="0%")
 
-        # Riquadro informazioni tempo (messaggio onesto)
         time_info_placeholder = st.empty()
         time_info_placeholder.info(
             "⏱️ **Elaborazione in corso.** Il tempo di riparazione varia in base alla complessità del file "
@@ -151,7 +148,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             st.error(f"❌ Errore durante la lettura del file: {str(e)}")
             return
 
-        # --- CONTROLLO ROBUSTO: VERIFICA CHE SIA UNA MESH 3D VALIDA ---
         is_valid_mesh = (
             mesh_before is not None
             and hasattr(mesh_before, 'vertices')
@@ -234,7 +230,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         progress_bar.progress(100, text="100%")
         time.sleep(0.3)
 
-        # Salva in session_state
         st.session_state.repair_state['processing_done'] = True
         st.session_state.repair_state['mesh_after'] = mesh_after
         st.session_state.repair_state['report_data'] = report_data
@@ -248,10 +243,8 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     pdf_bytes = st.session_state.repair_state['pdf_bytes']
     file_name = st.session_state.repair_state['file_name']
 
-    st.success(t("repair_success"))
-
     # ============================================================
-    # DIAGNOSI INTELLIGENTE
+    # DIAGNOSI INTELLIGENTE (mostrata PRIMA del messaggio di stato)
     # ============================================================
     diagnosis = diagnose_mesh(
         report_data.get('before') if report_data else None,
@@ -306,15 +299,27 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             st.success(f"### {diagnosis['title']}")
             st.markdown(diagnosis['description'])
             st.markdown("---")
+
     # ============================================================
-    # FINE DIAGNOSI INTELLIGENTE
+    # MESSAGGIO DI STATO CONTESTUALE (basato sulla diagnosi)
+    # ============================================================
+    if diagnosis:
+        if diagnosis['severity'] == 'critical':
+            st.info("📋 **Analisi completata** — consulta la diagnosi sopra per capire come procedere.")
+        elif diagnosis['severity'] == 'warning':
+            st.success("✅ **File elaborato con successo** — alcune anomalie minori sono state corrette.")
+        else:  # ok
+            st.success("✅ **File elaborato con successo!** La mesh era già valida e ottimale.")
+    else:
+        st.success(t("repair_success"))
+    # ============================================================
+    # FINE MESSAGGIO DI STATO
     # ============================================================
 
     # --- VISUALIZZAZIONE DEL REPORT ---
     st.subheader(t("report_header"))
     st.markdown(t("report_subtitle"))
 
-    # Tabella comparativa Prima/Dopo
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(f"#### {t('report_before')}")
@@ -336,7 +341,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         st.metric(t("report_duplicates"), f'{report_data["after"]["duplicate_vertices"]:,}')
         st.metric(t("report_holes"), f'{report_data["after"]["holes"]:,}')
 
-    # Azioni Applicate
     st.markdown("---")
     st.markdown(f"#### {t('report_actions')}")
     action_rows = []
@@ -357,7 +361,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         for row in action_rows:
             st.write(row)
 
-    # Pulsanti di Download
     st.markdown("---")
 
     col_download1, col_download2 = st.columns(2)
