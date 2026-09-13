@@ -83,7 +83,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         tipo = NON_MESH_FORMATS[file_ext_check]
         st.error(
             f"❌ **Formato non supportato per la riparazione.**\n\n"
-            f"Il file `.svg` è un file di **{tipo}**, non una mesh 3D. "
+            f"Il file `{file_ext_check}` è un file di **{tipo}**, non una mesh 3D. "
             f"La riparazione è disponibile solo per file di geometria 3D (STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D).\n\n"
             f"💡 Per lavorare con file {tipo}, usa la sezione **Converti Formati** o il **Viewer 3D**."
         )
