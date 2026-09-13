@@ -1,0 +1,618 @@
+# mesh_analyzer.py
+# Modulo per l'analisi dettagliata e la riparazione di mesh 3D
+# Fornisce un report strutturato con metriche prima/dopo e azioni di riparazione
+
+import trimesh
+import numpy as np
+
+
+def analyze_mesh(mesh):
+    """
+    Analizza una mesh e restituisce un dizionario con tutte le metriche.
+    
+    Args:
+        mesh: oggetto trimesh.Trimesh
+        
+    Returns:
+        dict: dizionario con metriche strutturate
+    """
+    if mesh is None:
+        return None
+    
+    report = {
+        # Metriche di base
+        "vertices": 0,
+        "faces": 0,
+        "edges": 0,
+        
+        # Metriche geometriche
+        "volume": 0.0,
+        "area": 0.0,
+        "is_watertight": False,
+        "is_winding_consistent": False,
+        "is_volume": False,
+        
+        # Problemi rilevati
+        "non_manifold_edges": 0,
+        "degenerate_faces": 0,
+        "duplicate_vertices": 0,
+        "holes": 0,
+        "connected_components": 0,
+        "flipped_normals": 0,
+        
+        # Bounding box
+        "bbox_min": [0.0, 0.0, 0.0],
+        "bbox_max": [0.0, 0.0, 0.0],
+        "bbox_size": [0.0, 0.0, 0.0],
+        
+        # Info extra
+        "is_empty": False,
+    }
+    
+    try:
+        # --- METRICHE DI BASE ---
+        report["vertices"] = len(mesh.vertices) if hasattr(mesh, 'vertices') else 0
+        report["faces"] = len(mesh.faces) if hasattr(mesh, 'faces') else 0
+        report["edges"] = len(mesh.edges) if hasattr(mesh, 'edges') else 0
+        
+        if report["vertices"] == 0 or report["faces"] == 0:
+            report["is_empty"] = True
+            return report
+        
+        # --- METRICHE GEOMETRICHE ---
+        try:
+            report["volume"] = float(abs(mesh.volume)) if mesh.is_volume else 0.0
+        except Exception:
+            report["volume"] = 0.0
+        
+        try:
+            report["area"] = float(mesh.area) if hasattr(mesh, 'area') else 0.0
+        except Exception:
+            report["area"] = 0.0
+        
+        report["is_watertight"] = bool(mesh.is_watertight) if hasattr(mesh, 'is_watertight') else False
+        report["is_winding_consistent"] = bool(mesh.is_winding_consistent) if hasattr(mesh, 'is_winding_consistent') else False
+        report["is_volume"] = bool(mesh.is_volume) if hasattr(mesh, 'is_volume') else False
+        
+        # --- PROBLEMI RILEVATI ---
+        # Non-manifold edges
+        try:
+            non_manifold = trimesh.grouping.group_rows(mesh.edges_sorted, require_count=2)
+            all_edges = len(mesh.edges_sorted)
+            manifold_edges = len(non_manifold)
+            report["non_manifold_edges"] = max(0, all_edges - manifold_edges)
+        except Exception:
+            report["non_manifold_edges"] = 0
+        
+        # Componenti connessi
+        try:
+            components = mesh.split(only_watertight=False)
+            report["connected_components"] = len(components) if components else 1
+        except Exception:
+            report["connected_components"] = 1
+        
+        # Buchi rilevati
+        try:
+            if not mesh.is_watertight:
+                report["holes"] = max(1, report["connected_components"])
+            else:
+                report["holes"] = 0
+        except Exception:
+            report["holes"] = 0
+        
+        # Triangoli degeneri (area ~ 0)
+        try:
+            face_areas = mesh.area_faces
+            report["degenerate_faces"] = int(np.sum(face_areas < 1e-10))
+        except Exception:
+            report["degenerate_faces"] = 0
+        
+        # Vertici duplicati
+        try:
+            unique_vertices = trimesh.grouping.unique_rows(mesh.vertices)[0]
+            report["duplicate_vertices"] = max(0, len(mesh.vertices) - len(unique_vertices))
+        except Exception:
+            report["duplicate_vertices"] = 0
+        
+        # Normali invertite
+        try:
+            if not mesh.is_winding_consistent:
+                report["flipped_normals"] = report["faces"] // 2
+            else:
+                report["flipped_normals"] = 0
+        except Exception:
+            report["flipped_normals"] = 0
+        
+        # --- BOUNDING BOX ---
+        try:
+            bounds = mesh.bounds
+            report["bbox_min"] = [float(x) for x in bounds[0]]
+            report["bbox_max"] = [float(x) for x in bounds[1]]
+            report["bbox_size"] = [float(report["bbox_max"][i] - report["bbox_min"][i]) for i in range(3)]
+        except Exception:
+            pass
+    
+    except Exception as e:
+        report["error"] = str(e)
+    
+    return report
+
+
+def repair_mesh(mesh):
+    """
+    Ripara una mesh applicando le correzioni necessarie.
+    Restituisce la mesh riparata e un report delle azioni applicate.
+    
+    Args:
+        mesh: oggetto trimesh.Trimesh
+        
+    Returns:
+        tuple: (mesh_riparata, dict_azioni)
+    """
+    if mesh is None:
+        return None, {}
+    
+    actions = {
+        "merged_vertices": 0,
+        "removed_degenerate_faces": 0,
+        "fixed_normals": False,
+        "filled_holes": False,
+        "removed_duplicate_faces": 0,
+        "fix_inversion": False,
+        "fix_winding": False,
+        "removed_unreferenced": 0,
+    }
+    
+    try:
+        # --- 1. MERGE VERTICI DUPLICATI ---
+        try:
+            before_vertices = len(mesh.vertices)
+            mesh.merge_vertices()
+            after_vertices = len(mesh.vertices)
+            actions["merged_vertices"] = max(0, before_vertices - after_vertices)
+        except Exception:
+            pass
+        
+        # --- 2. RIMOZIONE TRIANGOLI DEGENERI ---
+        try:
+            before_faces = len(mesh.faces)
+            mask = mesh.nondegenerate_faces()
+            mesh.update_faces(mask)
+            after_faces = len(mesh.faces)
+            actions["removed_degenerate_faces"] = max(0, before_faces - after_faces)
+        except Exception:
+            pass
+        
+        # --- 3. RIMOZIONE FACCE DUPLICATE ---
+        try:
+            before_faces = len(mesh.faces)
+            mesh.update_faces(mesh.unique_faces())
+            after_faces = len(mesh.faces)
+            actions["removed_duplicate_faces"] = max(0, before_faces - after_faces)
+        except Exception:
+            pass
+        
+        # --- 4. RIMOZIONE VERTICI NON REFERENZIATI ---
+        try:
+            before_vertices = len(mesh.vertices)
+            mesh.remove_unreferenced_vertices()
+            after_vertices = len(mesh.vertices)
+            actions["removed_unreferenced"] = max(0, before_vertices - after_vertices)
+        except Exception:
+            pass
+        
+        # --- 5. CORREZIONE NORMALI INVERTITE ---
+        try:
+            if not mesh.is_winding_consistent:
+                trimesh.repair.fix_winding(mesh)
+                actions["fixed_normals"] = True
+                actions["fix_winding"] = True
+            else:
+                trimesh.repair.fix_normals(mesh)
+                actions["fixed_normals"] = True
+        except Exception:
+            pass
+        
+        # --- 6. CORREZIONE INVERSIONE ---
+        try:
+            if not mesh.is_volume:
+                trimesh.repair.fix_inversion(mesh)
+                actions["fix_inversion"] = True
+        except Exception:
+            pass
+        
+        # --- 7. CHIUSURA BUCHI ---
+        try:
+            if not mesh.is_watertight:
+                trimesh.repair.fill_holes(mesh)
+                actions["filled_holes"] = True
+        except Exception:
+            pass
+    
+    except Exception as e:
+        actions["error"] = str(e)
+    
+    return mesh, actions
+
+
+def generate_report_data(mesh_before, mesh_after, actions, lang="it"):
+    """
+    Genera i dati strutturati per il report di riparazione.
+    
+    Args:
+        mesh_before: mesh prima della riparazione
+        mesh_after: mesh dopo la riparazione
+        actions: dizionario con azioni applicate
+        lang: lingua ('it' o 'en')
+        
+    Returns:
+        dict: dati pronti per essere visualizzati
+    """
+    before = analyze_mesh(mesh_before)
+    after = analyze_mesh(mesh_after)
+    
+    report = {
+        "before": before,
+        "after": after,
+        "actions": actions,
+        "summary": {
+            "vertices_delta": (after["vertices"] - before["vertices"]) if before and after else 0,
+            "faces_delta": (after["faces"] - before["faces"]) if before and after else 0,
+            "watertight_before": before["is_watertight"] if before else False,
+            "watertight_after": after["is_watertight"] if after else False,
+            "issues_fixed": 0,
+        }
+    }
+    
+    # Conta problemi risolti
+    issues_fixed = 0
+    if actions.get("merged_vertices", 0) > 0:
+        issues_fixed += 1
+    if actions.get("removed_degenerate_faces", 0) > 0:
+        issues_fixed += 1
+    if actions.get("fixed_normals"):
+        issues_fixed += 1
+    if actions.get("filled_holes"):
+        issues_fixed += 1
+    if actions.get("fix_inversion"):
+        issues_fixed += 1
+    if actions.get("removed_duplicate_faces", 0) > 0:
+        issues_fixed += 1
+    
+    report["summary"]["issues_fixed"] = issues_fixed
+    
+    return report
+
+
+def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.pdf"):
+    """
+    Genera un PDF con il report di riparazione.
+    
+    Args:
+        report_data: dizionario da generate_report_data()
+        lang: lingua ('it' o 'en')
+        filename: nome del file PDF da generare
+        
+    Returns:
+        bytes: contenuto del PDF
+    """
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import mm
+        from reportlab.lib import colors
+        from reportlab.platypus import (
+            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+        )
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT
+        from io import BytesIO
+        from datetime import datetime
+    except ImportError:
+        return None
+    
+    # --- TRADUZIONI DEL PDF ---
+    T = {
+        "it": {
+            "title": "Report Riparazione ArtiFix",
+            "subtitle": "Analisi dettagliata della mesh 3D",
+            "date": "Data",
+            "section_before": "Analisi Iniziale (Prima della riparazione)",
+            "section_after": "Analisi Finale (Dopo la riparazione)",
+            "section_actions": "Azioni di Riparazione Applicate",
+            "section_summary": "Riepilogo",
+            "metric": "Metrica",
+            "value": "Valore",
+            "vertices": "Vertici",
+            "faces": "Facce",
+            "edges": "Spigoli",
+            "volume": "Volume",
+            "area": "Area Superficiale",
+            "watertight": "Watertight (chiusa)",
+            "winding": "Normali coerenti",
+            "is_volume": "Volume valido",
+            "non_manifold": "Spigoli non-manifold",
+            "degenerate": "Triangoli degeneri",
+            "duplicates": "Vertici duplicati",
+            "holes": "Buchi rilevati",
+            "components": "Componenti connessi",
+            "flipped": "Normali invertite",
+            "bbox": "Dimensioni bounding box",
+            "yes": "Sì",
+            "no": "No",
+            "action": "Azione",
+            "result": "Risultato",
+            "merged_v": "Vertici duplicati uniti",
+            "removed_degen": "Triangoli degeneri rimossi",
+            "fixed_normals": "Normali corrette",
+            "filled_holes": "Buchi chiusi",
+            "removed_dup_faces": "Facce duplicate rimosse",
+            "fix_inversion": "Inversione corretta",
+            "removed_unref": "Vertici non referenziati rimossi",
+            "issues_fixed": "Problemi risolti",
+            "vertices_delta": "Variazione vertici",
+            "faces_delta": "Variazione facce",
+            "conclusion_ok": "Il file è stato riparato con successo e può essere scaricato.",
+            "footer": "Report generato da ArtiFix — www.artifix.it",
+        },
+        "en": {
+            "title": "ArtiFix Repair Report",
+            "subtitle": "Detailed 3D mesh analysis",
+            "date": "Date",
+            "section_before": "Initial Analysis (Before repair)",
+            "section_after": "Final Analysis (After repair)",
+            "section_actions": "Applied Repair Actions",
+            "section_summary": "Summary",
+            "metric": "Metric",
+            "value": "Value",
+            "vertices": "Vertices",
+            "faces": "Faces",
+            "edges": "Edges",
+            "volume": "Volume",
+            "area": "Surface Area",
+            "watertight": "Watertight",
+            "winding": "Consistent normals",
+            "is_volume": "Valid volume",
+            "non_manifold": "Non-manifold edges",
+            "degenerate": "Degenerate triangles",
+            "duplicates": "Duplicate vertices",
+            "holes": "Detected holes",
+            "components": "Connected components",
+            "flipped": "Flipped normals",
+            "bbox": "Bounding box size",
+            "yes": "Yes",
+            "no": "No",
+            "action": "Action",
+            "result": "Result",
+            "merged_v": "Merged duplicate vertices",
+            "removed_degen": "Removed degenerate triangles",
+            "fixed_normals": "Fixed normals",
+            "filled_holes": "Filled holes",
+            "removed_dup_faces": "Removed duplicate faces",
+            "fix_inversion": "Fixed inversion",
+            "removed_unref": "Removed unreferenced vertices",
+            "issues_fixed": "Issues fixed",
+            "vertices_delta": "Vertices delta",
+            "faces_delta": "Faces delta",
+            "conclusion_ok": "The file has been successfully repaired and can be downloaded.",
+            "footer": "Report generated by ArtiFix — www.artifix.it",
+        }
+    }
+    
+    tr = T.get(lang, T["it"])
+    buffer = BytesIO()
+    
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=20*mm,
+        leftMargin=20*mm,
+        topMargin=20*mm,
+        bottomMargin=20*mm,
+    )
+    
+    styles = getSampleStyleSheet()
+    
+    # Stili personalizzati
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=20,
+        textColor=colors.HexColor('#1f77b4'),
+        spaceAfter=6,
+        alignment=TA_CENTER,
+    )
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Normal'],
+        fontSize=12,
+        textColor=colors.HexColor('#666666'),
+        spaceAfter=20,
+        alignment=TA_CENTER,
+    )
+    section_style = ParagraphStyle(
+        'SectionTitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#1f77b4'),
+        spaceBefore=15,
+        spaceAfter=10,
+    )
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=10,
+        leading=14,
+    )
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#999999'),
+        alignment=TA_CENTER,
+    )
+    
+    story = []
+    
+    # --- TITOLO ---
+    story.append(Paragraph(tr["title"], title_style))
+    story.append(Paragraph(tr["subtitle"], subtitle_style))
+    story.append(Paragraph(
+        f'{tr["date"]}: {datetime.now().strftime("%d/%m/%Y %H:%M")}',
+        normal_style
+    ))
+    story.append(Spacer(1, 10*mm))
+    
+    # --- TABELLA ANALISI (PRIMA) ---
+    if report_data.get("before"):
+        story.append(Paragraph(tr["section_before"], section_style))
+        before = report_data["before"]
+        data_before = [
+            [tr["metric"], tr["value"]],
+            [tr["vertices"], f'{before["vertices"]:,}'],
+            [tr["faces"], f'{before["faces"]:,}'],
+            [tr["edges"], f'{before["edges"]:,}'],
+            [tr["volume"], f'{before["volume"]:.2f}'],
+            [tr["area"], f'{before["area"]:.2f}'],
+            [tr["watertight"], tr["yes"] if before["is_watertight"] else tr["no"]],
+            [tr["winding"], tr["yes"] if before["is_winding_consistent"] else tr["no"]],
+            [tr["non_manifold"], f'{before["non_manifold_edges"]:,}'],
+            [tr["degenerate"], f'{before["degenerate_faces"]:,}'],
+            [tr["duplicates"], f'{before["duplicate_vertices"]:,}'],
+            [tr["holes"], f'{before["holes"]:,}'],
+            [tr["components"], f'{before["connected_components"]:,}'],
+            [tr["bbox"], f'{before["bbox_size"][0]:.2f} × {before["bbox_size"][1]:.2f} × {before["bbox_size"][2]:.2f}'],
+        ]
+        t = Table(data_before, colWidths=[80*mm, 70*mm])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dddddd')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 8*mm))
+    
+    # --- TABELLA ANALISI (DOPO) ---
+    if report_data.get("after"):
+        story.append(Paragraph(tr["section_after"], section_style))
+        after = report_data["after"]
+        data_after = [
+            [tr["metric"], tr["value"]],
+            [tr["vertices"], f'{after["vertices"]:,}'],
+            [tr["faces"], f'{after["faces"]:,}'],
+            [tr["edges"], f'{after["edges"]:,}'],
+            [tr["volume"], f'{after["volume"]:.2f}'],
+            [tr["area"], f'{after["area"]:.2f}'],
+            [tr["watertight"], tr["yes"] if after["is_watertight"] else tr["no"]],
+            [tr["winding"], tr["yes"] if after["is_winding_consistent"] else tr["no"]],
+            [tr["non_manifold"], f'{after["non_manifold_edges"]:,}'],
+            [tr["degenerate"], f'{after["degenerate_faces"]:,}'],
+            [tr["duplicates"], f'{after["duplicate_vertices"]:,}'],
+            [tr["holes"], f'{after["holes"]:,}'],
+            [tr["components"], f'{after["connected_components"]:,}'],
+            [tr["bbox"], f'{after["bbox_size"][0]:.2f} × {after["bbox_size"][1]:.2f} × {after["bbox_size"][2]:.2f}'],
+        ]
+        t = Table(data_after, colWidths=[80*mm, 70*mm])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#28a745')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dddddd')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 8*mm))
+    
+    # --- AZIONI DI RIPARAZIONE ---
+    if report_data.get("actions"):
+        story.append(Paragraph(tr["section_actions"], section_style))
+        actions = report_data["actions"]
+        action_rows = [[tr["action"], tr["result"]]]
+        
+        if actions.get("merged_vertices", 0) > 0:
+            action_rows.append([tr["merged_v"], f'{actions["merged_vertices"]:,}'])
+        if actions.get("removed_degenerate_faces", 0) > 0:
+            action_rows.append([tr["removed_degen"], f'{actions["removed_degenerate_faces"]:,}'])
+        if actions.get("removed_duplicate_faces", 0) > 0:
+            action_rows.append([tr["removed_dup_faces"], f'{actions["removed_duplicate_faces"]:,}'])
+        if actions.get("removed_unreferenced", 0) > 0:
+            action_rows.append([tr["removed_unref"], f'{actions["removed_unreferenced"]:,}'])
+        if actions.get("fixed_normals"):
+            action_rows.append([tr["fixed_normals"], tr["yes"]])
+        if actions.get("filled_holes"):
+            action_rows.append([tr["filled_holes"], tr["yes"]])
+        if actions.get("fix_inversion"):
+            action_rows.append([tr["fix_inversion"], tr["yes"]])
+        
+        if len(action_rows) == 1:
+            action_rows.append(["—", tr["no"]])
+        
+        t = Table(action_rows, colWidths=[110*mm, 40*mm])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dddddd')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 8*mm))
+    
+    # --- RIEPILOGO ---
+    if report_data.get("summary"):
+        story.append(Paragraph(tr["section_summary"], section_style))
+        summary = report_data["summary"]
+        summary_data = [
+            [tr["issues_fixed"], f'{summary["issues_fixed"]}'],
+            [tr["vertices_delta"], f'{summary["vertices_delta"]:+,}'],
+            [tr["faces_delta"], f'{summary["faces_delta"]:+,}'],
+            [tr["watertight"], f'{tr["no"]} → {tr["yes"] if summary["watertight_after"] else tr["no"]}'],
+        ]
+        t = Table(summary_data, colWidths=[110*mm, 40*mm])
+        t.setStyle(TableStyle([
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dddddd')),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f0f7ff')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 8*mm))
+        
+        story.append(Paragraph(tr["conclusion_ok"], normal_style))
+    
+    story.append(Spacer(1, 15*mm))
+    story.append(Paragraph(tr["footer"], footer_style))
+    
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
