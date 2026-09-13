@@ -198,7 +198,7 @@ if CUBO_URL:
 else:
     st.set_page_config(
         page_title=t("app_title"),
-        page_icon="📐",
+        page_icon="🔧",
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -262,7 +262,7 @@ def load_3d_file(file_bytes, file_extension):
             'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'fbx':'fbx', '3mf':'3mf', 'dae':'dae', 'wrl':'wrl', 'off':'off', 'u3d':'u3d'
         }
         file_type = format_map.get(file_extension, file_extension)
-        
+
         if file_extension in ['obj', 'dae']:
             for method in [file_type, None]:
                 try:
@@ -288,29 +288,29 @@ def load_3d_file(file_bytes, file_extension):
 def convert_mesh(mesh, target_format):
     try:
         target_format = target_format.lower().replace('.', '')
-        
+
         if target_format == 'pdf':
             import matplotlib
             matplotlib.use('Agg')
             import matplotlib.pyplot as plt
             from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-            
+
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
-            
+
             tri_arrays = mesh.vertices[mesh.faces]
             poly3d = Poly3DCollection(tri_arrays, alpha=0.1, edgecolor='k', facecolor='#1f77b4')
             ax.add_collection3d(poly3d)
-            
+
             scale = mesh.vertices.flatten()
             ax.auto_scale_xyz(scale, scale, scale)
-            
+
             plt.savefig("converted_3d.pdf", format='pdf', bbox_inches='tight')
             plt.close()
-            
+
             with open("converted_3d.pdf", "rb") as f:
                 return f.read()
-        
+
         elif target_format == 'stl':
             return trimesh.exchange.stl.export_stl(mesh)
         elif target_format == 'obj':
@@ -352,25 +352,25 @@ def process_file(file_bytes, file_name):
     file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
     file_type, icon = detect_file_type(file_extension)
     result = {"success": False, "message": "", "type": file_type, "icon": icon, "info": {}}
-    
+
     try:
         if file_extension == 'pdf':
             if PDF_AVAILABLE:
                 pdf_reader = PdfReader(io.BytesIO(file_bytes))
                 result["success"] = True
-                result["message"] = f"✅ PDF: {len(pdf_reader.pages)} pagine"
+                result["message"] = f"📄 PDF: {len(pdf_reader.pages)} pagine"
                 result["info"] = {"pages": len(pdf_reader.pages)}
             else:
                 result["message"] = "Libreria PDF non disponibile."
-        
+
         elif file_extension == 'dxf':
             dxf_doc = ezdxf.read(io.BytesIO(file_bytes))
             entities = len(dxf_doc.entities)
             layers = set(e.dxf.layer for e in dxf_doc.entities if hasattr(e.dxf, 'layer'))
             result["success"] = True
-            result["message"] = f"✅ DXF: {entities} entità, {len(layers)} layer"
+            result["message"] = f"📐 DXF: {entities} entità, {len(layers)} layer"
             result["info"] = {"entities": entities, "layers": list(layers)[:10]}
-        
+
         elif file_extension in ['stl','obj','ply','glb','gltf','fbx','3mf','dae','wrl','off','u3d']:
             mesh = load_3d_file(file_bytes, file_extension)
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
@@ -378,8 +378,8 @@ def process_file(file_bytes, file_name):
                 result["message"] = f"✅ Mesh: {len(mesh.vertices)} vertici, {len(mesh.faces)} facce"
                 result["info"] = {"vertices": len(mesh.vertices), "faces": len(mesh.faces), "mesh": mesh}
             else:
-                result["message"] = "⚠️ File 3D non valido o formato non supportato."
-        
+                result["message"] = "❌ File 3D non valido o formato non supportato."
+
         elif file_extension == 'ifc' and IFC_AVAILABLE:
             with tempfile.NamedTemporaryFile(suffix='.ifc', delete=False) as tmp_ifc:
                 tmp_ifc.write(file_bytes)
@@ -388,14 +388,14 @@ def process_file(file_bytes, file_name):
                 ifc_file = ifcopenshell.open(tmp_ifc_path)
                 projects = ifc_file.by_type('IfcProject')
                 result["success"] = True
-                result["message"] = f"✅ IFC: {len(projects)} progetti"
+                result["message"] = f"🏗️ IFC: {len(projects)} progetti"
                 result["info"] = {"projects": len(projects)}
             finally:
                 try:
                     os.unlink(tmp_ifc_path)
                 except:
                     pass
-        
+
         elif file_extension in ['shp','geojson','kml','gpx'] and GEOPANDAS_AVAILABLE:
             if file_extension == 'shp':
                 with tempfile.NamedTemporaryFile(suffix='.shp', delete=False) as tmp:
@@ -404,15 +404,15 @@ def process_file(file_bytes, file_name):
             else:
                 gdf = gpd.read_file(io.BytesIO(file_bytes))
             result["success"] = True
-            result["message"] = f"✅ Geodati: {len(gdf)} features"
+            result["message"] = f"🌍 Geodati: {len(gdf)} features"
             result["info"] = {"features": len(gdf)}
-        
+
         else:
-            result["message"] = f"⚠️ Formato {file_extension} non supportato."
-    
+            result["message"] = f"❌ Formato {file_extension} non supportato."
+
     except Exception as e:
         result["message"] = f"❌ Errore: {str(e)}"
-    
+
     return result
 
 def invia_email(nome, email_utente, messaggio):
@@ -426,7 +426,7 @@ def invia_email(nome, email_utente, messaggio):
     msg['From'] = mittente
     msg['To'] = destinatario
     msg['Subject'] = f"Nuovo messaggio da {nome}"
-    
+
     corpo = f"Da: {nome} ({email_utente})\n\n{messaggio}"
     msg.attach(MIMEText(corpo, 'plain'))
 
@@ -445,7 +445,7 @@ with st.sidebar:
         st.markdown(f'<div class="sidebar-logo"><img src="{LOGO_URL}" alt="ArtiFix Logo"></div>', unsafe_allow_html=True)
     else:
         st.markdown('<div class="sidebar-logo"><h3 style="color:#1f77b4;margin:0;">🔧 ARTIFIX</h3></div>', unsafe_allow_html=True)
-    
+
     # --- SELETTORE LINGUA ---
     st.markdown('<div class="lang-selector">', unsafe_allow_html=True)
     lang_options = {"it": "🇮🇹 Italiano", "en": "🇬🇧 English"}
@@ -461,13 +461,13 @@ with st.sidebar:
         st.session_state.lang = selected_lang
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
-    
+
     st.markdown("---")
     st.markdown(f"## {t('sidebar_navigation')}")
-    
+
     if st.session_state.page_attuale in ["Cookie Policy", "Privacy Policy"]:
         st.session_state.navigation = "Dashboard"
-        st.markdown(f"📍 **{st.session_state.page_attuale}**")
+        st.markdown(f"🔙 **{st.session_state.page_attuale}**")
     else:
         PAGE_KEYS = {
             "Dashboard": "nav_dashboard",
@@ -478,13 +478,13 @@ with st.sidebar:
             "Diventa Sponsor": "nav_sponsor",
         }
         PAGE_ORDER = ["Dashboard", "Ripara File", "Viewer 3D", "Converti Formati", "Progetto ArtiFix", "Diventa Sponsor"]
-        
+
         current_index = 0
         for idx, p in enumerate(PAGE_ORDER):
             if p == st.session_state.page_attuale:
                 current_index = idx
                 break
-        
+
         page = st.radio(
             t("sidebar_navigation"),
             PAGE_ORDER,
@@ -494,17 +494,17 @@ with st.sidebar:
             label_visibility="collapsed"
         )
         st.session_state.page_attuale = page
-    
+
     st.markdown("---")
-    
+
     if st.button(t("nav_privacy"), key="privacy_link", use_container_width=True):
         st.session_state.page_attuale = "Privacy Policy"
         st.rerun()
-    
+
     if st.button(t("nav_cookie"), key="cookie_link", use_container_width=True):
         st.session_state.page_attuale = "Cookie Policy"
         st.rerun()
-    
+
     st.markdown(
         f"""
         <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
@@ -513,14 +513,10 @@ with st.sidebar:
         """,
         unsafe_allow_html=True
     )
-    
+
     st.markdown(
         f"""
-        <a href="mailto:info@artifix.it?subject=Sponsorizzazione%20ArtiFix" 
-           style="display:block; text-align:center; background:#fff4e6; color:#c26a00; 
-                  padding:8px; border-radius:6px; text-decoration:none; 
-                  font-weight:600; font-size:13px; margin-top:8px;
-                  border:1px solid #ffd9a8;">
+        <a href="mailto:info@artifix.it?subject=Sponsorizzazione%20ArtiFix" style="display:block; text-align:center; background:#fff4e6; color:#c26a00; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px; border:1px solid #ffd9a8;">
             {t("nav_become_sponsor")}
         </a>
         """,
@@ -545,13 +541,13 @@ if st.session_state.cookie_consent is None:
             {t("cookie_text")}
         </p>
         """, unsafe_allow_html=True)
-        
+
         st.markdown(f"""
         <div style="text-align: center; margin-bottom: 15px;">
             <strong style="color: #333;">{t("cookie_check_privacy")}</strong>
         </div>
         """, unsafe_allow_html=True)
-        
+
         col1, col2 = st.columns(2)
         with col1:
             if st.button(t("cookie_accept_necessary"), key="decline_cookies", use_container_width=True):
@@ -561,19 +557,19 @@ if st.session_state.cookie_consent is None:
             if st.button(t("cookie_accept_all"), key="accept_cookies", type="primary", use_container_width=True):
                 st.session_state.cookie_consent = "accepted"
                 st.rerun()
-    
+
 # --- DASHBOARD ---
 if page == "Dashboard":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
         st.markdown('<div class="logo-container"><img src="' + LOGO_URL + '" alt="Logo ArtiFix"></div>', unsafe_allow_html=True)
-        
+
         st.header(t("dash_header"))
         cols = st.columns(4)
         metrics = [("14,280", t("dash_metric_repaired")), ("38,910", t("dash_metric_conversions")), ("50+", t("dash_metric_formats")), ("🟢", t("dash_metric_online"))]
         for col, (val, label) in zip(cols, metrics):
             col.markdown(f'<div class="metric-card"><div class="metric-value">{val}</div><div class="metric-label">{label}</div></div>', unsafe_allow_html=True)
-        
+
         st.markdown("---")
         st.subheader(t("dash_supported_formats"))
         cols = st.columns(4)
@@ -587,69 +583,35 @@ if page == "Dashboard":
 
 # --- RIPARA FILE ---
 elif page == "Ripara File":
-    col_main, col_side = st.columns([3, 1], gap="large")
-    with col_main:
-        st.header(t("repair_header"))
-        uploaded_file = st.file_uploader(t("repair_upload"), type=[ext[1:] for ext in ALL_EXTENSIONS], key="repair")
-        if uploaded_file:
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
-            status_text.text(t("repair_status_analyzing"))
-            progress_bar.progress(30)
-            time.sleep(0.5)
-            
-            result = process_file(uploaded_file.getvalue(), uploaded_file.name)
-            
-            status_text.text(t("repair_status_verifying"))
-            progress_bar.progress(60)
-            time.sleep(0.5)
-            
-            if result["success"]:
-                status_text.text(t("repair_status_completing"))
-                progress_bar.progress(100)
-                time.sleep(0.5)
-                st.success(result["message"])
-                if result.get("info"):
-                    st.subheader(t("repair_details"))
-                    for key, value in result["info"].items():
-                        if key != 'mesh':
-                            st.metric(key.capitalize(), str(value)[:50])
-                if st.button(t("repair_button_repair")):
-                    st.success(t("repair_success"))
-                    st.download_button(t("repair_button_download"), data=uploaded_file.getvalue(), file_name=f"repaired_{uploaded_file.name}")
-            else:
-                status_text.text(t("repair_status_error"))
-                progress_bar.progress(100)
-                st.error(result["message"])
-    with col_side:
-        render_sponsor_band(st.session_state.lang)
-        sponsor_band_placeholder(st.session_state.lang)
+    from repair_page import render_repair_page
+    render_repair_page(load_3d_file, ALL_EXTENSIONS)
 
 # --- VIEWER 3D ---
 elif page == "Viewer 3D":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
         st.header(t("viewer_header"))
+
         viewer_file = st.file_uploader(t("viewer_upload"), type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"], key="viewer")
+
         if viewer_file:
             progress_bar = st.progress(0)
             status_text = st.empty()
-            
+
             status_text.text(t("viewer_status_loading"))
             progress_bar.progress(30)
             time.sleep(0.5)
-            
+
             try:
                 mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
-                
+
                 status_text.text(t("viewer_status_processing"))
                 progress_bar.progress(60)
                 time.sleep(0.5)
-                
+
                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                     st.success(t("viewer_success", vertices=len(mesh.vertices), faces=len(mesh.faces)))
-                    
+
                     try:
                         if len(mesh.vertices) > 65000:
                             target_faces = int(65000 / 3) * 3
@@ -661,7 +623,7 @@ elif page == "Viewer 3D":
                                 pass
                     except:
                         pass
-                    
+
                     if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
                         st.error(t("viewer_error_processing"))
                     else:
@@ -671,14 +633,14 @@ elif page == "Viewer 3D":
                         vertices[:, 1] -= min_y
                         vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
                         vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
-                        
+
                         mesh_data = {"vertices": vertices.tolist(), "faces": mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()}
                         mesh_json = json.dumps(mesh_data)
-                        
+
                         status_text.text(t("viewer_status_building"))
                         progress_bar.progress(100)
                         time.sleep(0.5)
-                        
+
                         viewer_html = """
                         <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:500px;}#info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.8);padding:5px 15px;border-radius:20px;}.legend{position:absolute;bottom:60px;left:20px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}.legend span{display:inline-block;width:12px;height:12px;margin-right:4px;}.axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}</style>
                         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -738,7 +700,10 @@ elif page == "Viewer 3D":
                         }
                         function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
                         animate();
-                        window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+                        window.addEventListener('resize', ()=>{
+                            camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix();
+                            renderer.setSize(container.clientWidth, container.clientHeight);
+                        });
                         </script></body></html>
                         """
                         st.components.v1.html(viewer_html, height=550)
@@ -749,26 +714,20 @@ elif page == "Viewer 3D":
     with col_side:
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
-    
+
 # --- CONVERTI FORMATI ---
 elif page == "Converti Formati":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
-        
+
         with st.expander(t("convert_expander_note")):
             st.markdown(t("convert_note_text"))
-        
+
         with st.expander(t("convert_expander_matrix")):
-            # Intestazione tabella dinamica (IT/EN)
-            if st.session_state.lang == "it":
-                matrix_header = "| Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |"
-            else:
-                matrix_header = "| From → To | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |"
-            
-            st.markdown(f"""
-            {matrix_header}
+            st.markdown("""
+            | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |
             |--------|-----|-----|-----|-----|------|-----|------|-----|-----|-----|-----|-----|
             | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
             | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -783,52 +742,52 @@ elif page == "Converti Formati":
             | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
             """)
             st.caption(t("convert_caption_matrix"))
-        
+
         uploaded_file = st.file_uploader(t("convert_upload"), type=[ext[1:] for ext in ALL_EXTENSIONS], key="convert")
         st.caption(t("convert_upload_hint"))
-        
+
         if uploaded_file:
             file_name = uploaded_file.name
             file_bytes = uploaded_file.getvalue()
             file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
             file_type, icon = detect_file_type(file_extension)
-            
+
             st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">{t("convert_file_type", type=file_type, ext=file_extension)}</div></div></div></div>', unsafe_allow_html=True)
-            
+
             convertibili = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off", "dxf", "pdf"]
-            
+
             if file_extension not in convertibili:
                 st.warning(t("convert_warning_format", format=file_extension.upper()))
                 st.info(t("convert_info_formats"))
             else:
                 target_formats = CONVERSION_MATRIX.get(file_extension, [])
                 target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
-                
+
                 if not target_options:
                     st.warning(t("convert_warning_no_target"))
                 else:
                     target_selected = st.selectbox(t("convert_target_format"), target_options)
                     target_ext = target_selected.split(".")[1].replace(")", "").strip()
-                    
+
                     if st.button(t("convert_button_convert", format=target_selected.split(' ')[0]), type="primary", use_container_width=True):
                         progress_bar = st.progress(0)
                         status_text = st.empty()
-                        
+
                         status_text.text(t("convert_status_loading"))
                         progress_bar.progress(20)
                         time.sleep(0.5)
                         mesh = load_3d_file(file_bytes, file_extension)
-                        
+
                         if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                             status_text.text(t("convert_status_converting"))
                             progress_bar.progress(70)
                             time.sleep(0.5)
                             result_bytes = convert_mesh(mesh, target_ext)
-                            
+
                             status_text.text(t("convert_status_saving"))
                             progress_bar.progress(100)
                             time.sleep(0.5)
-                            
+
                             if result_bytes:
                                 st.success(t("convert_success", format=target_selected.split(' ')[0]))
                                 mime_types = {
@@ -858,7 +817,7 @@ elif page == "Converti Formati":
                                 st.error(t("convert_error", format=target_selected.split(' ')[0]))
                         else:
                             st.error(t("convert_error_load"))
-                    
+
                     st.markdown("---")
                     if st.button(t("convert_button_preview")):
                         st.info(t("convert_info_preview"))
@@ -875,7 +834,7 @@ elif page == "Converti Formati":
                                         pass
                             except:
                                 pass
-                            
+
                             if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
                                 st.error(t("viewer_error_processing"))
                             else:
@@ -885,10 +844,10 @@ elif page == "Converti Formati":
                                 vertices[:, 1] -= min_y
                                 vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
                                 vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
-                                
+
                                 mesh_data = {"vertices": vertices.tolist(), "faces": mesh_preview.faces.tolist()}
                                 mesh_json = json.dumps(mesh_data)
-                                
+
                                 viewer_html = """
                                 <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:400px;}</style>
                                 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -939,7 +898,10 @@ elif page == "Converti Formati":
                                 }
                                 function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
                                 animate();
-                                window.addEventListener('resize', ()=>{ camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+                                window.addEventListener('resize', ()=>{
+                                    camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix();
+                                    renderer.setSize(container.clientWidth, container.clientHeight);
+                                });
                                 </script></body></html>
                                 """
                                 st.components.v1.html(viewer_html, height=400)
@@ -955,11 +917,11 @@ elif page == "Progetto ArtiFix":
     with col_main:
         st.header(t("project_header"))
         st.markdown(t("project_text"))
-        
+
         st.divider()
         st.subheader(t("project_contact"))
         st.write(t("project_contact_text"))
-        
+
         with st.form("contatti"):
             nome_input = st.text_input(t("project_form_name"))
             email_input = st.text_input(t("project_form_email"))
@@ -997,9 +959,9 @@ elif page == "Diventa Sponsor":
         st.markdown(
             f"""
             <div style="text-align:center; margin: 20px 0;">
-                <a href="{DONATE_LINK}" target="_blank" 
-                   style="display:inline-block; background:#0070ba; color:white; 
-                          padding:14px 28px; border-radius:8px; text-decoration:none; 
+                <a href="{DONATE_LINK}" target="_blank"
+                   style="display:inline-block; background:#0070ba; color:white;
+                          padding:14px 28px; border-radius:8px; text-decoration:none;
                           font-weight:700; font-size:16px;
                           box-shadow: 0 4px 12px rgba(0,112,186,0.3);">
                     {t("sponsor_donate_button")}
@@ -1021,9 +983,9 @@ elif page == "Diventa Sponsor":
             messaggio = st.text_area(t("sponsor_form_message"))
             invia = st.form_submit_button(t("sponsor_form_submit"), type="primary")
 
-        if invia:
-            if nome_brand and email_ref and sito and logo_url:
-                corpo = f"""
+            if invia:
+                if nome_brand and email_ref and sito and logo_url:
+                    corpo = f"""
 Nuova richiesta sponsor:
 
 - Brand: {nome_brand}
@@ -1031,14 +993,14 @@ Nuova richiesta sponsor:
 - Sito: {sito}
 - Logo URL: {logo_url}
 - Messaggio: {messaggio}
-                """
-                esito = invia_email(nome_brand, email_ref, corpo)
-                if esito is True:
-                    st.success(t("sponsor_form_success"))
+"""
+                    esito = invia_email(nome_brand, email_ref, corpo)
+                    if esito is True:
+                        st.success(t("sponsor_form_success"))
+                    else:
+                        st.error(t("sponsor_form_error", error=esito))
                 else:
-                    st.error(t("sponsor_form_error", error=esito))
-            else:
-                st.warning(t("sponsor_form_warning"))
+                    st.warning(t("sponsor_form_warning"))
 
         st.info(t("sponsor_form_info"))
     with col_side:
@@ -1050,17 +1012,17 @@ elif page == "Privacy Policy":
     st.header(t("privacy_header"))
     st.markdown(t("privacy_subtitle"))
     st.caption(t("privacy_updated"))
-    
+
     if st.button(t("privacy_back"), key="torna_dashboard_privacy"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
-    
+
     st.markdown("---")
-    
+
     st.markdown(t("privacy_content"))
 
     st.markdown("---")
-    
+
     if st.button(t("privacy_back"), key="torna_dashboard_privacy_basso"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
@@ -1070,17 +1032,17 @@ elif page == "Cookie Policy":
     st.header(t("cookie_policy_header"))
     st.markdown(t("cookie_policy_subtitle"))
     st.caption(t("cookie_policy_updated"))
-    
+
     if st.button(t("cookie_policy_back"), key="torna_dashboard_alto"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
-    
+
     st.markdown("---")
-    
+
     st.markdown(t("cookie_policy_content"))
 
     st.markdown("---")
-    
+
     if st.button(t("cookie_policy_back"), key="torna_dashboard_basso"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
