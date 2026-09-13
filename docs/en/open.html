@@ -192,13 +192,11 @@
     </div>
     
     <script>
-        // Streamlit app URL
         const APP_URL = 'https://artifix.streamlit.app/';
         
-        // Progressive status messages
         const statusMessages = [
             { time: 0, text: '⏳ Connecting...' },
-            { time: 1500, text: '🔄 Waking up the application...' },
+            { time: 1500, text: '🔄 Opening the application...' },
             { time: 3000, text: '⚙️ Loading components...' },
             { time: 4500, text: '✨ Almost ready...' },
             { time: 5000, text: '✅ Redirecting...' }
@@ -216,31 +214,22 @@
             }, msg.time);
         });
         
-        // Pre-fetch app to wake it up (in background)
         (function wakeUpApp() {
-            // First request (HEAD type, doesn't download everything)
             fetch(APP_URL, { 
                 method: 'HEAD',
                 mode: 'no-cors',
                 cache: 'no-store'
-            }).catch(function() {
-                // Ignore errors (CORS, network)
-                // What matters is that the request was sent
-            });
+            }).catch(function() {});
             
-            // Second request after 2 seconds (safety)
             setTimeout(function() {
                 fetch(APP_URL, { 
                     method: 'HEAD',
                     mode: 'no-cors',
                     cache: 'no-store'
-                }).catch(function() {
-                    // Ignore errors
-                });
+                }).catch(function() {});
             }, 2000);
         })();
         
-        // Auto-redirect after 5 seconds
         setTimeout(function() {
             window.location.href = APP_URL;
         }, 5000);
