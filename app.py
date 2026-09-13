@@ -446,7 +446,6 @@ with st.sidebar:
     else:
         st.markdown('<div class="sidebar-logo"><h3 style="color:#1f77b4;margin:0;">🔧 ARTIFIX</h3></div>', unsafe_allow_html=True)
 
-    # --- SELETTORE LINGUA ---
     st.markdown('<div class="lang-selector">', unsafe_allow_html=True)
     lang_options = {"it": "🇮🇹 Italiano", "en": "🇬🇧 English"}
     current_lang_index = 0 if st.session_state.lang == "it" else 1
@@ -802,9 +801,6 @@ elif page == "Converti Formati":
 
             st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">{t("convert_file_type", type=file_type, ext=file_extension)}</div></div></div></div>', unsafe_allow_html=True)
 
-            # ============================================
-            # CLASSIFICAZIONE DEL FILE
-            # ============================================
             MESH_FORMATS = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off"]
             VECTOR_FORMATS = ["svg"]
             DOC_FORMATS = ["pdf", "docx", "xlsx"]
@@ -815,7 +811,6 @@ elif page == "Converti Formati":
             # CASO 1 — MESH 3D → conversione tra formati
             # ============================================
             if file_extension in MESH_FORMATS or file_extension == "dxf":
-                convertibili = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off", "dxf", "pdf"]
                 target_formats = CONVERSION_MATRIX.get(file_extension, [])
                 target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
 
