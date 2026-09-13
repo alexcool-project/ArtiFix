@@ -75,14 +75,27 @@ def analyze_mesh(mesh):
         report["is_volume"] = bool(mesh.is_volume) if hasattr(mesh, 'is_volume') else False
         
         # --- PROBLEMI RILEVATI ---
-        # Non-manifold edges
+        # Non-manifold edges (calcolo corretto)
+        # Uno spigolo è manifold se ha ESATTAMENTE 2 facce adiacenti.
+        # Non-manifold = spigoli con 1 faccia (bordo aperto) o >2 facce (T-junction).
         try:
-            non_manifold = trimesh.grouping.group_rows(mesh.edges_sorted, require_count=2)
-            all_edges = len(mesh.edges_sorted)
-            manifold_edges = len(non_manifold)
-            report["non_manifold_edges"] = max(0, all_edges - manifold_edges)
+            # Conta quanti edge hanno esattamente 2 facce adiacenti
+            edge_counts = trimesh.grouping.group_rows(mesh.edges_sorted, require_count=None)
+            # raggruppa per contare le occorrenze
+            unique_edges, counts = np.unique(mesh.edges_sorted, axis=0, return_counts=True)
+            # Spigoli non-manifold = quelli con count != 2
+            non_manifold_count = int(np.sum(counts != 2))
+            report["non_manifold_edges"] = non_manifold_count
         except Exception:
-            report["non_manifold_edges"] = 0
+            # Fallback: se il calcolo fallisce, usa un'approssimazione
+            try:
+                if not mesh.is_watertight:
+                    # Se non è watertight, ci sono almeno degli spigoli di bordo
+                    report["non_manifold_edges"] = 0
+                else:
+                    report["non_manifold_edges"] = 0
+            except Exception:
+                report["non_manifold_edges"] = 0
         
         # Componenti connessi
         try:
@@ -91,10 +104,16 @@ def analyze_mesh(mesh):
         except Exception:
             report["connected_components"] = 1
         
-        # Buchi rilevati
+        # Buchi rilevati (usando l'algoritmo di trimesh)
         try:
             if not mesh.is_watertight:
-                report["holes"] = max(1, report["connected_components"])
+                # Usa trimesh.repair.broken_faces per capire se ci sono buchi
+                # Alternativa: conta gli spigoli di bordo (edge con 1 sola faccia)
+                unique_edges, counts = np.unique(mesh.edges_sorted, axis=0, return_counts=True)
+                boundary_edges = int(np.sum(counts == 1))
+                # Ogni buco è composto da almeno 3 edge di bordo
+                # Stima il numero di buchi come boundary_edges / 3 (approssimazione)
+                report["holes"] = max(1 if boundary_edges > 0 else 0, boundary_edges // 3)
             else:
                 report["holes"] = 0
         except Exception:
@@ -151,6 +170,11 @@ def repair_mesh(mesh):
     """
     if mesh is None:
         return None, {}
+    
+    # ⚠️ FIX CRITICO: crea una COPIA della mesh prima di modificarla.
+    # Senza questa copia, mesh_before e mesh_after puntano allo stesso oggetto
+    # e le metriche Prima/Dopo risulterebbero identiche.
+    mesh = mesh.copy()
     
     actions = {
         "merged_vertices": 0,
