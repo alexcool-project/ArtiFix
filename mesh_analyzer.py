@@ -735,4 +735,78 @@ def generate_pdf_report(report_data, lang="it", filename="artifix_repair_report.
     # --- AZIONI DI RIPARAZIONE ---
     if report_data.get("actions"):
         story.append(Paragraph(tr["section_actions"], section_style))
-        actions = report_data
+        actions = report_data["actions"]
+        action_rows = [[tr["action"], tr["result"]]]
+        
+        if actions.get("merged_vertices", 0) > 0:
+            action_rows.append([tr["merged_v"], f'{actions["merged_vertices"]:,}'])
+        if actions.get("removed_degenerate_faces", 0) > 0:
+            action_rows.append([tr["removed_degen"], f'{actions["removed_degenerate_faces"]:,}'])
+        if actions.get("removed_duplicate_faces", 0) > 0:
+            action_rows.append([tr["removed_dup_faces"], f'{actions["removed_duplicate_faces"]:,}'])
+        if actions.get("removed_unreferenced", 0) > 0:
+            action_rows.append([tr["removed_unref"], f'{actions["removed_unreferenced"]:,}'])
+        if actions.get("fixed_normals"):
+            action_rows.append([tr["fixed_normals"], tr["yes"]])
+        if actions.get("filled_holes"):
+            action_rows.append([tr["filled_holes"], tr["yes"]])
+        if actions.get("fix_inversion"):
+            action_rows.append([tr["fix_inversion"], tr["yes"]])
+        
+        if len(action_rows) == 1:
+            action_rows.append(["—", tr["no"]])
+        
+        t = Table(action_rows, colWidths=[110*mm, 40*mm])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dddddd')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 8*mm))
+    
+    # --- RIEPILOGO ---
+    if report_data.get("summary"):
+        story.append(Paragraph(tr["section_summary"], section_style))
+        summary = report_data["summary"]
+        summary_data = [
+            [tr["issues_fixed"], f'{summary["issues_fixed"]}'],
+            [tr["vertices_delta"], f'{summary["vertices_delta"]:+,}'],
+            [tr["faces_delta"], f'{summary["faces_delta"]:+,}'],
+            [tr["watertight"], f'{tr["no"]} → {tr["yes"] if summary["watertight_after"] else tr["no"]}'],
+        ]
+        t = Table(summary_data, colWidths=[110*mm, 40*mm])
+        t.setStyle(TableStyle([
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dddddd')),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f0f7ff')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 8*mm))
+        
+        story.append(Paragraph(tr["conclusion_ok"], normal_style))
+    
+    story.append(Spacer(1, 15*mm))
+    story.append(Paragraph(tr["footer"], footer_style))
+    
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
