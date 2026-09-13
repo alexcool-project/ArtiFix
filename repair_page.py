@@ -17,7 +17,6 @@ from translations import get_text
 
 
 # Chiavi di traduzione per i tipi di formato non-mesh
-# I valori sono chiavi del dizionario TRANSLATIONS (es. "type_pdf")
 NON_MESH_FORMATS = {
     '.svg': 'type_svg',
     '.pdf': 'type_pdf',
@@ -102,6 +101,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
         file_size_mb = len(file_bytes) / (1024 * 1024)
 
+        # --- COMPONENTI UI ---
         progress_bar = st.progress(0, text="0%")
 
         time_info_placeholder = st.empty()
@@ -320,6 +320,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     st.subheader(t("report_header"))
     st.markdown(t("report_subtitle"))
 
+    # Tabella comparativa Prima/Dopo
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(f"#### {t('report_before')}")
@@ -341,6 +342,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         st.metric(t("report_duplicates"), f'{report_data["after"]["duplicate_vertices"]:,}')
         st.metric(t("report_holes"), f'{report_data["after"]["holes"]:,}')
 
+    # Azioni Applicate
     st.markdown("---")
     st.markdown(f"#### {t('report_actions')}")
     action_rows = []
@@ -361,6 +363,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         for row in action_rows:
             st.write(row)
 
+    # Pulsanti di Download
     st.markdown("---")
 
     col_download1, col_download2 = st.columns(2)
