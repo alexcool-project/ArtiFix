@@ -10,15 +10,15 @@ from mesh_analyzer import analyze_mesh, repair_mesh, generate_report_data, gener
 from translations import get_text
 
 
-# Formati che non possono essere "riparati" come mesh 3D
-# NOTA: i valori devono corrispondere alle chiavi di traduzione per il messaggio multilingua
+# Chiavi di traduzione per i tipi di formato non-mesh
+# I valori sono chiavi del dizionario TRANSLATIONS (es. "type_pdf")
 NON_MESH_FORMATS = {
-    '.svg': 'grafica vettoriale 2D',
-    '.pdf': 'documento PDF',
-    '.docx': 'documento Word',
-    '.xlsx': 'foglio di calcolo Excel',
-    '.dxf': 'disegno CAD 2D',
-    '.dwg': 'disegno CAD 2D proprietario',
+    '.svg': 'type_svg',
+    '.pdf': 'type_pdf',
+    '.docx': 'type_docx',
+    '.xlsx': 'type_xlsx',
+    '.dxf': 'type_dxf',
+    '.dwg': 'type_dwg',
 }
 
 
@@ -81,7 +81,8 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     file_name_check = st.session_state.repair_state['file_name']
     file_ext_check = os.path.splitext(file_name_check)[1].lower()
     if file_ext_check in NON_MESH_FORMATS:
-        tipo = NON_MESH_FORMATS[file_ext_check]
+        # Traduce il tipo di formato (es. "type_pdf" → "PDF document" o "documento PDF")
+        tipo = t(NON_MESH_FORMATS[file_ext_check])
         st.error(
             f"{t('repair_error_non_mesh_title')}\n\n"
             f"{t('repair_error_non_mesh_desc', ext=file_ext_check, tipo=tipo)}\n\n"
