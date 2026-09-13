@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtiFix — Preparazione in corso...</title>
+    <link rel="icon" type="image/png" href="images/ArchiFix_cubo-logo.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e8eef5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(31, 119, 180, 0.15);
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo {
+            max-width: 280px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+        
+        .cubo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            animation: spin 3s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            color: #1f77b4;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #e0e7ee;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #1f77b4, #4a9fd4);
+            border-radius: 4px;
+            animation: progress 5s ease-in-out forwards;
+            width: 0%;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            20% { width: 30%; }
+            50% { width: 60%; }
+            80% { width: 85%; }
+            100% { width: 100%; }
+        }
+        
+        .status {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 20px;
+            min-height: 20px;
+        }
+        
+        .status.ready {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .tips {
+            background: #f8f9fa;
+            border-left: 3px solid #1f77b4;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #555;
+            text-align: left;
+            margin-top: 20px;
+        }
+        
+        .tips strong {
+            color: #1f77b4;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e7ee;
+            font-size: 0.8rem;
+            color: #999;
+        }
+        
+        .footer .artifix {
+            color: #1f77b4;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            .logo {
+                max-width: 200px;
+            }
+            h1 {
+                font-size: 1.2rem;
+            }
+            .cubo {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="images/ArchiFix_cubo-logo.png" alt="ArtiFix" class="cubo">
+        <img src="images/Artifix_logo.png" alt="ArtiFix" class="logo">
+        
+        <h1>🇮🇹 Sto preparando ArtiFix...</h1>
+        <p class="subtitle">
+            L'applicazione si sta avviando.<br>
+            Attendere qualche secondo...
+        </p>
+        
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+        
+        <p class="status" id="status">⏳ Connessione in corso...</p>
+        
+        <div class="tips">
+            <strong>💡 Lo sapevi?</strong><br>
+            ArtiFix è completamente gratuito e non richiede registrazione.<br>
+            Supporta oltre <strong>50 formati</strong> CAD/CAM e 3D.
+        </div>
+        
+        <div class="footer">
+            Powered by <span class="artifix">ARTIFIX</span><br>
+            © 2026 ArtiFix — Tutti i diritti riservati
+        </div>
+    </div>
+    
+    <script>
+        // URL dell'app Streamlit
+        const APP_URL = 'https://artifix.streamlit.app/';
+        
+        // Aggiorna lo stato con messaggi progressivi
+        const statusMessages = [
+            { time: 0, text: '⏳ Connessione in corso...' },
+            { time: 1500, text: '🔄 Risveglio dell\'applicazione...' },
+            { time: 3000, text: '⚙️ Caricamento componenti...' },
+            { time: 4500, text: '✨ Quasi pronto...' },
+            { time: 5000, text: '✅ Reindirizzamento in corso...' }
+        ];
+        
+        statusMessages.forEach(function(msg) {
+            setTimeout(function() {
+                const statusEl = document.getElementById('status');
+                if (statusEl) {
+                    statusEl.textContent = msg.text;
+                    if (msg.text.startsWith('✅')) {
+                        statusEl.classList.add('ready');
+                    }
+                }
+            }, msg.time);
+        });
+        
+        // Pre-fetch dell'app per svegliarla (in background)
+        (function wakeUpApp() {
+            // Prima richiesta (tipo HEAD, non scarica tutto)
+            fetch(APP_URL, { 
+                method: 'HEAD',
+                mode: 'no-cors',
+                cache: 'no-store'
+            }).catch(function() {
+                // Ignora errori (CORS, network)
+                // L'importante è che la richiesta sia partita
+            });
+            
+            // Seconda richiesta dopo 2 secondi (di sicurezza)
+            setTimeout(function() {
+                fetch(APP_URL, { 
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    cache: 'no-store'
+                }).catch(function() {
+                    // Ignora errori
+                });
+            }, 2000);
+        })();
+        
+        // Redirect automatico dopo 5 secondi
+        setTimeout(function() {
+            window.location.href = APP_URL;
+        }, 5000);
+    </script>
+</body>
+</html>
