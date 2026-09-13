@@ -760,6 +760,16 @@ elif page == "Viewer 3D":
                         });
                         </script></body></html>
                         """
+
+                        # ============================================================
+                        # NOTA MANUTENZIONE FUTURA
+                        # ============================================================
+                        # st.components.v1.html è deprecato ma ancora funzionante.
+                        # Verrà rimosso dopo il 2026-06-01. Al momento è supportato.
+                        # Perché non usiamo st.iframe? Perché non supporta HTML inline
+                        # con JavaScript (necessario per il viewer 3D Three.js).
+                        # Quando Streamlit rilascerà st.iframe con srcdoc, migrare.
+                        # ============================================================
                         st.components.v1.html(viewer_html, height=580)
                 else:
                     st.warning(t("viewer_warning_no_model"))
@@ -960,6 +970,16 @@ elif page == "Converti Formati":
                                 });
                                 </script></body></html>
                                 """
+
+                                # ============================================================
+                                # NOTA MANUTENZIONE FUTURA
+                                # ============================================================
+                                # st.components.v1.html è deprecato ma ancora funzionante.
+                                # Verrà rimosso dopo il 2026-06-01. Al momento è supportato.
+                                # Perché non usiamo st.iframe? Perché non supporta HTML inline
+                                # con JavaScript (necessario per l'anteprima Three.js).
+                                # Quando Streamlit rilascerà st.iframe con srcdoc, migrare.
+                                # ============================================================
                                 st.components.v1.html(viewer_html, height=420)
                         else:
                             st.warning(t("convert_warning_no_preview"))
