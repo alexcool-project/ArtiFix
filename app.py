@@ -586,7 +586,7 @@ elif page == "Ripara File":
     from repair_page import render_repair_page
     render_repair_page(load_3d_file, ALL_EXTENSIONS)
 
-# --- VIEWER 3D ---
+# --- VIEWER 3D (CORRETTO: rotazione Z-up → Y-up, Uint32, normals, centratura) ---
 elif page == "Viewer 3D":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
@@ -612,29 +612,45 @@ elif page == "Viewer 3D":
                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                     st.success(t("viewer_success", vertices=len(mesh.vertices), faces=len(mesh.faces)))
 
+                    # --- PULIZIA MESH ---
                     try:
-                        if len(mesh.vertices) > 65000:
-                            target_faces = int(65000 / 3) * 3
-                            mesh = mesh.simplify_quadric_decimation(face_count=target_faces)
-                        else:
-                            try:
-                                mesh = trimesh.repair.fix_normals(mesh)
-                            except:
-                                pass
-                    except:
+                        mesh.merge_vertices()
+                        mesh.remove_degenerate_faces()
+                        mesh.remove_unreferenced_vertices()
+                        trimesh.repair.fix_normals(mesh)
+                    except Exception:
                         pass
 
                     if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
                         st.error(t("viewer_error_processing"))
                     else:
-                        bounds = mesh.bounds
-                        min_y = bounds[0][1]
+                        # ============================================
+                        # ROTAZIONE Z-UP → Y-UP
+                        # Molti STL da CAD/scanner medicali sono Z-up,
+                        # Three.js è Y-up. Ruotiamo di -90° su X.
+                        # ============================================
                         vertices = mesh.vertices.copy()
-                        vertices[:, 1] -= min_y
-                        vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
-                        vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
+                        rotated = np.empty_like(vertices)
+                        rotated[:, 0] = vertices[:, 0]
+                        rotated[:, 1] = vertices[:, 2]
+                        rotated[:, 2] = -vertices[:, 1]
+                        vertices = rotated
 
-                        mesh_data = {"vertices": vertices.tolist(), "faces": mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()}
+                        # ============================================
+                        # CENTRAMENTO SU X, Z + BASE A Y=0
+                        # ============================================
+                        min_x, min_y, min_z = vertices.min(axis=0)
+                        max_x, max_y, max_z = vertices.max(axis=0)
+                        center_x = (min_x + max_x) / 2
+                        center_z = (min_z + max_z) / 2
+
+                        vertices[:, 0] -= center_x
+                        vertices[:, 1] -= min_y
+                        vertices[:, 2] -= center_z
+
+                        faces = mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()
+
+                        mesh_data = {"vertices": vertices.tolist(), "faces": faces}
                         mesh_json = json.dumps(mesh_data)
 
                         status_text.text(t("viewer_status_building"))
@@ -642,71 +658,118 @@ elif page == "Viewer 3D":
                         time.sleep(0.5)
 
                         viewer_html = """
-                        <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:500px;}#info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.8);padding:5px 15px;border-radius:20px;}.legend{position:absolute;bottom:60px;left:20px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}.legend span{display:inline-block;width:12px;height:12px;margin-right:4px;}.axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}</style>
+                        <html><head><style>
+                        body{margin:0;overflow:hidden;background:#f0f2f6;}
+                        #c{width:100%;height:550px;display:block;}
+                        #info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.85);padding:6px 16px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+                        .legend{position:absolute;top:10px;left:10px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}
+                        .legend span{display:inline-block;width:12px;height:12px;margin-right:4px;border-radius:2px;}
+                        .axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}
+                        </style>
                         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
                         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
                         </head><body>
                         <div id="c"></div>
-                        <div class="legend"><span class="axis-x"></span> X <span class="axis-y"></span> Y <span class="axis-z"></span> Z</div>
+                        <div class="legend"><span class="axis-x"></span> X (Rosso) &nbsp; <span class="axis-y"></span> Y (Verde) &nbsp; <span class="axis-z"></span> Z (Blu)</div>
                         <div id="info">""" + t("viewer_legend") + """</div>
                         <script>
                         const data = """ + mesh_json + """;
                         const container = document.getElementById('c');
                         const scene = new THREE.Scene();
                         scene.background = new THREE.Color(0xf0f2f6);
-                        const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
-                        camera.position.set(10,5,10);
-                        camera.lookAt(0,0,0);
+
+                        const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 5000);
+                        camera.position.set(15,12,15);
+                        camera.lookAt(0,3,0);
+
                         const renderer = new THREE.WebGLRenderer({antialias:true});
+                        renderer.setPixelRatio(window.devicePixelRatio);
                         renderer.setSize(container.clientWidth, container.clientHeight);
+                        renderer.shadowMap.enabled = true;
+                        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
                         container.appendChild(renderer.domElement);
+
                         const controls = new THREE.OrbitControls(camera, renderer.domElement);
                         controls.enableDamping = true;
-                        controls.dampingFactor = 0.05;
-                        controls.target.set(0,0,0);
+                        controls.dampingFactor = 0.08;
+                        controls.target.set(0,3,0);
                         controls.screenSpacePanning = true;
                         controls.update();
-                        const al=5;
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff0000, 0.4, 0.2));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), al, 0x00ff00, 0.4, 0.2));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), al, 0x0000ff, 0.4, 0.2));
-                        const grid = new THREE.GridHelper(20,20,0x888888,0x444444);
-                        grid.position.y=0;
+
+                        // Assi cartesiani
+                        const al = 8;
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff4444, 0.5, 0.3));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), al, 0x44ff44, 0.5, 0.3));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), al, 0x4444ff, 0.5, 0.3));
+
+                        // Griglia a Y=0
+                        const grid = new THREE.GridHelper(40, 40, 0x888888, 0xcccccc);
+                        grid.position.y = 0;
                         scene.add(grid);
-                        scene.add(new THREE.AmbientLight(0x404040,0.6));
-                        const dl = new THREE.DirectionalLight(0xffffff,1);
-                        dl.position.set(10,20,10);
-                        dl.castShadow=true;
-                        scene.add(dl);
-                        const dl2 = new THREE.DirectionalLight(0xffffff,0.5);
-                        dl2.position.set(-10,0,-10);
-                        scene.add(dl2);
-                        if(data.vertices && data.vertices.length>0){
+
+                        // Luci
+                        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+                        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+                        dirLight.position.set(15, 30, 15);
+                        dirLight.castShadow = true;
+                        dirLight.shadow.mapSize.width = 2048;
+                        dirLight.shadow.mapSize.height = 2048;
+                        scene.add(dirLight);
+                        const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
+                        fillLight.position.set(-15, 10, -15);
+                        scene.add(fillLight);
+
+                        // Modello
+                        if (data.vertices && data.vertices.length > 0) {
                             const geo = new THREE.BufferGeometry();
-                            geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
-                            if(data.faces && data.faces.length>0){
-                                geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
+                            const verts = new Float32Array(data.vertices.flat());
+                            geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+
+                            if (data.faces && data.faces.length > 0) {
+                                // Uint32 supporta >65k vertici (fondamentale per modelli complessi)
+                                geo.setIndex(new THREE.BufferAttribute(new Uint32Array(data.faces.flat()), 1));
                                 geo.computeVertexNormals();
                             }
-                            const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
+
+                            const mat = new THREE.MeshStandardMaterial({
+                                color: 0x1f77b4,
+                                roughness: 0.45,
+                                metalness: 0.1,
+                                flatShading: false,
+                                side: THREE.DoubleSide
+                            });
+
                             const mesh = new THREE.Mesh(geo, mat);
                             mesh.castShadow = true;
                             mesh.receiveShadow = true;
+
+                            // Scala per adattare alla vista
                             const box = new THREE.Box3().setFromObject(mesh);
                             const size = box.getSize(new THREE.Vector3());
-                            const maxDim = Math.max(size.x,size.y,size.z);
-                            if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
+                            const maxDim = Math.max(size.x, size.y, size.z);
+                            if (maxDim > 0 && maxDim < 1000) {
+                                const s = 10 / maxDim;
+                                mesh.scale.set(s, s, s);
+                            }
+
                             scene.add(mesh);
                         }
-                        function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
+
+                        function animate() {
+                            requestAnimationFrame(animate);
+                            controls.update();
+                            renderer.render(scene, camera);
+                        }
                         animate();
-                        window.addEventListener('resize', ()=>{
-                            camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix();
+
+                        window.addEventListener('resize', () => {
+                            camera.aspect = container.clientWidth / container.clientHeight;
+                            camera.updateProjectionMatrix();
                             renderer.setSize(container.clientWidth, container.clientHeight);
                         });
                         </script></body></html>
                         """
-                        st.components.v1.html(viewer_html, height=550)
+                        st.components.v1.html(viewer_html, height=580)
                 else:
                     st.warning(t("viewer_warning_no_model"))
             except Exception as e:
@@ -824,32 +887,35 @@ elif page == "Converti Formati":
                         mesh_preview = load_3d_file(file_bytes, file_extension)
                         if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
                             try:
-                                if len(mesh_preview.vertices) > 65000:
-                                    target_faces = int(65000 / 3) * 3
-                                    mesh_preview = mesh_preview.simplify_quadric_decimation(face_count=target_faces)
-                                else:
-                                    try:
-                                        mesh_preview = trimesh.repair.fix_normals(mesh_preview)
-                                    except:
-                                        pass
-                            except:
+                                mesh_preview.merge_vertices()
+                                mesh_preview.remove_degenerate_faces()
+                                mesh_preview.remove_unreferenced_vertices()
+                                trimesh.repair.fix_normals(mesh_preview)
+                            except Exception:
                                 pass
 
                             if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
                                 st.error(t("viewer_error_processing"))
                             else:
-                                bounds = mesh_preview.bounds
-                                min_y = bounds[0][1]
-                                vertices = mesh_preview.vertices.copy()
-                                vertices[:, 1] -= min_y
-                                vertices[:, 0] -= (bounds[0][0] + bounds[1][0]) / 2
-                                vertices[:, 2] -= (bounds[0][2] + bounds[1][2]) / 2
+                                # Rotazione Z-up → Y-up (come nel Viewer 3D)
+                                vp = mesh_preview.vertices.copy()
+                                rp = np.empty_like(vp)
+                                rp[:, 0] = vp[:, 0]
+                                rp[:, 1] = vp[:, 2]
+                                rp[:, 2] = -vp[:, 1]
+                                vp = rp
 
-                                mesh_data = {"vertices": vertices.tolist(), "faces": mesh_preview.faces.tolist()}
+                                min_x, min_y, min_z = vp.min(axis=0)
+                                max_x, max_y, max_z = vp.max(axis=0)
+                                vp[:, 0] -= (min_x + max_x) / 2
+                                vp[:, 1] -= min_y
+                                vp[:, 2] -= (min_z + max_z) / 2
+
+                                mesh_data = {"vertices": vp.tolist(), "faces": mesh_preview.faces.tolist()}
                                 mesh_json = json.dumps(mesh_data)
 
                                 viewer_html = """
-                                <html><head><style>body{margin:0;overflow:hidden;}#c{width:100%;height:400px;}</style>
+                                <html><head><style>body{margin:0;overflow:hidden;background:#f0f2f6;}#c{width:100%;height:400px;}</style>
                                 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
                                 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
                                 </head><body>
@@ -859,41 +925,40 @@ elif page == "Converti Formati":
                                 const container = document.getElementById('c');
                                 const scene = new THREE.Scene();
                                 scene.background = new THREE.Color(0xf0f2f6);
-                                const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 1000);
-                                camera.position.set(10,5,10);
-                                camera.lookAt(0,0,0);
+                                const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 5000);
+                                camera.position.set(12,10,12);
+                                camera.lookAt(0,2,0);
                                 const renderer = new THREE.WebGLRenderer({antialias:true});
                                 renderer.setSize(container.clientWidth, container.clientHeight);
                                 container.appendChild(renderer.domElement);
                                 const controls = new THREE.OrbitControls(camera, renderer.domElement);
                                 controls.enableDamping = true;
-                                controls.dampingFactor = 0.05;
-                                controls.target.set(0,0,0);
-                                controls.screenSpacePanning = true;
+                                controls.dampingFactor = 0.08;
+                                controls.target.set(0,2,0);
                                 controls.update();
-                                scene.add(new THREE.AmbientLight(0x404040,0.6));
-                                const dl = new THREE.DirectionalLight(0xffffff,1);
+                                scene.add(new THREE.AmbientLight(0xffffff,0.6));
+                                const dl = new THREE.DirectionalLight(0xffffff,0.9);
                                 dl.position.set(10,20,10);
                                 dl.castShadow=true;
                                 scene.add(dl);
-                                const dl2 = new THREE.DirectionalLight(0xffffff,0.5);
+                                const dl2 = new THREE.DirectionalLight(0xffffff,0.35);
                                 dl2.position.set(-10,0,-10);
                                 scene.add(dl2);
                                 if(data.vertices && data.vertices.length>0){
                                     const geo = new THREE.BufferGeometry();
                                     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
                                     if(data.faces && data.faces.length>0){
-                                        geo.setIndex(new THREE.BufferAttribute(new Uint16Array(data.faces.flat()), 1));
+                                        geo.setIndex(new THREE.BufferAttribute(new Uint32Array(data.faces.flat()), 1));
                                         geo.computeVertexNormals();
                                     }
-                                    const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.3, metalness:0.2, flatShading:true, side:THREE.DoubleSide});
+                                    const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.45, metalness:0.1, flatShading:false, side:THREE.DoubleSide});
                                     const mesh = new THREE.Mesh(geo, mat);
                                     mesh.castShadow = true;
                                     mesh.receiveShadow = true;
                                     const box = new THREE.Box3().setFromObject(mesh);
                                     const size = box.getSize(new THREE.Vector3());
                                     const maxDim = Math.max(size.x,size.y,size.z);
-                                    if(maxDim>0 && maxDim<100){ const s=8/maxDim; mesh.scale.set(s,s,s); }
+                                    if(maxDim>0 && maxDim<1000){ const s=10/maxDim; mesh.scale.set(s,s,s); }
                                     scene.add(mesh);
                                 }
                                 function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
@@ -904,7 +969,7 @@ elif page == "Converti Formati":
                                 });
                                 </script></body></html>
                                 """
-                                st.components.v1.html(viewer_html, height=400)
+                                st.components.v1.html(viewer_html, height=420)
                         else:
                             st.warning(t("convert_warning_no_preview"))
     with col_side:
