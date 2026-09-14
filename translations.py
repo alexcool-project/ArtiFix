@@ -178,7 +178,8 @@ Ogni giorno centinaia di professionisti, studenti e appassionati utilizzano i se
         "sponsor_form_brand": "Nome brand/azienda *",
         "sponsor_form_email": "Email di riferimento *",
         "sponsor_form_site": "Sito web (URL completo, es. https://www.miosito.it) *",
-        "sponsor_form_logo": "URL pubblico del logo (Postimages, Imgur, ecc.) *",
+        # ✅ MODIFICA: hint logo GitHub Raw
+        "sponsor_form_logo": "URL Raw di GitHub del logo (es. https://raw.githubusercontent.com/.../logo.png) — 300×100 px, PNG o JPG, max 200 KB *",
         "sponsor_form_message": "Messaggio opzionale (breve descrizione attività)",
         "sponsor_form_submit": "Invia richiesta sponsor",
         "sponsor_form_success": "✅ Richiesta inviata! Ti contatteremo entro 48h.",
@@ -436,7 +437,8 @@ Every day hundreds of professionals, students, and enthusiasts use ArtiFix servi
         "sponsor_form_brand": "Brand/company name *",
         "sponsor_form_email": "Contact email *",
         "sponsor_form_site": "Website (full URL, e.g. https://www.mysite.com) *",
-        "sponsor_form_logo": "Public logo URL (Postimages, Imgur, etc.) *",
+        # ✅ MODIFICA: hint logo GitHub Raw
+        "sponsor_form_logo": "GitHub Raw URL of the logo (e.g. https://raw.githubusercontent.com/.../logo.png) — 300×100 px, PNG or JPG, max 200 KB *",
         "sponsor_form_message": "Optional message (short business description)",
         "sponsor_form_submit": "Send sponsor request",
         "sponsor_form_success": "✅ Request sent! We will contact you within 48h.",
