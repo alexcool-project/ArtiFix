@@ -34,7 +34,7 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
-# --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO (versione migliorata) ---
+# --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
     "?subject=Richiesta%20Sponsorizzazione%20ArtiFix"
@@ -509,8 +509,6 @@ with st.sidebar:
                 current_index = idx
                 break
 
-        # ✅ FIX: key univoca per lingua, così Streamlit non perde la selezione
-        # quando l'utente cambia lingua IT → EN → IT
         nav_key = f"navigation_{st.session_state.lang}"
 
         page = st.radio(
@@ -533,6 +531,17 @@ with st.sidebar:
         st.session_state.page_attuale = "Cookie Policy"
         st.rerun()
 
+    # ✅ Pulsante Termini di Servizio (link esterno, cambia con la lingua)
+    terms_url = "https://www.artifix.it/termini.html" if st.session_state.lang == "it" else "https://www.artifix.it/en/terms.html"
+    st.markdown(
+        f"""
+        <a href="{terms_url}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px;">
+            {t("nav_terms")}
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.markdown(
         f"""
         <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
@@ -542,7 +551,6 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
-    # ✅ Pulsante sponsor con template email precompilato e migliorato
     st.markdown(
         f"""
         <a href="{SPONSOR_MAILTO}" style="display:block; text-align:center; background:#fff4e6; color:#c26a00; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px; border:1px solid #ffd9a8;">
@@ -784,15 +792,6 @@ elif page == "Viewer 3D":
                         </script></body></html>
                         """
 
-                        # ============================================================
-                        # NOTA MANUTENZIONE FUTURA
-                        # ============================================================
-                        # st.components.v1.html è deprecato ma ancora funzionante.
-                        # Verrà rimosso dopo il 2026-06-01. Al momento è supportato.
-                        # Perché non usiamo st.iframe? Perché non supporta HTML inline
-                        # con JavaScript (necessario per il viewer 3D Three.js).
-                        # Quando Streamlit rilascerà st.iframe con srcdoc, migrare.
-                        # ============================================================
                         st.components.v1.html(viewer_html, height=580)
                 else:
                     st.warning(t("viewer_warning_no_model"))
@@ -893,7 +892,6 @@ elif page == "Converti Formati":
                                     'pdf': 'application/pdf'
                                 }
                                 st.info(t("convert_info_ready"))
-                                # ✅ FIX: usa il nome originale del file con la nuova estensione
                                 original_name = os.path.splitext(file_name)[0]
                                 converted_filename = f"{original_name}.{target_ext}"
                                 st.download_button(
@@ -995,16 +993,6 @@ elif page == "Converti Formati":
                                 });
                                 </script></body></html>
                                 """
-
-                                # ============================================================
-                                # NOTA MANUTENZIONE FUTURA
-                                # ============================================================
-                                # st.components.v1.html è deprecato ma ancora funzionante.
-                                # Verrà rimosso dopo il 2026-06-01. Al momento è supportato.
-                                # Perché non usiamo st.iframe? Perché non supporta HTML inline
-                                # con JavaScript (necessario per l'anteprima Three.js).
-                                # Quando Streamlit rilascerà st.iframe con srcdoc, migrare.
-                                # ============================================================
                                 st.components.v1.html(viewer_html, height=420)
                         else:
                             st.warning(t("convert_warning_no_preview"))
@@ -1240,7 +1228,6 @@ elif page == "Diventa Sponsor":
             nome_brand = st.text_input(t("sponsor_form_brand"))
             email_ref = st.text_input(t("sponsor_form_email"))
             sito = st.text_input(t("sponsor_form_site"))
-            # ✅ MODIFICA: campo logo con placeholder GitHub Raw
             logo_url = st.text_input(
                 t("sponsor_form_logo"),
                 placeholder="https://raw.githubusercontent.com/..."
