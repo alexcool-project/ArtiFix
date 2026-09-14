@@ -13,6 +13,28 @@ BANNER_HEIGHT = 100
 MAX_VISIBLE = 6
 SCROLL_DURATION = 40  # secondi per un ciclo completo (più alto = più lento)
 
+# --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO (condiviso) ---
+SPONSOR_MAILTO = (
+    "mailto:info@artifix.it"
+    "?subject=Richiesta%20Sponsorizzazione%20ArtiFix"
+    "&body=FORM%20PRECOMPILATO%20(se%20vuoi%20aderire%20alla%20sponsorizzazione%20"
+    "valuta%20una%20donazione%20per%20il%20progetto%20ArtiFix%20e%20comunque%20"
+    "inizia%20ad%20utilizzare%20i%20servizi%20CAD%20gratuiti!)%0D%0A%0D%0A"
+    "Buongiorno%20Team%20ArtiFix%2C%0D%0A%0D%0A"
+    "Sono%20interessato%2Fa%20alla%20sponsorizzazione%20di%20ArtiFix%20"
+    "(puoi%20cliccare%20sul%20pulsante%20%22Dona%20con%20PayPal%22%20presente%20"
+    "nel%20sito%20per%20richiedere%20la%20sponsorizzazione%2C%20entro%20pochi%20"
+    "minuti%20sar%C3%A0%20attiva%20sul%20sito)%0D%0A%0D%0A"
+    "Ecco%20i%20miei%20dati%3A%0D%0A%0D%0A"
+    "%F0%9F%8F%A2%20Nome%20Azienda%3A%20%0D%0A"
+    "%F0%9F%8C%90%20Sito%20Web%3A%20%0D%0A"
+    "%F0%9F%93%A7%20Email%3A%20%0D%0A"
+    "%F0%9F%93%9E%20Telefono%3A%20%0D%0A"
+    "%F0%9F%96%BC%EF%B8%8F%20Logo%20%E2%89%88%20300%20x%20100px%20(URL%20GitHub%20Raw%20o%20allegato)%3A%20%0D%0A"
+    "%F0%9F%92%AC%20Messaggio%3A%0D%0A%0D%0A"
+    "Grazie%2C%0D%0A%5BNominativo%5D"
+)
+
 
 # --- DIZIONARIO TRADUZIONI SPONSOR (IT/EN) ---
 SPONSOR_TEXTS = {
@@ -117,6 +139,7 @@ def render_sponsor_band(lang="it"):
     sponsors = load_sponsors()
 
     if not sponsors:
+        # ✅ MODIFICA: usa SPONSOR_MAILTO anche nello stato vuoto
         st.markdown(
             f"""
             <div style="
@@ -130,7 +153,7 @@ def render_sponsor_band(lang="it"):
                 <strong>{_get_sponsor_text('empty_title', lang)}</strong><br>
                 <span style="font-size: 0.72rem;">
                 {_get_sponsor_text('empty_text', lang)}<br>
-                <a href="mailto:info@artifix.it" style="color:#2a6df4;">info@artifix.it</a>
+                <a href="{SPONSOR_MAILTO}" style="color:#2a6df4;">info@artifix.it</a>
                 </span>
             </div>
             """,
@@ -277,6 +300,8 @@ def render_sponsor_band(lang="it"):
 
 
 def sponsor_band_placeholder(lang="it"):
+    """Placeholder sotto la banda sponsor con link sponsorizzazione."""
+    # ✅ MODIFICA: usa SPONSOR_MAILTO con template precompilato
     st.markdown(
         f"""
         <div style="
@@ -289,7 +314,7 @@ def sponsor_band_placeholder(lang="it"):
             font-size: 0.72rem;
             color: #555;">
             <div style="font-weight: 600; margin-bottom: 4px;">{_get_sponsor_text('become_sponsor', lang)}</div>
-            <a href="mailto:info@artifix.it?subject=Sponsorizzazione%20ArtiFix"
+            <a href="{SPONSOR_MAILTO}"
                style="color: #2a6df4; text-decoration: none; font-weight: 600;">
                info@artifix.it
             </a>
