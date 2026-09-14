@@ -34,21 +34,26 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
-# --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
-# ✅ NOVITÀ: ora include il corpo email con tutti i campi da compilare
+# --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO (versione migliorata) ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
     "?subject=Richiesta%20Sponsorizzazione%20ArtiFix"
-    "&body=Buongiorno%20Team%20ArtiFix%2C%0D%0A%0D%0A"
-    "Sono%20interessato%2Fa%20alla%20sponsorizzazione%20di%20ArtiFix.%0D%0A%0D%0A"
+    "&body=FORM%20PRECOMPILATO%20(se%20vuoi%20aderire%20alla%20sponsorizzazione%20"
+    "valuta%20una%20donazione%20per%20il%20progetto%20ArtiFix%20e%20comunque%20"
+    "inizia%20ad%20utilizzare%20i%20servizi%20CAD%20gratuiti!)%0D%0A%0D%0A"
+    "Buongiorno%20Team%20ArtiFix%2C%0D%0A%0D%0A"
+    "Sono%20interessato%2Fa%20alla%20sponsorizzazione%20di%20ArtiFix%20"
+    "(puoi%20cliccare%20sul%20pulsante%20%22Dona%20con%20PayPal%22%20presente%20"
+    "nel%20sito%20per%20richiedere%20la%20sponsorizzazione%2C%20entro%20pochi%20"
+    "minuti%20sar%C3%A0%20attiva%20sul%20sito)%0D%0A%0D%0A"
     "Ecco%20i%20miei%20dati%3A%0D%0A%0D%0A"
     "%F0%9F%8F%A2%20Nome%20Azienda%3A%20%0D%0A"
     "%F0%9F%8C%90%20Sito%20Web%3A%20%0D%0A"
     "%F0%9F%93%A7%20Email%3A%20%0D%0A"
     "%F0%9F%93%9E%20Telefono%3A%20%0D%0A"
-    "%F0%9F%96%BC%EF%B8%8F%20Logo%20(URL%20GitHub%20Raw%20o%20allegato)%3A%20%0D%0A%0D%0A"
+    "%F0%9F%96%BC%EF%B8%8F%20Logo%20%E2%89%88%20300%20x%20100px%20(URL%20GitHub%20Raw%20o%20allegato)%3A%20%0D%0A"
     "%F0%9F%92%AC%20Messaggio%3A%0D%0A%0D%0A"
-    "Grazie%2C%0D%0A%5BNome%20e%20Cognome%5D"
+    "Grazie%2C%0D%0A%5BNominativo%5D"
 )
 
 # --- CONFIGURAZIONE PAGINA (DEVE ESSERE LA PRIMA ISTRUZIONE STREAMLIT) ---
@@ -537,7 +542,7 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
-    # ✅ MODIFICA 1: pulsante sponsor con template email precompilato
+    # ✅ Pulsante sponsor con template email precompilato e migliorato
     st.markdown(
         f"""
         <a href="{SPONSOR_MAILTO}" style="display:block; text-align:center; background:#fff4e6; color:#c26a00; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px; border:1px solid #ffd9a8;">
@@ -1235,7 +1240,7 @@ elif page == "Diventa Sponsor":
             nome_brand = st.text_input(t("sponsor_form_brand"))
             email_ref = st.text_input(t("sponsor_form_email"))
             sito = st.text_input(t("sponsor_form_site"))
-            # ✅ MODIFICA 2: campo logo con placeholder GitHub Raw
+            # ✅ MODIFICA: campo logo con placeholder GitHub Raw
             logo_url = st.text_input(
                 t("sponsor_form_logo"),
                 placeholder="https://raw.githubusercontent.com/..."
