@@ -2,6 +2,10 @@
 
 > **Convert. Fix. Deliver.** — Universal CAD/CAM file repair, conversion and 3D viewer.
 
+[![License: All Rights Reserved](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](LICENSE.md)
+[![Website](https://img.shields.io/badge/Website-artifix.it-blue.svg)](https://www.artifix.it)
+[![Web App](https://img.shields.io/badge/Web%20App-artifix.streamlit.app-brightgreen.svg)](https://artifix.streamlit.app)
+
 **English** | [Italiano](#-italiano)
 
 ---
@@ -78,13 +82,44 @@ Ingegneri, progettisti, architetti, studenti e appassionati di stampa 3D che nec
 
 ---
 
-## 📄 License
+## 📄 License / Licenza
 
-This project is source-available. See the [LICENSE](LICENSE) file for details.
+This project is **source-available** but **all rights reserved**.
 
-## 🙏 Support
+Questo progetto è **source-available** ma **tutti i diritti riservati**.
+
+See the [LICENSE.md](LICENSE.md) file for full details.
+
+Per i dettagli completi, consulta il file [LICENSE.md](LICENSE.md).
+
+**Key points:**
+- ✅ Personal, professional and educational use allowed
+- ✅ Consultation of source code allowed
+- ✅ Contributions via Pull Request welcome
+- ❌ Copying, modifying or redistributing the Software is prohibited
+- ❌ Selling the Software or services based on it is prohibited
+- ❌ Using the "ArtiFix" trademark without permission is prohibited
+
+---
+
+## ⚖️ Legal / Legale
+
+All legal documents are available in Italian and English:
+
+Tutti i documenti legali sono disponibili in italiano e inglese:
+
+- 🔒 [Privacy Policy (IT)](https://www.artifix.it/privacy.html) · [Privacy Policy (EN)](https://www.artifix.it/en/privacy.html)
+- 🍪 [Cookie Policy (IT)](https://www.artifix.it/cookie.html) · [Cookie Policy (EN)](https://www.artifix.it/en/cookie.html)
+- 📜 [Termini di Servizio (IT)](https://www.artifix.it/termini.html) · [Terms of Service (EN)](https://www.artifix.it/en/terms.html)
+- 📄 [Licenza d'Uso (IT/EN)](LICENSE.md)
+
+---
+
+## 🙏 Support / Supporto
 
 If you find ArtiFix useful, consider supporting the project:
+
+Se trovi ArtiFix utile, considera di sostenere il progetto:
 
 - ⭐ **Star this repository** to show your support
 - 🐛 **Report bugs** via [GitHub Issues](https://github.com/alexcool-project/Artifix/issues)
@@ -97,4 +132,8 @@ If you find ArtiFix useful, consider supporting the project:
   <strong>ArtiFix</strong> — Convert. Fix. Deliver.
   <br>
   © 2026 ArtiFix. All rights reserved.
+  <br>
+  <a href="https://www.artifix.it">Website</a> ·
+  <a href="https://artifix.streamlit.app">Web App</a> ·
+  <a href="https://github.com/alexcool-project/Artifix">GitHub</a>
 </p>
