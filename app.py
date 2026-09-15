@@ -113,6 +113,23 @@ st.markdown("""
     }
     .main .block-container { padding-bottom: 80px !important; }
     .lang-selector { padding: 8px 0; margin-bottom: 15px; }
+
+    /* ===== FIX TESTO BIANCO PULSANTE GUIDA ===== */
+    a.guide-button, a.guide-button:link, a.guide-button:visited,
+    a.guide-button:hover, a.guide-button:active, a.guide-button:focus {
+        color: #ffffff !important;
+        text-decoration: none !important;
+        background: #1f77b4 !important;
+        display: inline-block !important;
+        padding: 10px 24px !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        border: none !important;
+    }
+    a.guide-button:hover {
+        background: #155a8a !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -438,14 +455,12 @@ def render_proprietary_formats_help():
         # Tip
         st.info(t("notes_expander_tip"))
 
-        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO)
+        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO + CLASSE CSS)
         st.markdown(
             f"""
             <div style="text-align: center; margin-top: 12px;">
                 <a href="https://www.artifix.it/esportare-dwg-in-dae.html" target="_blank" rel="noopener"
-                   style="display: inline-block; background: #1f77b4; color: #ffffff !important;
-                          padding: 10px 24px; border-radius: 8px; text-decoration: none;
-                          font-weight: 700; font-size: 14px;">
+                   class="guide-button">
                     {t("notes_expander_guide_link")}
                 </a>
             </div>
