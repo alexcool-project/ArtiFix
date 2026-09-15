@@ -411,35 +411,47 @@ def invia_email(nome, email_utente, messaggio):
 # ============================================================
 
 def render_proprietary_formats_help():
-    """Box informativo sui formati proprietari (DWG, SKP, RVT)."""
-    st.markdown(
-        f"""
-        <div style="background: linear-gradient(135deg, #eef4ff 0%, #f7f9fc 100%); border: 1px solid #d6e2f5; border-radius: 12px; padding: 24px 28px; margin: 24px 0;">
-            <h3 style="color: #0d1b2a; font-size: 1.35rem; font-weight: 700; margin: 0 0 12px 0;">{t("prop_title")}</h3>
-            <p style="color: #333; font-size: 0.95rem; line-height: 1.7; margin-bottom: 20px;">{t("prop_intro")}</p>
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 12px; background: #ffffff; border-left: 4px solid #1f77b4; border-radius: 8px; padding: 12px 16px;">
-                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #1f77b4; color: #ffffff; font-weight: 700; border-radius: 50%; flex-shrink: 0;">1</span>
-                    <div style="font-size: 0.95rem;"><strong>{t("prop_step1_title")}</strong> {t("prop_step1_desc")}</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 12px; background: #ffffff; border-left: 4px solid #1f77b4; border-radius: 8px; padding: 12px 16px;">
-                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #1f77b4; color: #ffffff; font-weight: 700; border-radius: 50%; flex-shrink: 0;">2</span>
-                    <div style="font-size: 0.95rem;"><strong>{t("prop_step2_title")}</strong> {t("prop_step2_desc")}</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 12px; background: #ffffff; border-left: 4px solid #1f77b4; border-radius: 8px; padding: 12px 16px;">
-                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #1f77b4; color: #ffffff; font-weight: 700; border-radius: 50%; flex-shrink: 0;">3</span>
-                    <div style="font-size: 0.95rem;"><strong>{t("prop_step3_title")}</strong> {t("prop_step3_desc")}</div>
-                </div>
-            </div>
-            <div style="text-align: center; margin-bottom: 16px;">
-                <a href="https://www.artifix.it/esportare-dwg-in-dae.html" target="_blank" rel="noopener" style="display: inline-block; background: #1f77b4; color: #ffffff !important; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px;">{t("prop_btn_guide")}</a>
-            </div>
-            <p style="color: #555; font-size: 0.85rem; line-height: 1.6; text-align: center; margin: 0; padding-top: 16px; border-top: 1px solid #d6e2f5;">{t("prop_note")}</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    """Mostra una tendina (expander) con le note sui formati proprietari.
+    
+    Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
+    Sostituisce il precedente box grande sempre visibile.
+    """
+    with st.expander(t("notes_expander_title"), expanded=False):
+        # Intro
+        st.markdown(t("notes_expander_intro"))
 
+        st.markdown("---")
+
+        # Due colonne: supportati vs non supportati
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(t("notes_expander_native"))
+        with col2:
+            st.markdown(t("notes_expander_not_supported"))
+
+        st.markdown("---")
+
+        # Come procedere
+        st.markdown(t("notes_expander_howto"))
+        st.markdown(t("notes_expander_steps"))
+
+        # Tip
+        st.info(t("notes_expander_tip"))
+
+        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO)
+        st.markdown(
+            f"""
+            <div style="text-align: center; margin-top: 12px;">
+                <a href="https://www.artifix.it/esportare-dwg-in-dae.html" target="_blank" rel="noopener"
+                   style="display: inline-block; background: #1f77b4; color: #ffffff !important;
+                          padding: 10px 24px; border-radius: 8px; text-decoration: none;
+                          font-weight: 700; font-size: 14px;">
+                    {t("notes_expander_guide_link")}
+                </a>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 def is_3d_pdf(file_bytes):
     """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
