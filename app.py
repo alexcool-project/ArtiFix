@@ -19,6 +19,9 @@ from sponsors import load_sponsors, render_sponsor_band, sponsor_band_placeholde
 # --- MODULO TRADUZIONI (IT/EN) ---
 from translations import TRANSLATIONS, get_text, detect_browser_language
 
+# --- UTILITY CONDIVISIONE VIEWER (v8.0) ---
+from share_utils import render_share_section
+
 # --- LIBRERIA COOKIE (OPZIONALE) ---
 try:
     from streamlit_cookies_controller import CookieController
@@ -429,7 +432,7 @@ def invia_email(nome, email_utente, messaggio):
 
 def render_proprietary_formats_help():
     """Mostra una tendina (expander) con le note sui formati proprietari.
-    
+
     Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
     Sostituisce il precedente box grande sempre visibile.
     """
@@ -833,6 +836,9 @@ elif page == "Viewer 3D":
                         </script></body></html>
                         """
                         st.components.v1.html(viewer_html, height=580)
+
+                        # --- SEZIONE CONDIVISIONE (v8.0) ---
+                        render_share_section(viewer_file, t)
                 else:
                     st.warning(t("viewer_warning_no_model"))
             except Exception as e:
