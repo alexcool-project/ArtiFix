@@ -761,7 +761,7 @@ elif page == "Viewer 3D":
                         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
                         </head><body>
                         <div id="c"></div>
-                        <div class="legend"><span class="axis-x"></span> X (Rosso) &nbsp; <span class="axis-y"></span> Y (Verde) &nbsp; <span class="axis-z"></span> Z (Blu)</div>
+                        <div class="legend"><span class="axis-x"></span> """ + t("viewer_legend_axes") + """</div>
                         <div id="info">""" + t("viewer_legend") + """</div>
                         <script>
                         const data = """ + mesh_json + """;
@@ -837,7 +837,7 @@ elif page == "Viewer 3D":
                         st.components.v1.html(viewer_html, height=580)
 
                         # --- SEZIONE CONDIVISIONE (v8.0) ---
-                        render_share_section(viewer_file, t)
+                        render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
                     st.warning(t("viewer_warning_no_model"))
             except Exception as e:
