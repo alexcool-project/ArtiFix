@@ -42,6 +42,8 @@ TRANSLATIONS = {
         "share_result_title": "📎 Link condivisibile",
         "share_result_url": "URL pubblico:",
         "share_copy_link": "Copia link",
+        "share_copy_success": "✅ Link copiato!",
+        "share_copy_error": "❌ Errore",
         "share_qr_title": "📱 QR Code",
         "share_qr_caption": "Scansiona con il telefono per aprire il viewer",
         "share_download_qr": "📥 Scarica QR Code (PNG)",
@@ -160,6 +162,7 @@ TRANSLATIONS = {
         "viewer_warning_no_model": "⚠️ Impossibile caricare il modello.",
         "viewer_error_generic": "❌ Errore: {error}",
         "viewer_legend": "🔄 Trascina per ruotare | 🖱️ Tasto destro per spostare | 🖱️ Rotella per zoom",
+        "viewer_legend_axes": "X (Rosso) | Y (Verde) | Z (Blu)",
 
         # --- 3D PDF DETECTION ---
         "pdf_no_3d_title": "❌ **Il PDF non contiene un modello 3D incorporato.**",
@@ -368,6 +371,8 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "share_result_title": "📎 Shareable link",
         "share_result_url": "Public URL:",
         "share_copy_link": "Copy link",
+        "share_copy_success": "✅ Link copied!",
+        "share_copy_error": "❌ Error",
         "share_qr_title": "📱 QR Code",
         "share_qr_caption": "Scan with your phone to open the viewer",
         "share_download_qr": "📥 Download QR Code (PNG)",
@@ -486,6 +491,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "viewer_warning_no_model": "⚠️ Unable to load model.",
         "viewer_error_generic": "❌ Error: {error}",
         "viewer_legend": "🔄 Drag to rotate | 🖱️ Right click to pan | 🖱️ Scroll to zoom",
+        "viewer_legend_axes": "X (Red) | Y (Green) | Z (Blue)",
 
         # --- 3D PDF DETECTION (EN) ---
         "pdf_no_3d_title": "❌ **The PDF does not contain an embedded 3D model.**",
