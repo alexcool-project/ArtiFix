@@ -35,6 +35,18 @@ TRANSLATIONS = {
         "prop_btn_guide": "📖 Guida: esportare DWG in DAE",
         "prop_note": "💡 **DAE (Collada)** e **OBJ** sono formati universali che possono essere esportati dalla quasi totalità dei software CAD 3D presenti sul mercato.",
         
+        # --- TENDINA NOTE FORMATI PROPRIETARI ---
+        "notes_expander_title": "📝 Note: formati proprietari (DWG, SKP, RVT, STEP, IGES)",
+        "notes_expander_intro": "ArtiFix supporta nativamente oltre 50 formati. **Alcuni formati proprietari non possono essere letti direttamente** perché richiedono librerie commerciali. Ecco come procedere:",
+        "notes_expander_native": "**✅ Supportati nativamente:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, DXF, 3D PDF, SVG, DOCX, XLSX, IFC, SHP, GeoJSON, KML, GPX.",
+        "notes_expander_not_supported": "**❌ NON supportati direttamente:** DWG, SKP, RVT, STEP, IGES, DGN, DWT.",
+        "notes_expander_howto": "**🔧 Come procedere per i formati non supportati:**",
+        "notes_expander_steps": """1. **Apri il file** nel software con cui è stato creato (AutoCAD, SketchUp, Revit, FreeCAD, ecc.)
+2. **Esporta in DAE (Collada)** o **OBJ** — formati universali e gratuiti
+3. **Carica il file DAE/OBJ** su ArtiFix e converti in qualsiasi altro formato (STL, 3D PDF, GLB, ecc.)""",
+        "notes_expander_tip": "💡 **Suggerimento:** la quasi totalità dei software CAD 3D (AutoCAD, SketchUp, Revit, Rhino, FreeCAD) può esportare in DAE o OBJ con un semplice click su **File → Esporta → DAE/OBJ**.",
+        "notes_expander_guide_link": "📖 Leggi la guida completa: esportare DWG in DAE",
+        
         # --- COOKIE BANNER ---
         "cookie_title": "🍪 Cookie Policy",
         "cookie_text": "Noi e terze parti selezionate utilizziamo cookie o tecnologie simili per finalità tecniche e, con il tuo consenso, anche per altre finalità come specificato nella cookie policy. Il rifiuto del consenso può rendere non disponibili le relative funzioni. Usa il pulsante \"Accetta tutti i cookie\" per acconsentire. Usa il pulsante \"Accetta solo i cookie necessari\" per continuare senza accettare.",
@@ -68,6 +80,7 @@ TRANSLATIONS = {
         "repair_error_non_mesh_title": "❌ **Formato non supportato per la riparazione.**",
         "repair_error_non_mesh_desc": "Il file `{ext}` è un file di **{tipo}**, non una mesh 3D.",
         "repair_error_non_mesh_hint": "Per lavorare con file {tipo}, usa la sezione **Converti Formati** o il **Viewer 3D**.",
+        "repair_error_pdf_hint": "⚠️ **Attenzione:** i PDF standard (non 3D) non possono essere riparati, convertiti o visualizzati. Solo i **3D PDF** con modello 3D incorporato (**U3D** o **PRC**) possono essere visualizzati nel **Viewer 3D**.",
         "repair_error_invalid_mesh_title": "❌ **Impossibile riparare questo file.**",
         "repair_error_invalid_mesh_desc": "Il file `{ext}` non contiene una mesh 3D valida con vertici e facce.",
         "repair_error_invalid_mesh_hint": "Formati supportati: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**.",
@@ -323,6 +336,18 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "prop_btn_guide": "📖 Guide: export DWG to DAE",
         "prop_note": "💡 **DAE (Collada)** and **OBJ** are universal formats that can be exported from almost all 3D CAD software on the market.",
         
+        # --- NOTES EXPANDER: PROPRIETARY FORMATS ---
+        "notes_expander_title": "📝 Note: proprietary formats (DWG, SKP, RVT, STEP, IGES)",
+        "notes_expander_intro": "ArtiFix natively supports 50+ formats. **Some proprietary formats cannot be read directly** because they require commercial libraries. Here's how to proceed:",
+        "notes_expander_native": "**✅ Natively supported:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, DXF, 3D PDF, SVG, DOCX, XLSX, IFC, SHP, GeoJSON, KML, GPX.",
+        "notes_expander_not_supported": "**❌ NOT directly supported:** DWG, SKP, RVT, STEP, IGES, DGN, DWT.",
+        "notes_expander_howto": "**🔧 How to proceed for unsupported formats:**",
+        "notes_expander_steps": """1. **Open the file** in the software it was created with (AutoCAD, SketchUp, Revit, FreeCAD, etc.)
+2. **Export to DAE (Collada)** or **OBJ** — universal, free formats
+3. **Upload the DAE/OBJ file** to ArtiFix and convert to any other format (STL, 3D PDF, GLB, etc.)""",
+        "notes_expander_tip": "💡 **Tip:** almost all 3D CAD software (AutoCAD, SketchUp, Revit, Rhino, FreeCAD) can export to DAE or OBJ with a simple click on **File → Export → DAE/OBJ**.",
+        "notes_expander_guide_link": "📖 Read the full guide: export DWG to DAE",
+        
         # --- COOKIE BANNER ---
         "cookie_title": "🍪 Cookie Policy",
         "cookie_text": "We and selected third parties use cookies or similar technologies for technical purposes and, with your consent, also for other purposes as specified in the cookie policy. Denying consent may make related features unavailable. Use the \"Accept all cookies\" button to consent. Use the \"Accept only necessary cookies\" button to continue without accepting.",
@@ -356,6 +381,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "repair_error_non_mesh_title": "❌ **Format not supported for repair.**",
         "repair_error_non_mesh_desc": "The file `{ext}` is a **{tipo}** file, not a 3D mesh.",
         "repair_error_non_mesh_hint": "To work with {tipo} files, use the **Format Conversion** or **3D Viewer** section.",
+        "repair_error_pdf_hint": "⚠️ **Warning:** standard PDFs (non-3D) cannot be repaired, converted, or viewed. Only **3D PDFs** with an embedded 3D model (**U3D** or **PRC**) can be viewed in the **3D Viewer**.",
         "repair_error_invalid_mesh_title": "❌ **Cannot repair this file.**",
         "repair_error_invalid_mesh_desc": "The file `{ext}` does not contain a valid 3D mesh with vertices and faces.",
         "repair_error_invalid_mesh_hint": "Supported formats: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**.",
@@ -372,233 +398,4 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "report_header": "📊 Detailed Repair Report",
         "report_subtitle": "Complete analysis of the changes applied to the file.",
         "report_before": "Initial State (Before)",
-        "report_after": "Final State (After)",
-        "report_actions": "Applied Actions",
-        "report_summary": "Final Summary",
-        "report_metric": "Metric",
-        "report_value_before": "Initial Value",
-        "report_value_after": "Final Value",
-        "report_vertices": "Vertices",
-        "report_faces": "Faces",
-        "report_watertight": "Watertight",
-        "report_non_manifold": "Non-Manifold Edges",
-        "report_degenerate": "Degenerate Triangles",
-        "report_duplicates": "Duplicate Vertices",
-        "report_holes": "Holes",
-        "report_fixed": "Fixed",
-        "report_not_fixed": "Not Fixed",
-        "report_action_merged_vertices": "Merged duplicate vertices",
-        "report_action_removed_degenerate": "Removed degenerate triangles",
-        "report_action_fixed_normals": "Fixed inverted normals",
-        "report_action_filled_holes": "Filled holes",
-        "report_action_fix_inversion": "Fixed volume inversion",
-        "report_action_removed_duplicate_faces": "Removed duplicate faces",
-        "report_summary_issues": "Issues fixed",
-        "report_summary_watertight": "Watertight",
-        "report_download_pdf": "📥 Download PDF Report",
-        "report_no_issues": "✅ No issues detected. The file is already optimal.",
-        
-        # --- VIEWER 3D ---
-        "viewer_header": "🖥️ 3D Viewer",
-        "viewer_upload": "Upload 3D model",
-        "viewer_upload_hint": "💡 **Supported formats:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, **3D PDF** (the PDF file must contain an embedded 3D model in **.u3d** or **.prc** format).",
-        "viewer_status_loading": "Loading model... (30%)",
-        "viewer_status_processing": "Processing vertices and faces... (60%)",
-        "viewer_status_building": "Building 3D view... (100%)",
-        "viewer_success": "✅ {vertices} vertices, {faces} faces",
-        "viewer_error_processing": "❌ Error processing mesh.",
-        "viewer_warning_no_model": "⚠️ Unable to load model.",
-        "viewer_error_generic": "❌ Error: {error}",
-        "viewer_legend": "🔄 Drag to rotate | 🖱️ Right-click to pan | 🖱️ Scroll to zoom",
-        
-        # --- 3D PDF DETECTION ---
-        "pdf_no_3d_title": "❌ **The PDF does not contain an embedded 3D model.**",
-        "pdf_no_3d_desc": "The file `{filename}` is a standard PDF, not a 3D PDF. To view it in the 3D Viewer, it must contain a 3D model in **U3D** or **PRC** format.",
-        "pdf_no_3d_howto_title": "📖 How to create a 3D PDF",
-        "pdf_no_3d_howto_steps": """1. Open your model in a CAD software (AutoCAD, SketchUp, Revit, FreeCAD, etc.)
-2. Export the model to **U3D** or **PRC** format (embeddable 3D formats)
-3. Use **Adobe Acrobat Pro** or **Foxit PhantomPDF** to create a 3D PDF:
-   - Open a blank PDF
-   - Go to **Tools → 3D → Add 3D**
-   - Select the exported U3D or PRC file
-   - Save the PDF
-4. Upload the 3D PDF to ArtiFix to view it""",
-        "pdf_no_3d_alternative": "💡 **Simpler alternative:** upload the **U3D** or **PRC** file directly to the 3D Viewer (they are natively supported, no PDF needed).",
-        "pdf_3d_detected": "✅ **3D PDF detected!** It contains an embedded 3D model. Processing...",
-        
-        # --- CONVERT FORMATS ---
-        "convert_header": "🔄 Universal Format Conversion",
-        "convert_subtitle": "Convert files between **all supported formats** with **all possible combinations**.",
-        "convert_expander_note": "ℹ️ Note on proprietary and paid formats",
-        "convert_note_text": """**ArtiFix cannot directly read proprietary and paid formats** (such as DWG, SKP, RVT, STEP, IGES, etc.) because they require commercial libraries and dedicated servers.
-
-**How to solve?** If your file is in a proprietary format, we recommend:
-1. Open the file in the software it was created with (e.g. AutoCAD, SketchUp, Revit).
-2. Use the **"Export"** or **"Save As"** function to convert it to **DAE (Collada)** or **OBJ**.
-3. Upload the DAE or OBJ file to ArtiFix and convert it here to any other mesh format (STL, PLY, GLB, GLTF, etc.) or 3D PDF.
-
-*DAE (Collada) and OBJ are universal, free formats that can be exported from almost all 3D CAD software on the market.*""",
-        "convert_expander_matrix": "📋 Available conversion matrix",
-        "convert_caption_matrix": "✅ = Conversion supported | ❌ = Conversion not supported",
-        "convert_upload": "Upload a file to convert",
-        "convert_upload_hint": "💡 Click to browse your computer, or drag and drop the file here.",
-        "convert_target_format": "Target format",
-        "convert_button_convert": "🔄 Convert to {format}",
-        "convert_status_loading": "Loading and analyzing model... (20%)",
-        "convert_status_converting": "Converting... (70%)",
-        "convert_status_saving": "Saving file... (100%)",
-        "convert_success": "✅ Conversion to {format} completed!",
-        "convert_info_ready": "📥 The file is ready! Click the button below to download it.",
-        "convert_button_download": "📥 Download .{format}",
-        "convert_error": "❌ Conversion to {format} failed. Try another format.",
-        "convert_error_load": "❌ Unable to load model. Make sure the file is a valid 3D model.",
-        "convert_button_preview": "🖥️ Show interactive preview (rotate with mouse)",
-        "convert_info_preview": "💡 Rotate the model 360° with mouse or touchpad",
-        "convert_warning_format": "⚠️ The **.{format}** format cannot be converted to other formats.",
-        "convert_info_formats": "💡 Convertible formats are: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF**.",
-        "convert_warning_no_target": "⚠️ No target format available for this file.",
-        "convert_warning_no_preview": "⚠️ Unable to load model for preview. Make sure the file is a valid 3D model.",
-        "convert_file_type": "Type: {type} | Extension: .{ext}",
-        
-        # --- ARTIFIX PROJECT ---
-        "project_header": "🚀 ArtiFix Project",
-        "project_text": """**ArtiFix** is a professional platform for repairing, converting, and visualizing CAD/CAM files.
-This project is constantly evolving. For information, collaborations, or technical support, contact us.""",
-        "project_contact": "📧 Contact Us",
-        "project_contact_text": "Send a request to info@artifix.it",
-        "project_form_name": "Your name",
-        "project_form_email": "Your email",
-        "project_form_message": "Message",
-        "project_form_submit": "Send",
-        "project_success": "Email sent successfully!",
-        "project_error": "Error: {error}",
-        "project_warning": "Fill in all fields before sending.",
-        
-        # --- BECOME A SPONSOR ---
-        "sponsor_header": "🤝 Become an ArtiFix Sponsor",
-        "sponsor_intro": """**ArtiFix** is an independent project offering free tools for repairing, converting, and visualizing CAD/CAM files.
-
-Every day hundreds of professionals, students, and enthusiasts use ArtiFix services. If you also believe in this project and want to support it, you can become a **sponsor**.""",
-        "sponsor_format_title": "📐 Required banner format",
-        "sponsor_format_text": """- **Dimensions:** 300 × 100 px
-- **File format:** PNG (preferred) or JPG
-- **Background:** transparent or neutral
-- **Maximum size:** 200 KB
-- **Content:** company logo + optional short tagline""",
-        "sponsor_how_title": "💶 How it works",
-        "sponsor_how_text": """1. You make a **free donation** via the PayPal button below.
-2. You fill out the form with your brand details (name, website, email, logo).
-3. Within 24-48h your banner is published in the ArtiFix sidebar for **30 days**.
-4. After 30 days, if you wish to renew, you can donate again.""",
-        "sponsor_donate_button": "💙 Donate with PayPal",
-        "sponsor_form_title": "📤 Send your request",
-        "sponsor_form_caption": "After making the donation, fill out this form with your brand details.",
-        "sponsor_form_brand": "Brand/company name *",
-        "sponsor_form_email": "Contact email *",
-        "sponsor_form_site": "Website (full URL, e.g. https://www.mysite.com) *",
-        "sponsor_form_logo": "GitHub Raw URL of the logo (e.g. https://raw.githubusercontent.com/.../logo.png) — 300×100 px, PNG or JPG, max 200 KB *",
-        "sponsor_form_message": "Optional message (short business description)",
-        "sponsor_form_submit": "Send sponsor request",
-        "sponsor_form_success": "✅ Request sent! We will contact you within 48h.",
-        "sponsor_form_error": "Send error: {error}",
-        "sponsor_form_warning": "Fill in all required fields (*).",
-        "sponsor_form_info": "💡 After donating, send the request via this form. Your banner will be active within 24-48h.",
-        
-        # --- PRIVACY POLICY ---
-        "privacy_header": "🔒 Privacy Policy",
-        "privacy_subtitle": "**ArtiFix - Universal CAD/CAM Repair**",
-        "privacy_updated": "Last updated: September 15, 2026",
-        "privacy_back": "← Back to Dashboard",
-        "privacy_content": """This Privacy Policy is provided pursuant to Art. 13 of Regulation (EU) 2016/679 (GDPR), concerning the protection of natural persons with regard to the processing of personal data.
-
-### 1. Data Controller
-The Data Controller is **ArtiFix**, based in Italy. For any request, you can contact the Controller at: **info@artifix.it**.
-
-### 2. Data collected and purposes
-**Data voluntarily provided by the user**: Through the "Contact Us" form, name, email address, and message are collected to respond to requests received.
-**Navigation data**: The site uses technical cookies (for operation) and analytics cookies (optional) as described in the Cookie Policy.
-**Files uploaded**: Files uploaded by users for conversion are processed temporarily in memory on the server and are not stored after processing.
-
-### 3. Data collected for Donations and Sponsorships
-**Donor Data**: name, email, amount, date, payment method.
-**Sponsor Data**: brand name, logo URL, website, contact email, phone (optional), start date, duration.
-**Legal basis**: consent (Art. 6, para. 1, lett. a GDPR) + liberality (Art. 6, para. 1, lett. b GDPR).
-**Retention**: 10 years for donations, 24 months for sponsorships.
-
-### 4. Data subject rights
-Pursuant to Arts. 15-22 of the GDPR, the user has the right to: access, rectification, deletion, restriction, objection, portability, withdrawal of consent.
-To exercise these rights: **info@artifix.it**
-
-### 5. Communication and dissemination
-Data will not be transferred to third parties for marketing purposes or sold. They may be communicated to PayPal (payments), Google (storage), accountant (tax obligations), competent authorities.
-
-### 6. Data transfer
-Data is not transferred outside the European Union. The app is hosted on Streamlit Cloud (USA), but file processing takes place in memory.
-
-### 7. Changes to the Privacy Policy
-This Privacy Policy may be subject to updates. The updated version will always be available on this page.""",
-        
-        # --- COOKIE POLICY ---
-        "cookie_policy_header": "🍪 Cookie Policy",
-        "cookie_policy_subtitle": "**ArtiFix - Universal CAD/CAM Repair**",
-        "cookie_policy_updated": "Last updated: September 15, 2026",
-        "cookie_policy_back": "← Back to Dashboard",
-        "cookie_policy_content": """This Cookie Policy is provided pursuant to Art. 13 of Regulation (EU) 2016/679 (GDPR) and the Italian Data Protection Authority Provision of June 10, 2021.
-
-### 1. Data Controller
-The Data Controller is **ArtiFix**, based in Italy. For any request, you can contact the Controller at: **info@artifix.it**.
-
-### 2. What are Cookies
-Cookies are small text files that websites send and record on the user's computer or mobile device, to be retransmitted to the same sites on subsequent visits. They are used to remember the user's actions and preferences.
-
-### 3. Types of Cookies used
-This site uses exclusively **Technical Cookies (or strictly necessary)**. These cookies are essential for the operation of the site and do not require the user's prior consent.
-
-*   **Session Cookies**: Automatically deleted when the browser is closed.
-*   **Functional Cookies**: Allow remembering user choices (e.g., upload limit 5GB).
-
-**Third-party / Profiling Cookies**: This site **does not use** profiling, marketing, or third-party cookies.
-
-### 4. Consent Management
-On first access, the user can choose whether to accept or reject cookies via the appropriate banner.
-
-### 5. How to disable Cookies via Browser
-*   **Google Chrome**: [Instructions](https://support.google.com/chrome/answer/95647)
-*   **Mozilla Firefox**: [Instructions](https://support.mozilla.org/kb/block-websites-storing-cookies)
-*   **Microsoft Edge**: [Instructions](https://support.microsoft.com/microsoft-edge/delete-cookies-in-microsoft-edge)
-*   **Safari**: [Instructions](https://support.apple.com/guide/safari/manage-cookies)
-
-### 6. Data Subject Rights
-Pursuant to Arts. 15-22 of the GDPR, the user has the right to access, rectify, delete, restrict, object to, and port their personal data. To exercise these rights: **info@artifix.it**.
-
-### 7. Updates
-This Cookie Policy may be subject to updates.""",
-        
-        # --- FOOTER ---
-        "footer": "© 2026 ArtiFix | All rights reserved",
-    }
-}
-
-# Funzione helper per recuperare una traduzione
-def get_text(key, lang="it", **kwargs):
-    lang = lang if lang in TRANSLATIONS else "it"
-    text = TRANSLATIONS[lang].get(key, key)
-    if kwargs:
-        try:
-            text = text.format(**kwargs)
-        except (KeyError, IndexError):
-            pass
-    return text
-
-# Rilevamento lingua browser
-def detect_browser_language():
-    try:
-        import streamlit as st
-        browser_lang = st.context.headers.get('Accept-Language', 'it')
-        if browser_lang:
-            primary_lang = browser_lang.split(',')[0].split(';')[0].split('-')[0].lower()
-            if primary_lang == 'en':
-                return 'en'
-        return 'it'
-    except Exception:
-        return 'it'
+        "report_
