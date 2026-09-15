@@ -24,7 +24,7 @@ TRANSLATIONS = {
         "nav_become_sponsor": "🤝 Diventa Sponsor",
 
         # --- CONDIVIDI VIEWER 3D (v8.0) ---
-        "share_button": "📤 Condividi con il tuo cliente",
+        "share_button": "📤 Condividi il file 3D generato",
         "share_info_tooltip": "ℹ️ Cos'è questo pulsante?",
         "share_info_title": "🔗 Condividi il tuo modello 3D con un link",
         "share_info_body": "Genera un **link pubblico** al tuo modello 3D. Puoi inviarlo via **email, WhatsApp, SMS**, incorporarlo in **presentazioni**, stamparlo come **QR Code**, o condividerlo sui **social**.",
@@ -349,7 +349,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "nav_become_sponsor": "🤝 Become a Sponsor",
 
         # --- SHARE 3D VIEWER (v8.0) ---
-        "share_button": "📤 Share with your client",
+        "share_button": "📤 Share the generated 3D file",
         "share_info_tooltip": "ℹ️ What is this button?",
         "share_info_title": "🔗 Share your 3D model with a link",
         "share_info_body": "Generate a **public link** to your 3D model. Send it via **email, WhatsApp, SMS**, embed it in **presentations**, print it as a **QR Code**, or share it on **social media**.",
