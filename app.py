@@ -680,7 +680,6 @@ elif page == "Viewer 3D":
             key="viewer",
             help=t("viewer_upload_hint")
         )
-        st.info(t("viewer_upload_hint"))
 
         if viewer_file:
             # ✅ Controllo 3D PDF
