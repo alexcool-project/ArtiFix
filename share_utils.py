@@ -32,13 +32,17 @@ def render_share_info_tooltip(t) -> None:
         st.markdown(t("share_info_use_cases"))
 
 
-def _render_copy_button(url: str, label: str) -> None:
-    """Renderizza un pulsante 'Copia link' con feedback visivo."""
+def _render_copy_button(url: str, label: str, t) -> None:
+    """Renderizza un pulsante 'Copia link' con feedback visivo tradotto."""
     safe_url = html.escape(url, quote=True)
     # Rimuovi eventuale emoji 📋 dal label per evitare duplicati
     clean_label = label.replace("📋 ", "").replace(" 📋", "").strip()
     # Aggiungiamo noi l'emoji nel template (per coerenza)
     display_label = f"📋 {clean_label}" if clean_label else "📋 Copia link"
+
+    # Stringhe tradotte per il pulsante
+    copied_text = t("share_copy_success")
+    error_text = t("share_copy_error")
 
     copy_html = f"""
     <!DOCTYPE html>
@@ -105,14 +109,14 @@ def _render_copy_button(url: str, label: str) -> None:
                     document.execCommand('copy');
                     showSuccess();
                 }} catch (err) {{
-                    txt.textContent = '❌ Errore';
+                    txt.textContent = '{error_text}';
                 }}
                 document.body.removeChild(ta);
             }}
 
             function showSuccess() {{
                 btn.classList.add('copied');
-                txt.textContent = '✅ Link copiato!';
+                txt.textContent = '{copied_text}';
                 setTimeout(() => {{
                     btn.classList.remove('copied');
                     txt.textContent = '{display_label}';
@@ -211,7 +215,7 @@ def handle_share_action(
         st.markdown(f"**{t('share_result_url')}**")
         st.code(result["url"], language=None)
 
-        _render_copy_button(result["url"], t("share_copy_link"))
+        _render_copy_button(result["url"], t("share_copy_link"), t)
 
         if result.get("qr_path"):
             st.markdown("---")
