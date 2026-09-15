@@ -35,6 +35,10 @@ def render_share_info_tooltip(t) -> None:
 def _render_copy_button(url: str, label: str) -> None:
     """Renderizza un pulsante 'Copia link' con feedback visivo."""
     safe_url = html.escape(url, quote=True)
+    # Rimuovi eventuale emoji 📋 dal label per evitare duplicati
+    clean_label = label.replace("📋 ", "").replace(" 📋", "").strip()
+    # Aggiungiamo noi l'emoji nel template (per coerenza)
+    display_label = f"📋 {clean_label}" if clean_label else "📋 Copia link"
 
     copy_html = f"""
     <!DOCTYPE html>
@@ -71,7 +75,7 @@ def _render_copy_button(url: str, label: str) -> None:
     </head>
     <body>
     <button class="copy-btn" id="copyBtn" onclick="copyLink()">
-        <span id="btnText">📋 {label}</span>
+        <span id="btnText">{display_label}</span>
     </button>
 
     <script>
@@ -111,7 +115,7 @@ def _render_copy_button(url: str, label: str) -> None:
                 txt.textContent = '✅ Link copiato!';
                 setTimeout(() => {{
                     btn.classList.remove('copied');
-                    txt.textContent = '📋 {label}';
+                    txt.textContent = '{display_label}';
                 }}, 2500);
             }}
         }}
@@ -197,10 +201,7 @@ def handle_share_action(
 
         # --- Avviso di propagazione GitHub Pages ---
         st.warning(
-            "⏱️ **Attendi 30-90 secondi** prima di aprire il link. "
-            "GitHub Pages impiega fino a 1 minuto per pubblicare il file. "
-            "Se apri il link subito, potresti vedere un errore **404** "
-            "— riprova dopo qualche secondo."
+            t("share_warning_propagation")
         )
 
         # --- Risultato ---
