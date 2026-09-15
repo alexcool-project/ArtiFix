@@ -87,11 +87,21 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     file_ext_check = os.path.splitext(file_name_check)[1].lower()
     if file_ext_check in NON_MESH_FORMATS:
         tipo = t(NON_MESH_FORMATS[file_ext_check])
-        st.error(
-            f"{t('repair_error_non_mesh_title')}\n\n"
-            f"{t('repair_error_non_mesh_desc', ext=file_ext_check, tipo=tipo)}\n\n"
-            f"💡 {t('repair_error_non_mesh_hint', tipo=tipo)}"
-        )
+
+        # ✅ MESSAGGIO SPECIFICO PER PDF
+        if file_ext_check == '.pdf':
+            st.error(t("pdf_no_3d_title"))
+            st.markdown(t("pdf_no_3d_desc").format(filename=file_name_check))
+            with st.expander(t("pdf_no_3d_howto_title"), expanded=True):
+                st.markdown(t("pdf_no_3d_howto_steps"))
+            st.info(t("pdf_no_3d_alternative"))
+        else:
+            # Messaggio generico per altri formati non-mesh
+            st.error(
+                f"{t('repair_error_non_mesh_title')}\n\n"
+                f"{t('repair_error_non_mesh_desc', ext=file_ext_check, tipo=tipo)}\n\n"
+                f"💡 {t('repair_error_non_mesh_hint', tipo=tipo)}"
+            )
         return
 
     # --- SE NON ELABORATO, ESEGUI ---
