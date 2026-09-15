@@ -1,6 +1,10 @@
 """
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
+Usa la libreria `mesh2u3d` per generare un viewer HTML 3D autonomo
+(con logo ArtiFix, controlli avanzati, trasparenze, X-Ray, ecc.)
+e lo pubblica su GitHub Pages.
+
 Espone:
   - render_share_section(uploaded_file, t): pulsante + nota + form
   - handle_share_action(...): elabora file e pubblica viewer
@@ -9,6 +13,7 @@ Usato da 'Viewer 3D' in app.py.
 """
 from __future__ import annotations
 
+import html
 import os
 import tempfile
 from pathlib import Path
@@ -27,13 +32,119 @@ def render_share_info_tooltip(t) -> None:
         st.markdown(t("share_info_use_cases"))
 
 
+def _render_copy_button(url: str, label: str) -> None:
+    """
+    Renderizza un pulsante 'Copia link' usando un iframe HTML.
+
+    JavaScript inline di Streamlit è bloccato, quindi usiamo un iframe
+    isolato che può eseguire navigator.clipboard.writeText().
+
+    Il pulsante mostra un feedback visivo "✅ Link copiato!" dopo il click.
+    """
+    safe_url = html.escape(url, quote=True)
+
+    copy_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }}
+        .copy-btn {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 24px;
+            background: #1f77b4;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }}
+        .copy-btn:hover {{
+            background: #155a8a;
+        }}
+        .copy-btn:active {{
+            transform: scale(0.98);
+        }}
+        .copy-btn.copied {{
+            background: #2ecc71;
+        }}
+    </style>
+    </head>
+    <body>
+    <button class="copy-btn" id="copyBtn" onclick="copyLink()">
+        <span id="btnText">📋 Copia link</span>
+    </button>
+
+    <script>
+        function copyLink() {{
+            const url = "{safe_url}";
+            const btn = document.getElementById('copyBtn');
+            const txt = document.getElementById('btnText');
+
+            // Prova con navigator.clipboard (moderno)
+            if (navigator.clipboard && window.isSecureContext) {{
+                navigator.clipboard.writeText(url).then(() => {{
+                    showSuccess();
+                }}).catch(err => {{
+                    fallbackCopy(url);
+                }});
+            }} else {{
+                fallbackCopy(url);
+            }}
+
+            function fallbackCopy(text) {{
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try {{
+                    document.execCommand('copy');
+                    showSuccess();
+                }} catch (err) {{
+                    txt.textContent = '❌ Errore';
+                }}
+                document.body.removeChild(ta);
+            }}
+
+            function showSuccess() {{
+                btn.classList.add('copied');
+                txt.textContent = '✅ Link copiato!';
+                setTimeout(() => {{
+                    btn.classList.remove('copied');
+                    txt.textContent = '📋 Copia link';
+                }}, 2500);
+            }}
+        }}
+    </script>
+    </body>
+    </html>
+    """
+
+    # L'iframe ha altezza fissa per il pulsante (~50px)
+    st.components.v1.html(copy_html, height=60)
+
+
 def handle_share_action(
     uploaded_file,
     project_title: str,
     generate_qr: bool,
     t,
 ) -> None:
-    """Genera il viewer HTML e lo pubblica su GitHub Pages."""
+    """Genera il viewer HTML con mesh2u3d e lo pubblica su GitHub Pages."""
     # Import lazy (solo quando serve)
     try:
         from mesh2u3d.io.mesh_reader import MeshReader
@@ -51,6 +162,7 @@ def handle_share_action(
     status = st.empty()
 
     try:
+        # Step 1 — Leggi mesh
         status.text(t("share_status_loading"))
         progress.progress(20)
 
@@ -68,6 +180,7 @@ def handle_share_action(
             )
             progress.progress(50)
 
+            # Step 2 — Genera viewer HTML con mesh2u3d
             html_path = Path(tempfile.gettempdir()) / f"{mesh_data.name}.html"
             mesh_to_html(
                 mesh_data,
@@ -75,6 +188,8 @@ def handle_share_action(
                 title=project_title or mesh_data.name,
                 source_format=file_ext.replace(".", "").upper(),
             )
+
+            # Step 3 — Pubblica su GitHub Pages
             status.text(t("share_status_publishing"))
             progress.progress(75)
 
@@ -101,17 +216,8 @@ def handle_share_action(
         st.markdown(f"**{t('share_result_url')}**")
         st.code(result["url"], language=None)
 
-        st.markdown(
-            f"""
-            <div style="text-align:center;margin:10px 0;">
-                <button onclick="navigator.clipboard.writeText('{result['url']}');this.textContent='✅ Copiato!';"
-                        style="background:#1f77b4;color:white;padding:10px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">
-                    {t('share_copy_link')}
-                </button>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        # Pulsante copia con feedback visivo
+        _render_copy_button(result["url"], t("share_copy_link"))
 
         if result.get("qr_path"):
             st.markdown("---")
@@ -142,14 +248,14 @@ def render_share_section(uploaded_file, t) -> None:
     Renderizza la sezione di condivisione sotto il viewer.
 
     Layout:
-      [i] 📤 Condividi con il tuo cliente
-      (al click su i → si apre la nota informativa)
+      📤 Condividi il file 3D generato
+      ℹ️ Cos'è questo pulsante? (expander)
       [NOME PROGETTO] [☑ QR Code]
       [🚀 Genera link condivisibile]
     """
     st.markdown("---")
 
-    # Titolo + icona (i)
+    # Titolo
     st.markdown(f"### {t('share_button')}")
 
     # Nota informativa (apre al click)
