@@ -397,5 +397,4 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         # --- REPAIR REPORT ---
         "report_header": "📊 Detailed Repair Report",
         "report_subtitle": "Complete analysis of the changes applied to the file.",
-        "report_before": "Initial State (Before)",
-        "report_
+        "report_before": "Initial State
