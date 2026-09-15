@@ -9,7 +9,7 @@ TRANSLATIONS = {
         "sidebar_navigation": "Navigazione",
         "sidebar_lang_select": "Lingua / Language",
         "welcome": "Benvenuto su ArtiFix",
-        
+
         # --- MENU SIDEBAR ---
         "nav_dashboard": "Dashboard",
         "nav_repair": "Ripara File",
@@ -22,7 +22,31 @@ TRANSLATIONS = {
         "nav_terms": "📜 Termini di Servizio",
         "nav_donate": "💙 Dona con PayPal",
         "nav_become_sponsor": "🤝 Diventa Sponsor",
-        
+
+        # --- CONDIVIDI VIEWER 3D (v8.0) ---
+        "share_button": "📤 Condividi con il tuo cliente",
+        "share_info_tooltip": "ℹ️ Cos'è questo pulsante?",
+        "share_info_title": "🔗 Condividi il tuo modello 3D con un link",
+        "share_info_body": "Genera un **link pubblico** al tuo modello 3D. Puoi inviarlo via **email, WhatsApp, SMS**, incorporarlo in **presentazioni**, stamparlo come **QR Code**, o condividerlo sui **social**.",
+        "share_info_features": "**Cosa ottiene il tuo cliente:**\n- ✅ Apre il link nel **browser**\n- ✅ **Zero installazioni**\n- ✅ **Zero Adobe Acrobat**\n- ✅ Funziona su **PC, Mac, Linux, smartphone**\n- ✅ **Link permanente** e riutilizzabile",
+        "share_info_use_cases": "**🎯 Perfetto per:**\n- Presentazioni a clienti e committenti\n- Portfolio progetti\n- Approvazione di prototipi\n- Condivisione con fornitori\n- Documentazione tecnica",
+        "share_project_title": "Nome del progetto (visibile al cliente)",
+        "share_generate_qr": "Genera anche il QR Code",
+        "share_generate_button": "🚀 Genera link condivisibile",
+        "share_status_loading": "📖 Lettura del modello...",
+        "share_status_processing": "🔧 Elaborazione mesh ({v} vertici, {f} triangoli)...",
+        "share_status_publishing": "☁️ Pubblicazione su GitHub Pages...",
+        "share_status_done": "✅ Pubblicazione completata!",
+        "share_success": "🎉 **Viewer pubblicato!** Il link è pronto per essere condiviso.",
+        "share_result_title": "📎 Link condivisibile",
+        "share_result_url": "URL pubblico:",
+        "share_copy_link": "📋 Copia link",
+        "share_qr_title": "📱 QR Code",
+        "share_qr_caption": "Scansiona con il telefono per aprire il viewer",
+        "share_download_qr": "📥 Scarica QR Code (PNG)",
+        "share_info_id": "💡 **ID Viewer:** `{id}` — Conserva questo codice per riferimento futuro.",
+        "share_error": "❌ **Errore durante la pubblicazione:** {error}",
+
         # --- BOX FORMATI PROPRIETARI (DWG/SKP/RVT) ---
         "prop_title": "🔓 Hai un file DWG, SKP o RVT?",
         "prop_intro": "Nessun problema! ArtiFix supporta **tutti i formati CAD più comuni**. Basta una semplice esportazione dal tuo software per accedere a tutti i servizi ArtiFix.",
@@ -34,7 +58,7 @@ TRANSLATIONS = {
         "prop_step3_desc": "e converti in qualsiasi formato (STL, 3D PDF, DXF, ecc.)",
         "prop_btn_guide": "📖 Guida: esportare DWG in DAE",
         "prop_note": "💡 **DAE (Collada)** e **OBJ** sono formati universali che possono essere esportati dalla quasi totalità dei software CAD 3D presenti sul mercato.",
-        
+
         # --- TENDINA NOTE FORMATI PROPRIETARI ---
         "notes_expander_title": "📝 Note: formati proprietari (DWG, SKP, RVT, STEP, IGES)",
         "notes_expander_intro": "ArtiFix supporta nativamente oltre 50 formati. **Alcuni formati proprietari non possono essere letti direttamente** perché richiedono librerie commerciali. Ecco come procedere:",
@@ -46,14 +70,14 @@ TRANSLATIONS = {
 3. **Carica il file DAE/OBJ** su ArtiFix e converti in qualsiasi altro formato (STL, 3D PDF, GLB, ecc.)""",
         "notes_expander_tip": "💡 **Suggerimento:** la quasi totalità dei software CAD 3D (AutoCAD, SketchUp, Revit, Rhino, FreeCAD) può esportare in DAE o OBJ con un semplice click su **File → Esporta → DAE/OBJ**.",
         "notes_expander_guide_link": "📖 Leggi la guida completa: esportare DWG in DAE",
-        
+
         # --- COOKIE BANNER ---
         "cookie_title": "🍪 Cookie Policy",
         "cookie_text": "Noi e terze parti selezionate utilizziamo cookie o tecnologie simili per finalità tecniche e, con il tuo consenso, anche per altre finalità come specificato nella cookie policy. Il rifiuto del consenso può rendere non disponibili le relative funzioni. Usa il pulsante \"Accetta tutti i cookie\" per acconsentire. Usa il pulsante \"Accetta solo i cookie necessari\" per continuare senza accettare.",
         "cookie_check_privacy": "Consulta la Privacy Policy tramite il pulsante apposito",
         "cookie_accept_necessary": "Accetta solo i cookie necessari",
         "cookie_accept_all": "Accetta tutti i cookie",
-        
+
         # --- DASHBOARD ---
         "dash_header": "📊 Dashboard",
         "dash_metric_repaired": "File Riparati",
@@ -62,7 +86,7 @@ TRANSLATIONS = {
         "dash_metric_online": "Online",
         "dash_supported_formats": "📁 Formati Supportati (50+ estensioni)",
         "dash_info_select": "👈 Seleziona una funzionalità dal menu.",
-        
+
         # --- RIPARA FILE ---
         "repair_header": "🛠️ Centro Riparazione File",
         "repair_upload": "Seleziona un file",
@@ -122,7 +146,7 @@ TRANSLATIONS = {
         "report_summary_watertight": "Watertight",
         "report_download_pdf": "📥 Scarica Report PDF",
         "report_no_issues": "✅ Nessun problema rilevato. Il file è già ottimale.",
-        
+
         # --- VIEWER 3D ---
         "viewer_header": "🖥️ Viewer 3D",
         "viewer_upload": "Carica modello 3D",
@@ -135,7 +159,7 @@ TRANSLATIONS = {
         "viewer_warning_no_model": "⚠️ Impossibile caricare il modello.",
         "viewer_error_generic": "❌ Errore: {error}",
         "viewer_legend": "🔄 Trascina per ruotare | 🖱️ Tasto destro per spostare | 🖱️ Rotella per zoom",
-        
+
         # --- 3D PDF DETECTION ---
         "pdf_no_3d_title": "❌ **Il PDF non contiene un modello 3D incorporato.**",
         "pdf_no_3d_desc": "Il file `{filename}` è un PDF standard, non un 3D PDF. Per visualizzarlo nel Viewer 3D, deve contenere un modello 3D in formato **U3D** o **PRC**.",
@@ -150,7 +174,7 @@ TRANSLATIONS = {
 4. Carica il 3D PDF su ArtiFix per visualizzarlo""",
         "pdf_no_3d_alternative": "💡 **Alternativa più semplice:** carica direttamente il file **U3D** o **PRC** nel Viewer 3D (sono supportati nativamente, senza bisogno del PDF).",
         "pdf_3d_detected": "✅ **3D PDF rilevato!** Contiene un modello 3D incorporato. Elaborazione in corso...",
-        
+
         # --- CONVERTI FORMATI ---
         "convert_header": "🔄 Conversione Formati Universale",
         "convert_subtitle": "Converti file tra **tutti i formati** supportati con **tutte le combinazioni** possibili.",
@@ -184,7 +208,7 @@ TRANSLATIONS = {
         "convert_warning_no_target": "⚠️ Nessun formato di destinazione disponibile per questo file.",
         "convert_warning_no_preview": "⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.",
         "convert_file_type": "Tipo: {type} | Estensione: .{ext}",
-        
+
         # --- PROGETTO ARTIFIX ---
         "project_header": "🚀 Progetto ArtiFix",
         "project_text": """**ArtiFix** è una piattaforma professionale per la riparazione, conversione e visualizzazione di file CAD/CAM.
@@ -198,7 +222,7 @@ Questo progetto è in continua evoluzione. Per richieste di informazioni, collab
         "project_success": "Email inviata con successo!",
         "project_error": "Errore: {error}",
         "project_warning": "Compila tutti i campi prima di inviare.",
-        
+
         # --- DIVENTA SPONSOR ---
         "sponsor_header": "🤝 Diventa Sponsor di ArtiFix",
         "sponsor_intro": """**ArtiFix** è un progetto indipendente che offre strumenti gratuiti per la riparazione, conversione e visualizzazione di file CAD/CAM.
@@ -228,7 +252,7 @@ Ogni giorno centinaia di professionisti, studenti e appassionati utilizzano i se
         "sponsor_form_error": "Errore invio: {error}",
         "sponsor_form_warning": "Compila tutti i campi obbligatori (*).",
         "sponsor_form_info": "💡 Dopo la donazione, invia la richiesta tramite questo form. Il tuo banner sarà attivo entro 24-48h.",
-        
+
         # --- PRIVACY POLICY ---
         "privacy_header": "🔒 Privacy Policy",
         "privacy_subtitle": "**ArtiFix - Riparazione File CAD/CAM Universale**",
@@ -262,7 +286,7 @@ I dati non vengono trasferiti al di fuori dell'Unione Europea. L'app è ospitata
 
 ### 7. Modifiche alla Privacy Policy
 La presente Privacy Policy può essere soggetta ad aggiornamenti. La versione aggiornata sarà sempre disponibile su questa pagina.""",
-        
+
         # --- COOKIE POLICY ---
         "cookie_policy_header": "🍪 Cookie Policy",
         "cookie_policy_subtitle": "**ArtiFix - Riparazione File CAD/CAM Universale**",
@@ -298,11 +322,11 @@ Ai sensi degli artt. 15-22 del GDPR, l'utente ha il diritto di accesso, rettific
 
 ### 7. Aggiornamenti
 La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
-        
+
         # --- FOOTER ---
         "footer": "© 2026 ArtiFix | Tutti i diritti riservati",
     },
-    
+
     "en": {
         # --- GENERAL ---
         "app_title": "ArtiFix - Universal CAD/CAM Repair",
@@ -310,7 +334,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "sidebar_navigation": "Navigation",
         "sidebar_lang_select": "Lingua / Language",
         "welcome": "Welcome to ArtiFix",
-        
+
         # --- SIDEBAR MENU ---
         "nav_dashboard": "Dashboard",
         "nav_repair": "Repair File",
@@ -323,7 +347,31 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "nav_terms": "📜 Terms of Service",
         "nav_donate": "💙 Donate with PayPal",
         "nav_become_sponsor": "🤝 Become a Sponsor",
-        
+
+        # --- SHARE 3D VIEWER (v8.0) ---
+        "share_button": "📤 Share with your client",
+        "share_info_tooltip": "ℹ️ What is this button?",
+        "share_info_title": "🔗 Share your 3D model with a link",
+        "share_info_body": "Generate a **public link** to your 3D model. Send it via **email, WhatsApp, SMS**, embed it in **presentations**, print it as a **QR Code**, or share it on **social media**.",
+        "share_info_features": "**What your client gets:**\n- ✅ Opens the link in the **browser**\n- ✅ **Zero installations**\n- ✅ **Zero Adobe Acrobat**\n- ✅ Works on **PC, Mac, Linux, smartphone**\n- ✅ **Permanent link** reusable anytime",
+        "share_info_use_cases": "**🎯 Perfect for:**\n- Presentations to clients and stakeholders\n- Project portfolio\n- Prototype approval\n- Supplier sharing\n- Technical documentation",
+        "share_project_title": "Project name (visible to client)",
+        "share_generate_qr": "Also generate QR Code",
+        "share_generate_button": "🚀 Generate shareable link",
+        "share_status_loading": "📖 Reading model...",
+        "share_status_processing": "🔧 Processing mesh ({v} vertices, {f} triangles)...",
+        "share_status_publishing": "☁️ Publishing to GitHub Pages...",
+        "share_status_done": "✅ Publishing completed!",
+        "share_success": "🎉 **Viewer published!** The link is ready to share.",
+        "share_result_title": "📎 Shareable link",
+        "share_result_url": "Public URL:",
+        "share_copy_link": "📋 Copy link",
+        "share_qr_title": "📱 QR Code",
+        "share_qr_caption": "Scan with your phone to open the viewer",
+        "share_download_qr": "📥 Download QR Code (PNG)",
+        "share_info_id": "💡 **Viewer ID:** `{id}` — Keep this code for future reference.",
+        "share_error": "❌ **Publishing error:** {error}",
+
         # --- PROPRIETARY FORMATS BOX (DWG/SKP/RVT) ---
         "prop_title": "🔓 Have a DWG, SKP or RVT file?",
         "prop_intro": "No problem! ArtiFix supports **all common CAD formats**. A simple export from your software gives you access to all ArtiFix services.",
@@ -335,7 +383,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "prop_step3_desc": "and convert to any format (STL, 3D PDF, DXF, etc.)",
         "prop_btn_guide": "📖 Guide: export DWG to DAE",
         "prop_note": "💡 **DAE (Collada)** and **OBJ** are universal formats that can be exported from almost all 3D CAD software on the market.",
-        
+
         # --- NOTES EXPANDER: PROPRIETARY FORMATS ---
         "notes_expander_title": "📝 Note: proprietary formats (DWG, SKP, RVT, STEP, IGES)",
         "notes_expander_intro": "ArtiFix natively supports 50+ formats. **Some proprietary formats cannot be read directly** because they require commercial libraries. Here's how to proceed:",
@@ -347,14 +395,14 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
 3. **Upload the DAE/OBJ file** to ArtiFix and convert to any other format (STL, 3D PDF, GLB, etc.)""",
         "notes_expander_tip": "💡 **Tip:** almost all 3D CAD software (AutoCAD, SketchUp, Revit, Rhino, FreeCAD) can export to DAE or OBJ with a simple click on **File → Export → DAE/OBJ**.",
         "notes_expander_guide_link": "📖 Read the full guide: export DWG to DAE",
-        
+
         # --- COOKIE BANNER ---
         "cookie_title": "🍪 Cookie Policy",
         "cookie_text": "We and selected third parties use cookies or similar technologies for technical purposes and, with your consent, also for other purposes as specified in the cookie policy. Denying consent may make related features unavailable. Use the \"Accept all cookies\" button to consent. Use the \"Accept only necessary cookies\" button to continue without accepting.",
         "cookie_check_privacy": "View the Privacy Policy using the dedicated button",
         "cookie_accept_necessary": "Accept only necessary cookies",
         "cookie_accept_all": "Accept all cookies",
-        
+
         # --- DASHBOARD ---
         "dash_header": "📊 Dashboard",
         "dash_metric_repaired": "Repaired Files",
@@ -363,7 +411,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "dash_metric_online": "Online",
         "dash_supported_formats": "📁 Supported Formats (50+ extensions)",
         "dash_info_select": "👈 Select a feature from the menu.",
-        
+
         # --- REPAIR FILE ---
         "repair_header": "🛠️ File Repair Center",
         "repair_upload": "Select a file",
@@ -423,7 +471,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "report_summary_watertight": "Watertight",
         "report_download_pdf": "📥 Download PDF Report",
         "report_no_issues": "✅ No issues detected. The file is already optimal.",
-        
+
         # --- VIEWER 3D ---
         "viewer_header": "🖥️ 3D Viewer",
         "viewer_upload": "Upload 3D model",
@@ -436,7 +484,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "viewer_warning_no_model": "⚠️ Unable to load model.",
         "viewer_error_generic": "❌ Error: {error}",
         "viewer_legend": "🔄 Drag to rotate | 🖱️ Right-click to pan | 🖱️ Scroll to zoom",
-        
+
         # --- 3D PDF DETECTION ---
         "pdf_no_3d_title": "❌ **The PDF does not contain an embedded 3D model.**",
         "pdf_no_3d_desc": "The file `{filename}` is a standard PDF, not a 3D PDF. To view it in the 3D Viewer, it must contain a 3D model in **U3D** or **PRC** format.",
@@ -451,7 +499,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
 4. Upload the 3D PDF to ArtiFix to view it""",
         "pdf_no_3d_alternative": "💡 **Simpler alternative:** upload the **U3D** or **PRC** file directly to the 3D Viewer (they are natively supported, no PDF needed).",
         "pdf_3d_detected": "✅ **3D PDF detected!** It contains an embedded 3D model. Processing...",
-        
+
         # --- CONVERT FORMATS ---
         "convert_header": "🔄 Universal Format Conversion",
         "convert_subtitle": "Convert files between **all supported formats** with **all possible combinations**.",
@@ -485,7 +533,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "convert_warning_no_target": "⚠️ No target format available for this file.",
         "convert_warning_no_preview": "⚠️ Unable to load model for preview. Make sure the file is a valid 3D model.",
         "convert_file_type": "Type: {type} | Extension: .{ext}",
-        
+
         # --- ARTIFIX PROJECT ---
         "project_header": "🚀 ArtiFix Project",
         "project_text": """**ArtiFix** is a professional platform for repairing, converting, and visualizing CAD/CAM files.
@@ -499,7 +547,7 @@ This project is constantly evolving. For information, collaborations, or technic
         "project_success": "Email sent successfully!",
         "project_error": "Error: {error}",
         "project_warning": "Fill in all fields before sending.",
-        
+
         # --- BECOME A SPONSOR ---
         "sponsor_header": "🤝 Become an ArtiFix Sponsor",
         "sponsor_intro": """**ArtiFix** is an independent project offering free tools for repairing, converting, and visualizing CAD/CAM files.
@@ -529,7 +577,7 @@ Every day hundreds of professionals, students, and enthusiasts use ArtiFix servi
         "sponsor_form_error": "Send error: {error}",
         "sponsor_form_warning": "Fill in all required fields (*).",
         "sponsor_form_info": "💡 After donating, send the request via this form. Your banner will be active within 24-48h.",
-        
+
         # --- PRIVACY POLICY ---
         "privacy_header": "🔒 Privacy Policy",
         "privacy_subtitle": "**ArtiFix - Universal CAD/CAM Repair**",
@@ -563,7 +611,7 @@ Data is not transferred outside the European Union. The app is hosted on Streaml
 
 ### 7. Changes to the Privacy Policy
 This Privacy Policy may be subject to updates. The updated version will always be available on this page.""",
-        
+
         # --- COOKIE POLICY ---
         "cookie_policy_header": "🍪 Cookie Policy",
         "cookie_policy_subtitle": "**ArtiFix - Universal CAD/CAM Repair**",
@@ -599,7 +647,7 @@ Pursuant to Arts. 15-22 of the GDPR, the user has the right to access, rectify, 
 
 ### 7. Updates
 This Cookie Policy may be subject to updates.""",
-        
+
         # --- FOOTER ---
         "footer": "© 2026 ArtiFix | All rights reserved",
     }
