@@ -84,7 +84,7 @@ Nella massima misura consentita dalla legge, il Titolare **non è responsabile**
 
 La presente Licenza è regolata dalla **legge italiana**.
 
-Per qualsiasi controversia è competente il **Foro di Milano** (da adattare alla tua città).
+Per qualsiasi controversia è competente il **Foro del domicilio del Titolare**.
 
 ### 10. CONTATTI
 
@@ -173,7 +173,7 @@ To the maximum extent permitted by law, the Owner **is not liable** for:
 
 This License is governed by **Italian law**.
 
-For any dispute, the **Court of Milan** (to be adapted to your city) has exclusive jurisdiction.
+For any dispute, the **Court of the Owner's domicile** has exclusive jurisdiction.
 
 ### 10. CONTACTS
 
