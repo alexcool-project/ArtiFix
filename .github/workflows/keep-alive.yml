@@ -2,8 +2,8 @@ name: Keep ArtiFix Alive
 
 on:
   schedule:
-    # Every 3 hours (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
-    - cron: '0 */3 * * *'
+    # Every 1 hour (00:00, 01:00, 02:00, ... 23:00 UTC)
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -12,22 +12,44 @@ jobs:
     steps:
       - name: Wake up ArtiFix app
         run: |
-          echo "Svegliando ArtiFix..."
+          echo "🔄 Svegliando ArtiFix..."
           echo "Timestamp: $(date -u)"
+          echo ""
 
+          # Primo tentativo: ping alla root dell'app
           HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
             -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            --max-time 60 \
-            --max-redirs 0 \
+            -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+            -H "Accept-Language: it-IT,it;q=0.9,en;q=0.8" \
+            --max-time 120 \
             --connect-timeout 30 \
+            --retry 3 \
+            --retry-delay 10 \
+            --retry-all-errors \
+            -L \
             https://artifix.streamlit.app || echo "000")
 
-          echo "HTTP Status Code: $HTTP_CODE"
+          echo "HTTP Status Code (root): $HTTP_CODE"
+          echo ""
 
-          if [ "$HTTP_CODE" != "000" ]; then
-            echo "✅ ArtiFix ha ricevuto il ping ed è stata svegliata"
+          # Secondo tentativo: ping all'health endpoint di Streamlit
+          HEALTH_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            --max-time 60 \
+            --connect-timeout 30 \
+            -L \
+            https://artifix.streamlit.app/healthz || echo "000")
+
+          echo "HTTP Status Code (healthz): $HEALTH_CODE"
+          echo ""
+
+          # Consideriamo riuscito il ping se ALMENO UNO dei due ha risposto con 2xx o 3xx
+          if [[ "$HTTP_CODE" =~ ^[23] ]] || [[ "$HEALTH_CODE" =~ ^[23] ]]; then
+            echo "✅ ArtiFix ha ricevuto il ping ed è sveglia!"
+            echo "   Root: $HTTP_CODE | Healthz: $HEALTH_CODE"
             exit 0
           else
             echo "⚠️ ArtiFix non ha risposto al ping"
+            echo "   Root: $HTTP_CODE | Healthz: $HEALTH_CODE"
             exit 1
           fi
