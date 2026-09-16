@@ -3,7 +3,6 @@ Utility per la condivisione di viewer HTML 3D e PDF 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare:
   - Viewer HTML 3D autonomi (three.js)
-  - PDF 3D con PRC embedded (compatibile Adobe Acrobat/Reader)
   - PDF 3D con U3D embedded (compatibile Foxit, PDF-XChange)
 
 Espone:
@@ -138,23 +137,22 @@ def handle_share_action(
     lang: str = "it",
 ) -> None:
     """
-    Genera il file (HTML, PDF-PRC o PDF-U3D) e lo fornisce all'utente.
+    Genera il file (HTML o PDF-U3D) e lo fornisce all'utente.
 
     Parameters
     ----------
     uploaded_file : file caricato
     project_title : titolo del progetto
     generate_qr : se generare QR code (solo per HTML)
-    output_format : "html" | "pdf_prc" | "pdf_u3d"
+    output_format : "html" | "pdf_u3d"
     t : funzione di traduzione
     lang : lingua ("it" o "en")
     """
     try:
         from mesh2u3d.io.mesh_reader import MeshReader
         from mesh2u3d.html.writer import mesh_to_html
-        from mesh2u3d.prc.writer import mesh_to_prc
         from mesh2u3d.u3d.writer import mesh_to_u3d
-        from mesh2u3d.pdf.embedder import embed_prc_in_pdf, embed_u3d_in_pdf
+        from mesh2u3d.pdf.embedder import embed_u3d_in_pdf
         from mesh2u3d.share import share_html_viewer
     except ImportError as e:
         st.error(f"❌ Libreria `mesh2u3d` non disponibile: {e}")
@@ -203,34 +201,6 @@ def handle_share_action(
                     title=project_title or mesh_data.name,
                     generate_qr=generate_qr,
                 )
-                progress.progress(100)
-                status.text(t("share_status_done"))
-
-            elif output_format == "pdf_prc":
-                # --- PDF con PRC embedded (compatibile Adobe) ---
-                with tempfile.NamedTemporaryFile(suffix=".prc", delete=False) as tmp_prc:
-                    tmp_prc_path = Path(tmp_prc.name)
-                try:
-                    mesh_to_prc(mesh_data, str(tmp_prc_path))
-                    pdf_path = Path(tempfile.gettempdir()) / f"{mesh_data.name}_prc.pdf"
-                    embed_prc_in_pdf(
-                        tmp_prc_path,
-                        pdf_path,
-                        title=project_title or mesh_data.name,
-                    )
-                finally:
-                    try:
-                        tmp_prc_path.unlink()
-                    except OSError:
-                        pass
-
-                result = {
-                    "url": None,
-                    "qr_path": None,
-                    "viewer_id": "pdf_prc",
-                    "pdf_path": str(pdf_path),
-                    "file_name": f"{project_title or mesh_data.name}.pdf",
-                }
                 progress.progress(100)
                 status.text(t("share_status_done"))
 
@@ -299,13 +269,10 @@ def handle_share_action(
             st.info(t("share_info_id").format(id=result["viewer_id"]))
 
         else:
-            # PDF: solo download (PRC o U3D)
+            # PDF: solo download
             st.success(t("share_success"))
             st.markdown("---")
             st.subheader(t("share_result_title"))
-
-            if output_format == "pdf_prc":
-                st.info(t("share_prc_info"))
 
             with open(result["pdf_path"], "rb") as f:
                 pdf_bytes = f.read()
@@ -355,24 +322,19 @@ def render_share_section(uploaded_file, t, lang: str = "it") -> None:
             key="share_generate_qr",
         )
 
-    # --- Selettore formato di output (NOVITÀ v7.4) ---
+    # --- Selettore formato di output (senza PRC) ---
     st.markdown(f"**{t('share_format_label')}**")
     output_format = st.radio(
         t("share_format_label"),
-        options=["html", "pdf_prc", "pdf_u3d"],
+        options=["html", "pdf_u3d"],
         format_func=lambda x: {
             "html": t("share_format_html"),
-            "pdf_prc": t("share_format_pdf_prc"),
             "pdf_u3d": t("share_format_pdf_u3d"),
         }[x],
         index=0,
         key="share_output_format",
         label_visibility="collapsed",
     )
-
-    # Info contestuale sul formato selezionato
-    if output_format == "pdf_prc":
-        st.info(t("share_prc_info"))
 
     if st.button(
         t("share_generate_button"),
