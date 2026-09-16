@@ -788,7 +788,7 @@ elif page == "Viewer 3D":
     with col_main:
         st.header(t("viewer_header"))
 
-        # --- SEZIONE INFORMATIVA HTML 3D VIEWER (NOVITÀ - CON TRADUZIONI) ---
+        # --- SEZIONE INFORMATIVA HTML 3D VIEWER ---
         render_html_viewer_info(t)
         st.markdown("---")
 
@@ -970,10 +970,9 @@ elif page == "Converti Formati":
     with col_main:
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
+        
+        # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
-
-        with st.expander(t("convert_expander_note")):
-            st.markdown(t("convert_note_text"))
 
         with st.expander(t("convert_expander_matrix")):
             st.markdown("""
