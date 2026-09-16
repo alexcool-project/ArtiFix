@@ -133,6 +133,61 @@ st.markdown("""
     a.guide-button:hover {
         background: #155a8a !important;
     }
+
+    /* ===== HTML 3D VIEWER INFO SECTION ===== */
+    .html-viewer-intro {
+        background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
+        border-left: 4px solid #1f77b4;
+        border-radius: 10px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .html-viewer-intro h3 {
+        color: #1f77b4;
+        margin-top: 0;
+        margin-bottom: 0.8rem;
+        font-size: 1.2rem;
+    }
+    .html-viewer-intro p {
+        color: #333;
+        line-height: 1.6;
+        margin-bottom: 0.5rem;
+    }
+    .html-viewer-benefits {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin: 1rem 0 1.5rem 0;
+    }
+    .html-viewer-benefit {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 0.9rem;
+        color: #333;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .html-viewer-benefit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(31, 119, 180, 0.15);
+    }
+    .html-viewer-benefit .benefit-icon {
+        font-size: 1.3rem;
+        display: block;
+        margin-bottom: 6px;
+    }
+    .html-viewer-benefit .benefit-title {
+        font-weight: 700;
+        color: #1f77b4;
+        display: block;
+        margin-bottom: 4px;
+    }
+    .html-viewer-benefit .benefit-desc {
+        color: #555;
+        line-height: 1.4;
+        font-size: 0.85rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -427,8 +482,66 @@ def invia_email(nome, email_utente, messaggio):
 
 
 # ============================================================
-# FUNZIONI HELPER PER FORMATI PROPRIETARI E 3D PDF
+# FUNZIONI HELPER PER FORMATI PROPRIETARI, 3D PDF E HTML VIEWER
 # ============================================================
+
+def render_html_viewer_info():
+    """
+    Mostra una sezione informativa sull'HTML 3D Viewer.
+
+    Spiega cos'è, i suoi vantaggi e come si usa. Stile coerente con il
+    resto dell'app (bordi blu, sfondo chiaro, icone).
+    """
+    st.markdown("""
+    <div class="html-viewer-intro">
+        <h3>🌐 Cos'è l'HTML 3D Viewer?</h3>
+        <p>
+            L'<strong>HTML 3D Viewer</strong> è un file autonomo che mostra il tuo modello 3D
+            in <strong>qualsiasi browser moderno</strong>, senza installazioni, senza account, senza Adobe.
+        </p>
+        <p>
+            Puoi condividerlo in <strong>tre modi</strong>:
+            <strong>link pubblico</strong> (con QR code), <strong>file scaricabile</strong> (.html),
+            oppure <strong>screenshot professionale</strong> per presentazioni e cataloghi.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="html-viewer-benefits">
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">⚡</span>
+            <span class="benefit-title">Zero installazioni</span>
+            <span class="benefit-desc">Si apre con doppio click nel browser.</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">🚫</span>
+            <span class="benefit-title">Zero Adobe</span>
+            <span class="benefit-desc">Non serve Acrobat Pro. Funziona con qualsiasi browser.</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">📱</span>
+            <span class="benefit-title">Mobile-ready</span>
+            <span class="benefit-desc">Smartphone, tablet, desktop. Nessuna limitazione.</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">🔄</span>
+            <span class="benefit-title">Interattivo</span>
+            <span class="benefit-desc">Ruota, zooma, cambia materiale, X-Ray, wireframe.</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">🔗</span>
+            <span class="benefit-title">Link + QR</span>
+            <span class="benefit-desc">Condividi via email, WhatsApp, SMS.</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">💾</span>
+            <span class="benefit-title">Persistente</span>
+            <span class="benefit-desc">Il file è tuo, per sempre. Funziona anche offline.</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 def render_proprietary_formats_help():
     """Mostra una tendina (expander) con le note sui formati proprietari.
@@ -673,6 +786,10 @@ elif page == "Viewer 3D":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
         st.header(t("viewer_header"))
+
+        # --- SEZIONE INFORMATIVA HTML 3D VIEWER (NOVITÀ) ---
+        render_html_viewer_info()
+        st.markdown("---")
 
         viewer_file = st.file_uploader(
             t("viewer_upload"),
