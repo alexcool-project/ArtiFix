@@ -623,7 +623,6 @@ def extract_3d_from_pdf(file_bytes):
     except Exception:
         return None
 
-
 # --- BARRA LATERALE ---
 with st.sidebar:
     if LOGO_URL:
@@ -792,10 +791,11 @@ elif page == "Viewer 3D":
         render_html_viewer_info(t)
         st.markdown("---")
 
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         viewer_file = st.file_uploader(
             t("viewer_upload"),
             type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
-            key="viewer",
+            key=f"viewer_{st.session_state.lang}",
             help=t("viewer_upload_hint")
         )
 
@@ -970,7 +970,7 @@ elif page == "Converti Formati":
     with col_main:
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
-        
+
         # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
 
@@ -992,10 +992,11 @@ elif page == "Converti Formati":
             """)
             st.caption(t("convert_caption_matrix"))
 
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         uploaded_file = st.file_uploader(
             t("convert_upload"),
             type=[ext[1:] for ext in ALL_EXTENSIONS],
-            key="convert",
+            key=f"convert_{st.session_state.lang}",
             help=t("convert_upload_hint")
         )
         st.caption(t("convert_upload_hint"))
