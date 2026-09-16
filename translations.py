@@ -205,15 +205,6 @@ TRANSLATIONS = {
         # --- CONVERTI FORMATI ---
         "convert_header": "🔄 Conversione Formati Universale",
         "convert_subtitle": "Converti file tra **tutti i formati** supportati con **tutte le combinazioni** possibili.",
-        "convert_expander_note": "ℹ️ Nota sui formati proprietari e a pagamento",
-        "convert_note_text": """**ArtiFix non può leggere direttamente i formati proprietari e a pagamento** (come DWG, SKP, RVT, STEP, IGES, ecc.) perché richiedono librerie commerciali e server dedicati.
-
-**Come risolvere?** Se il tuo file è in un formato proprietario, ti consigliamo di:
-1. Aprire il file nel software con cui è stato creato (es. AutoCAD, SketchUp, Revit).
-2. Utilizzare la funzione **"Esporta"** o **"Salva con nome"** per convertirlo in **DAE (Collada)** o **OBJ**.
-3. Caricare il file DAE o OBJ su ArtiFix e convertirlo qui in qualsiasi altro formato mesh (STL, PLY, GLB, GLTF, ecc.) o 3D PDF.
-
-*DAE (Collada) e OBJ sono formati universali e gratuiti che possono essere esportati dalla quasi totalità dei software CAD 3D presenti sul mercato.*""",
         "convert_expander_matrix": "📋 Matrice delle conversioni disponibili",
         "convert_caption_matrix": "✅ = Conversione supportata | ❌ = Conversione non supportata",
         "convert_upload": "Carica un file da convertire",
@@ -557,15 +548,6 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         # --- CONVERT FORMATS (EN) ---
         "convert_header": "🔄 Universal Format Conversion",
         "convert_subtitle": "Convert files between **all supported formats** with **all possible combinations**.",
-        "convert_expander_note": "ℹ️ Note on proprietary and paid formats",
-        "convert_note_text": """**ArtiFix cannot directly read proprietary and paid formats** (such as DWG, SKP, RVT, STEP, IGES, etc.) because they require commercial libraries and dedicated servers.
-
-**How to solve?** If your file is in a proprietary format, we recommend:
-1. Opening the file in the software it was created with (e.g., AutoCAD, SketchUp, Revit).
-2. Using the **"Export"** or **"Save as"** function to convert it to **DAE (Collada)** or **OBJ**.
-3. Uploading the DAE or OBJ file to ArtiFix and converting it here to any other mesh format (STL, PLY, GLB, GLTF, etc.) or 3D PDF.
-
-*DAE (Collada) and OBJ are universal, free formats that can be exported from almost all 3D CAD software on the market.*""",
         "convert_expander_matrix": "📋 Available conversion matrix",
         "convert_caption_matrix": "✅ = Supported conversion | ❌ = Unsupported conversion",
         "convert_upload": "Upload a file to convert",
