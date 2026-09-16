@@ -1,13 +1,14 @@
 """
-Utility per la condivisione di viewer HTML 3D su GitHub Pages.
+Utility per la condivisione di viewer HTML 3D e PDF 3D su GitHub Pages.
 
-Usa la libreria `mesh2u3d` per generare un viewer HTML 3D autonomo
-(con logo ArtiFix, controlli avanzati, trasparenze, X-Ray, ecc.)
-e lo pubblica su GitHub Pages.
+Usa la libreria `mesh2u3d` per generare:
+  - Viewer HTML 3D autonomi (three.js)
+  - PDF 3D con PRC embedded (compatibile Adobe Acrobat/Reader)
+  - PDF 3D con U3D embedded (compatibile Foxit, PDF-XChange)
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
-  - handle_share_action(...): elabora file e pubblica viewer
+  - handle_share_action(...): elabora file e genera l'output scelto
 
 Usato da 'Viewer 3D' in app.py.
 """
@@ -35,12 +36,9 @@ def render_share_info_tooltip(t) -> None:
 def _render_copy_button(url: str, label: str, t) -> None:
     """Renderizza un pulsante 'Copia link' con feedback visivo tradotto."""
     safe_url = html.escape(url, quote=True)
-    # Rimuovi eventuale emoji 📋 dal label per evitare duplicati
     clean_label = label.replace("📋 ", "").replace(" 📋", "").strip()
-    # Aggiungiamo noi l'emoji nel template (per coerenza)
     display_label = f"📋 {clean_label}" if clean_label else "📋 Copia link"
 
-    # Stringhe tradotte per il pulsante
     copied_text = t("share_copy_success")
     error_text = t("share_copy_error")
 
@@ -135,20 +133,32 @@ def handle_share_action(
     uploaded_file,
     project_title: str,
     generate_qr: bool,
+    output_format: str,
     t,
     lang: str = "it",
 ) -> None:
-    """Genera il viewer HTML con mesh2u3d e lo pubblica su GitHub Pages."""
+    """
+    Genera il file (HTML, PDF-PRC o PDF-U3D) e lo fornisce all'utente.
+
+    Parameters
+    ----------
+    uploaded_file : file caricato
+    project_title : titolo del progetto
+    generate_qr : se generare QR code (solo per HTML)
+    output_format : "html" | "pdf_prc" | "pdf_u3d"
+    t : funzione di traduzione
+    lang : lingua ("it" o "en")
+    """
     try:
         from mesh2u3d.io.mesh_reader import MeshReader
         from mesh2u3d.html.writer import mesh_to_html
+        from mesh2u3d.prc.writer import mesh_to_prc
+        from mesh2u3d.u3d.writer import mesh_to_u3d
+        from mesh2u3d.pdf.embedder import embed_prc_in_pdf, embed_u3d_in_pdf
         from mesh2u3d.share import share_html_viewer
     except ImportError as e:
         st.error(f"❌ Libreria `mesh2u3d` non disponibile: {e}")
-        st.info(
-            "💡 La libreria `mesh2u3d` deve essere installata. "
-            "Se sei lo sviluppatore, controlla `requirements.txt`."
-        )
+        st.info("💡 Controlla `requirements.txt`.")
         return
 
     progress = st.progress(0)
@@ -173,27 +183,88 @@ def handle_share_action(
             )
             progress.progress(50)
 
-            # Step 2 — Genera viewer HTML (passa la lingua!)
-            html_path = Path(tempfile.gettempdir()) / f"{mesh_data.name}.html"
-            mesh_to_html(
-                mesh_data,
-                html_path,
-                title=project_title or mesh_data.name,
-                source_format=file_ext.replace(".", "").upper(),
-                lang=lang,
-            )
+            # Step 2 — Genera file in base al formato scelto
+            if output_format == "html":
+                # --- HTML 3D (viewer three.js) ---
+                html_path = Path(tempfile.gettempdir()) / f"{mesh_data.name}.html"
+                mesh_to_html(
+                    mesh_data,
+                    html_path,
+                    title=project_title or mesh_data.name,
+                    source_format=file_ext.replace(".", "").upper(),
+                    lang=lang,
+                )
 
-            # Step 3 — Pubblica su GitHub Pages
-            status.text(t("share_status_publishing"))
-            progress.progress(75)
+                status.text(t("share_status_publishing"))
+                progress.progress(75)
 
-            result = share_html_viewer(
-                html_path,
-                title=project_title or mesh_data.name,
-                generate_qr=generate_qr,
-            )
-            progress.progress(100)
-            status.text(t("share_status_done"))
+                result = share_html_viewer(
+                    html_path,
+                    title=project_title or mesh_data.name,
+                    generate_qr=generate_qr,
+                )
+                progress.progress(100)
+                status.text(t("share_status_done"))
+
+            elif output_format == "pdf_prc":
+                # --- PDF con PRC embedded (compatibile Adobe) ---
+                with tempfile.NamedTemporaryFile(suffix=".prc", delete=False) as tmp_prc:
+                    tmp_prc_path = Path(tmp_prc.name)
+                try:
+                    mesh_to_prc(mesh_data, str(tmp_prc_path))
+                    pdf_path = Path(tempfile.gettempdir()) / f"{mesh_data.name}_prc.pdf"
+                    embed_prc_in_pdf(
+                        tmp_prc_path,
+                        pdf_path,
+                        title=project_title or mesh_data.name,
+                    )
+                finally:
+                    try:
+                        tmp_prc_path.unlink()
+                    except OSError:
+                        pass
+
+                result = {
+                    "url": None,
+                    "qr_path": None,
+                    "viewer_id": "pdf_prc",
+                    "pdf_path": str(pdf_path),
+                    "file_name": f"{project_title or mesh_data.name}.pdf",
+                }
+                progress.progress(100)
+                status.text(t("share_status_done"))
+
+            elif output_format == "pdf_u3d":
+                # --- PDF con U3D embedded (Foxit, PDF-XChange) ---
+                with tempfile.NamedTemporaryFile(suffix=".u3d", delete=False) as tmp_u3d:
+                    tmp_u3d_path = Path(tmp_u3d.name)
+                try:
+                    mesh_to_u3d(mesh_data, str(tmp_u3d_path))
+                    pdf_path = Path(tempfile.gettempdir()) / f"{mesh_data.name}_u3d.pdf"
+                    embed_u3d_in_pdf(
+                        tmp_u3d_path,
+                        pdf_path,
+                        title=project_title or mesh_data.name,
+                    )
+                finally:
+                    try:
+                        tmp_u3d_path.unlink()
+                    except OSError:
+                        pass
+
+                result = {
+                    "url": None,
+                    "qr_path": None,
+                    "viewer_id": "pdf_u3d",
+                    "pdf_path": str(pdf_path),
+                    "file_name": f"{project_title or mesh_data.name}.pdf",
+                }
+                progress.progress(100)
+                status.text(t("share_status_done"))
+
+            else:
+                st.error(f"❌ Formato non supportato: {output_format}")
+                return
 
         finally:
             try:
@@ -201,37 +272,51 @@ def handle_share_action(
             except OSError:
                 pass
 
-        st.success(t("share_success"))
-
-        # --- Avviso di propagazione GitHub Pages ---
-        st.warning(
-            t("share_warning_propagation")
-        )
-
-        # --- Risultato ---
-        st.markdown("---")
-        st.subheader(t("share_result_title"))
-
-        st.markdown(f"**{t('share_result_url')}**")
-        st.code(result["url"], language=None)
-
-        _render_copy_button(result["url"], t("share_copy_link"), t)
-
-        if result.get("qr_path"):
+        # --- Mostra risultato ---
+        if output_format == "html":
+            # Link + QR (comportamento originale)
+            st.success(t("share_success"))
+            st.warning(t("share_warning_propagation"))
             st.markdown("---")
-            st.subheader(t("share_qr_title"))
-            st.image(result["qr_path"], width=250, caption=t("share_qr_caption"))
+            st.subheader(t("share_result_title"))
+            st.markdown(f"**{t('share_result_url')}**")
+            st.code(result["url"], language=None)
+            _render_copy_button(result["url"], t("share_copy_link"), t)
 
-            with open(result["qr_path"], "rb") as f:
-                st.download_button(
-                    t("share_download_qr"),
-                    data=f.read(),
-                    file_name=f"{result['viewer_id']}_qr.png",
-                    mime="image/png",
-                    use_container_width=True,
-                )
+            if result.get("qr_path"):
+                st.markdown("---")
+                st.subheader(t("share_qr_title"))
+                st.image(result["qr_path"], width=250, caption=t("share_qr_caption"))
+                with open(result["qr_path"], "rb") as f:
+                    st.download_button(
+                        t("share_download_qr"),
+                        data=f.read(),
+                        file_name=f"{result['viewer_id']}_qr.png",
+                        mime="image/png",
+                        use_container_width=True,
+                    )
 
-        st.info(t("share_info_id").format(id=result["viewer_id"]))
+            st.info(t("share_info_id").format(id=result["viewer_id"]))
+
+        else:
+            # PDF: solo download (PRC o U3D)
+            st.success(t("share_success"))
+            st.markdown("---")
+            st.subheader(t("share_result_title"))
+
+            if output_format == "pdf_prc":
+                st.info(t("share_prc_info"))
+
+            with open(result["pdf_path"], "rb") as f:
+                pdf_bytes = f.read()
+
+            st.download_button(
+                label=f"📥 {t('share_download_pdf')}",
+                data=pdf_bytes,
+                file_name=result["file_name"],
+                mime="application/pdf",
+                use_container_width=True,
+            )
 
     except Exception as e:
         progress.empty()
@@ -270,10 +355,36 @@ def render_share_section(uploaded_file, t, lang: str = "it") -> None:
             key="share_generate_qr",
         )
 
+    # --- Selettore formato di output (NOVITÀ v7.4) ---
+    st.markdown(f"**{t('share_format_label')}**")
+    output_format = st.radio(
+        t("share_format_label"),
+        options=["html", "pdf_prc", "pdf_u3d"],
+        format_func=lambda x: {
+            "html": t("share_format_html"),
+            "pdf_prc": t("share_format_pdf_prc"),
+            "pdf_u3d": t("share_format_pdf_u3d"),
+        }[x],
+        index=0,
+        key="share_output_format",
+        label_visibility="collapsed",
+    )
+
+    # Info contestuale sul formato selezionato
+    if output_format == "pdf_prc":
+        st.info(t("share_prc_info"))
+
     if st.button(
         t("share_generate_button"),
         type="primary",
         use_container_width=True,
         key="share_generate_button",
     ):
-        handle_share_action(uploaded_file, project_title, generate_qr, t, lang=lang)
+        handle_share_action(
+            uploaded_file,
+            project_title,
+            generate_qr,
+            output_format,
+            t,
+            lang=lang,
+        )
