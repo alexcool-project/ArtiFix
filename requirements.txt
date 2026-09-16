@@ -45,7 +45,7 @@ PyPDF2
 pymeshlab
 reportlab
 
-# --- mesh2u3d: libreria per viewer HTML 3D condivisibile ---
+# --- mesh2u3d: libreria per viewer HTML 3D, PRC e U3D condivisibile ---
 PyGithub>=2.5.0
 python-dotenv>=1.0.0
 qrcode[pil]>=8.0
