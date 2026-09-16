@@ -485,59 +485,60 @@ def invia_email(nome, email_utente, messaggio):
 # FUNZIONI HELPER PER FORMATI PROPRIETARI, 3D PDF E HTML VIEWER
 # ============================================================
 
-def render_html_viewer_info():
+def render_html_viewer_info(t_func):
     """
     Mostra una sezione informativa sull'HTML 3D Viewer.
 
-    Spiega cos'è, i suoi vantaggi e come si usa. Stile coerente con il
-    resto dell'app (bordi blu, sfondo chiaro, icone).
+    Usa le traduzioni IT/EN fornite dal dizionario `translations.py`.
+    Lo stile è coerente con il resto dell'app (bordi blu, sfondo chiaro, icone).
+
+    Parameters
+    ----------
+    t_func : callable
+        Funzione di traduzione `t(key)` che restituisce la stringa tradotta
+        nella lingua corrente.
     """
-    st.markdown("""
+    # --- Intro ---
+    st.markdown(f"""
     <div class="html-viewer-intro">
-        <h3>🌐 Cos'è l'HTML 3D Viewer?</h3>
-        <p>
-            L'<strong>HTML 3D Viewer</strong> è un file autonomo che mostra il tuo modello 3D
-            in <strong>qualsiasi browser moderno</strong>, senza installazioni, senza account, senza Adobe.
-        </p>
-        <p>
-            Puoi condividerlo in <strong>tre modi</strong>:
-            <strong>link pubblico</strong> (con QR code), <strong>file scaricabile</strong> (.html),
-            oppure <strong>screenshot professionale</strong> per presentazioni e cataloghi.
-        </p>
+        <h3>{t_func('html_viewer_title')}</h3>
+        <p>{t_func('html_viewer_intro')}</p>
+        <p>{t_func('html_viewer_modes')}</p>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
+    # --- Benefici (6 box) ---
+    st.markdown(f"""
     <div class="html-viewer-benefits">
         <div class="html-viewer-benefit">
             <span class="benefit-icon">⚡</span>
-            <span class="benefit-title">Zero installazioni</span>
-            <span class="benefit-desc">Si apre con doppio click nel browser.</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit1_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit1_desc')}</span>
         </div>
         <div class="html-viewer-benefit">
             <span class="benefit-icon">🚫</span>
-            <span class="benefit-title">Zero Adobe</span>
-            <span class="benefit-desc">Non serve Acrobat Pro. Funziona con qualsiasi browser.</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit2_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit2_desc')}</span>
         </div>
         <div class="html-viewer-benefit">
             <span class="benefit-icon">📱</span>
-            <span class="benefit-title">Mobile-ready</span>
-            <span class="benefit-desc">Smartphone, tablet, desktop. Nessuna limitazione.</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit3_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit3_desc')}</span>
         </div>
         <div class="html-viewer-benefit">
             <span class="benefit-icon">🔄</span>
-            <span class="benefit-title">Interattivo</span>
-            <span class="benefit-desc">Ruota, zooma, cambia materiale, X-Ray, wireframe.</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit4_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit4_desc')}</span>
         </div>
         <div class="html-viewer-benefit">
             <span class="benefit-icon">🔗</span>
-            <span class="benefit-title">Link + QR</span>
-            <span class="benefit-desc">Condividi via email, WhatsApp, SMS.</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit5_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit5_desc')}</span>
         </div>
         <div class="html-viewer-benefit">
             <span class="benefit-icon">💾</span>
-            <span class="benefit-title">Persistente</span>
-            <span class="benefit-desc">Il file è tuo, per sempre. Funziona anche offline.</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit6_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit6_desc')}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -787,8 +788,8 @@ elif page == "Viewer 3D":
     with col_main:
         st.header(t("viewer_header"))
 
-        # --- SEZIONE INFORMATIVA HTML 3D VIEWER (NOVITÀ) ---
-        render_html_viewer_info()
+        # --- SEZIONE INFORMATIVA HTML 3D VIEWER (NOVITÀ - CON TRADUZIONI) ---
+        render_html_viewer_info(t)
         st.markdown("---")
 
         viewer_file = st.file_uploader(
