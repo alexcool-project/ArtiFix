@@ -56,6 +56,23 @@ TRANSLATIONS = {
         "share_format_pdf_u3d": "📄 PDF 3D (compatibile Foxit, PDF-XChange, ecc.)",
         "share_download_pdf": "Scarica PDF 3D",
 
+        # --- HTML 3D VIEWER INFO SECTION (NOVITÀ v7.4) ---
+        "html_viewer_title": "🌐 Cos'è l'HTML 3D Viewer?",
+        "html_viewer_intro": "L'<strong>HTML 3D Viewer</strong> è un file autonomo che mostra il tuo modello 3D in <strong>qualsiasi browser moderno</strong>, senza installazioni, senza account, senza Adobe.",
+        "html_viewer_modes": "Puoi condividerlo in <strong>tre modi</strong>: <strong>link pubblico</strong> (con QR code), <strong>file scaricabile</strong> (.html), oppure <strong>screenshot professionale</strong> per presentazioni e cataloghi.",
+        "html_viewer_benefit1_title": "Zero installazioni",
+        "html_viewer_benefit1_desc": "Si apre con doppio click nel browser.",
+        "html_viewer_benefit2_title": "Zero Adobe",
+        "html_viewer_benefit2_desc": "Non serve Acrobat Pro. Funziona con qualsiasi browser.",
+        "html_viewer_benefit3_title": "Mobile-ready",
+        "html_viewer_benefit3_desc": "Smartphone, tablet, desktop. Nessuna limitazione.",
+        "html_viewer_benefit4_title": "Interattivo",
+        "html_viewer_benefit4_desc": "Ruota, zooma, cambia materiale, X-Ray, wireframe.",
+        "html_viewer_benefit5_title": "Link + QR",
+        "html_viewer_benefit5_desc": "Condividi via email, WhatsApp, SMS.",
+        "html_viewer_benefit6_title": "Persistente",
+        "html_viewer_benefit6_desc": "Il file è tuo, per sempre. Funziona anche offline.",
+
         # --- BOX FORMATI PROPRIETARI (DWG/SKP/RVT) ---
         "prop_title": "🔓 Hai un file DWG, SKP o RVT?",
         "prop_intro": "Nessun problema! ArtiFix supporta **tutti i formati CAD più comuni**. Basta una semplice esportazione dal tuo software per accedere a tutti i servizi ArtiFix.",
@@ -390,6 +407,23 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "share_format_html": "🌐 HTML 3D (viewable in any browser)",
         "share_format_pdf_u3d": "📄 3D PDF (Foxit, PDF-XChange compatible)",
         "share_download_pdf": "Download 3D PDF",
+
+        # --- HTML 3D VIEWER INFO SECTION (NEW v7.4) ---
+        "html_viewer_title": "🌐 What is the HTML 3D Viewer?",
+        "html_viewer_intro": "The <strong>HTML 3D Viewer</strong> is a standalone file that shows your 3D model in <strong>any modern browser</strong>, without installations, without accounts, without Adobe.",
+        "html_viewer_modes": "You can share it in <strong>three ways</strong>: <strong>public link</strong> (with QR code), <strong>downloadable file</strong> (.html), or <strong>professional screenshot</strong> for presentations and catalogs.",
+        "html_viewer_benefit1_title": "Zero installations",
+        "html_viewer_benefit1_desc": "Opens with a double click in the browser.",
+        "html_viewer_benefit2_title": "Zero Adobe",
+        "html_viewer_benefit2_desc": "No Acrobat Pro needed. Works with any browser.",
+        "html_viewer_benefit3_title": "Mobile-ready",
+        "html_viewer_benefit3_desc": "Smartphone, tablet, desktop. No limitations.",
+        "html_viewer_benefit4_title": "Interactive",
+        "html_viewer_benefit4_desc": "Rotate, zoom, change material, X-Ray, wireframe.",
+        "html_viewer_benefit5_title": "Link + QR",
+        "html_viewer_benefit5_desc": "Share via email, WhatsApp, SMS.",
+        "html_viewer_benefit6_title": "Persistent",
+        "html_viewer_benefit6_desc": "The file is yours, forever. Works offline too.",
 
         # --- PROPRIETARY FORMATS BOX (DWG/SKP/RVT) ---
         "prop_title": "🔓 Have a DWG, SKP or RVT file?",
