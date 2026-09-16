@@ -27,9 +27,9 @@ TRANSLATIONS = {
         "share_button": "📤 Condividi il file 3D generato",
         "share_info_tooltip": "ℹ️ Cos'è questo pulsante?",
         "share_info_title": "🔗 Condividi il tuo modello 3D",
-        "share_info_body": "Puoi condividere il tuo modello 3D in **3 formati diversi**, scegliendo quello più adatto al tuo cliente.",
-        "share_info_features": "**Cosa ottiene il tuo cliente:**\n- ✅ Apre il file **senza installare nulla**\n- ✅ **Zero Adobe Acrobat** richiesto (per HTML)\n- ✅ Funziona su **PC, Mac, Linux, smartphone**\n- ✅ **Link permanente** o **file scaricabile**",
-        "share_info_use_cases": "**🎯 Formati disponibili:**\n- 🌐 **HTML 3D** — link condivisibile + QR code\n- 📄 **PDF con PRC** — compatibile Adobe Acrobat/Reader\n- 📄 **PDF con U3D** — compatibile Foxit, PDF-XChange",
+        "share_info_body": "Puoi condividere il tuo modello 3D in **2 formati diversi**, scegliendo quello più adatto al tuo cliente.",
+        "share_info_features": "**Cosa ottiene il tuo cliente:**\n- ✅ Apre il file **senza installare nulla**\n- ✅ Funziona su **PC, Mac, Linux, smartphone**\n- ✅ **Link permanente** o **file scaricabile**",
+        "share_info_use_cases": "**🎯 Formati disponibili:**\n- 🌐 **HTML 3D** — link condivisibile + QR code\n- 📄 **PDF 3D** — visualizzabile in Foxit Reader, PDF-XChange, ecc.",
         "share_project_title": "Nome del progetto (visibile al cliente)",
         "share_generate_qr": "Genera anche il QR Code",
         "share_generate_button": "🚀 Genera file condivisibile",
@@ -50,12 +50,10 @@ TRANSLATIONS = {
         "share_info_id": "💡 **ID Viewer:** `{id}` — Conserva questo codice per riferimento futuro.",
         "share_error": "❌ **Errore durante la generazione:** {error}",
 
-        # --- FORMATO OUTPUT (NOVITÀ v7.4) ---
+        # --- FORMATO OUTPUT ---
         "share_format_label": "Formato di output",
         "share_format_html": "🌐 HTML 3D (visualizzabile in qualsiasi browser)",
-        "share_format_pdf_prc": "📄 PDF con PRC (compatibile Adobe Acrobat/Reader)",
-        "share_format_pdf_u3d": "📄 PDF con U3D (compatibile Foxit, PDF-XChange)",
-        "share_prc_info": "💡 **PDF con PRC** è il formato consigliato per la massima compatibilità: si apre con **Adobe Acrobat Reader** (gratuito).",
+        "share_format_pdf_u3d": "📄 PDF 3D (compatibile Foxit, PDF-XChange, ecc.)",
         "share_download_pdf": "Scarica PDF 3D",
 
         # --- BOX FORMATI PROPRIETARI (DWG/SKP/RVT) ---
@@ -73,7 +71,7 @@ TRANSLATIONS = {
         # --- TENDINA NOTE FORMATI PROPRIETARI ---
         "notes_expander_title": "📝 Note: formati proprietari (DWG, SKP, RVT, STEP, IGES)",
         "notes_expander_intro": "ArtiFix supporta nativamente oltre 50 formati. **Alcuni formati proprietari non possono essere letti direttamente** perché richiedono librerie commerciali. Ecco come procedere:",
-        "notes_expander_native": "**✅ Supportati nativamente:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, PRC, DXF, 3D PDF, SVG, DOCX, XLSX, IFC, SHP, GeoJSON, KML, GPX.",
+        "notes_expander_native": "**✅ Supportati nativamente:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, DXF, 3D PDF, SVG, DOCX, XLSX, IFC, SHP, GeoJSON, KML, GPX.",
         "notes_expander_not_supported": "**❌ NON supportati direttamente:** DWG, SKP, RVT, STEP, IGES, DGN, DWT.",
         "notes_expander_howto": "**🔧 Come procedere per i formati non supportati:**",
         "notes_expander_steps": """1. **Apri il file** nel software con cui è stato creato (AutoCAD, SketchUp, Revit, FreeCAD, ecc.)
@@ -101,7 +99,7 @@ TRANSLATIONS = {
         # --- RIPARA FILE ---
         "repair_header": "🛠️ Centro Riparazione File",
         "repair_upload": "Seleziona un file",
-        "repair_upload_hint": "💡 **Formati supportati:** DXF, STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, IFC, SHP, GEOJSON, KML, GPX, SVG, **3D PDF** (con modello 3D incorporato **.u3d** o **.prc**), DOCX, XLSX. I formati proprietari (DWG, SKP, RVT, STEP, IGES) devono essere esportati in DAE o OBJ.",
+        "repair_upload_hint": "💡 **Formati supportati:** DXF, STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, IFC, SHP, GEOJSON, KML, GPX, SVG, **3D PDF** (con modello 3D incorporato **.u3d**), DOCX, XLSX. I formati proprietari (DWG, SKP, RVT, STEP, IGES) devono essere esportati in DAE o OBJ.",
         "repair_status_analyzing": "Analisi del file in corso... (30%)",
         "repair_status_verifying": "Verifica del risultato... (60%)",
         "repair_status_completing": "Completamento... (100%)",
@@ -115,7 +113,7 @@ TRANSLATIONS = {
         "repair_error_non_mesh_title": "❌ **Formato non supportato per la riparazione.**",
         "repair_error_non_mesh_desc": "Il file `{ext}` è un file di **{tipo}**, non una mesh 3D.",
         "repair_error_non_mesh_hint": "Per lavorare con file {tipo}, usa la sezione **Converti Formati** o il **Viewer 3D**.",
-        "repair_error_pdf_hint": "⚠️ **Attenzione:** i PDF standard (non 3D) non possono essere riparati, convertiti o visualizzati. Solo i **3D PDF** con modello 3D incorporato (**U3D** o **PRC**) possono essere visualizzati nel **Viewer 3D**.",
+        "repair_error_pdf_hint": "⚠️ **Attenzione:** i PDF standard (non 3D) non possono essere riparati, convertiti o visualizzati. Solo i **3D PDF** con modello 3D incorporato (**U3D**) possono essere visualizzati nel **Viewer 3D**.",
         "repair_error_invalid_mesh_title": "❌ **Impossibile riparare questo file.**",
         "repair_error_invalid_mesh_desc": "Il file `{ext}` non contiene una mesh 3D valida con vertici e facce.",
         "repair_error_invalid_mesh_hint": "Formati supportati: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**.",
@@ -161,7 +159,7 @@ TRANSLATIONS = {
         # --- VIEWER 3D ---
         "viewer_header": "🖥️ Viewer 3D",
         "viewer_upload": "Carica modello 3D",
-        "viewer_upload_hint": "💡 **Formati supportati:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, **3D PDF** (il file PDF deve contenere un modello 3D incorporato in formato **.u3d** o **.prc**).",
+        "viewer_upload_hint": "💡 **Formati supportati:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, **3D PDF** (il file PDF deve contenere un modello 3D incorporato in formato **.u3d**).",
         "viewer_status_loading": "Caricamento del modello... (30%)",
         "viewer_status_processing": "Elaborazione vertici e facce... (60%)",
         "viewer_status_building": "Costruzione della vista 3D... (100%)",
@@ -174,17 +172,17 @@ TRANSLATIONS = {
 
         # --- 3D PDF DETECTION ---
         "pdf_no_3d_title": "❌ **Il PDF non contiene un modello 3D incorporato.**",
-        "pdf_no_3d_desc": "Il file `{filename}` è un PDF standard, non un 3D PDF. Per visualizzarlo nel Viewer 3D, deve contenere un modello 3D in formato **U3D** o **PRC**.",
+        "pdf_no_3d_desc": "Il file `{filename}` è un PDF standard, non un 3D PDF. Per visualizzarlo nel Viewer 3D, deve contenere un modello 3D in formato **U3D**.",
         "pdf_no_3d_howto_title": "📖 Come creare un 3D PDF",
         "pdf_no_3d_howto_steps": """1. Apri il tuo modello in un software CAD (AutoCAD, SketchUp, Revit, FreeCAD, ecc.)
-2. Esporta il modello in formato **U3D** o **PRC** (formati 3D incorporabili)
+2. Esporta il modello in formato **U3D** (formato 3D incorporabile)
 3. Usa **Adobe Acrobat Pro** o **Foxit PhantomPDF** per creare un 3D PDF:
    - Apri un PDF vuoto
    - Vai su **Strumenti → 3D → Aggiungi 3D**
-   - Seleziona il file U3D o PRC esportato
+   - Seleziona il file U3D esportato
    - Salva il PDF
 4. Carica il 3D PDF su ArtiFix per visualizzarlo""",
-        "pdf_no_3d_alternative": "💡 **Alternativa più semplice:** carica direttamente il file **U3D** o **PRC** nel Viewer 3D (sono supportati nativamente, senza bisogno del PDF).",
+        "pdf_no_3d_alternative": "💡 **Alternativa più semplice:** carica direttamente il file **U3D** nel Viewer 3D (è supportato nativamente, senza bisogno del PDF).",
         "pdf_3d_detected": "✅ **3D PDF rilevato!** Contiene un modello 3D incorporato. Elaborazione in corso...",
 
         # --- CONVERTI FORMATI ---
@@ -216,7 +214,7 @@ TRANSLATIONS = {
         "convert_button_preview": "🖥️ Mostra anteprima interattiva (ruota con il mouse)",
         "convert_info_preview": "💡 Ruota il modello a 360° con il mouse o il touchpad",
         "convert_warning_format": "⚠️ Il formato **.{format}** non può essere convertito in altri formati.",
-        "convert_info_formats": "💡 I formati convertibili sono: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF, PRC**.",
+        "convert_info_formats": "💡 I formati convertibili sono: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF**.",
         "convert_warning_no_target": "⚠️ Nessun formato di destinazione disponibile per questo file.",
         "convert_warning_no_preview": "⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.",
         "convert_file_type": "Tipo: {type} | Estensione: .{ext}",
@@ -364,9 +362,9 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "share_button": "📤 Share the generated 3D file",
         "share_info_tooltip": "ℹ️ What is this button?",
         "share_info_title": "🔗 Share your 3D model",
-        "share_info_body": "You can share your 3D model in **3 different formats**, choosing the one that best suits your client.",
-        "share_info_features": "**What your client gets:**\n- ✅ Opens the file **without installing anything**\n- ✅ **Zero Adobe Acrobat** required (for HTML)\n- ✅ Works on **PC, Mac, Linux, smartphone**\n- ✅ **Permanent link** or **downloadable file**",
-        "share_info_use_cases": "**🎯 Available formats:**\n- 🌐 **HTML 3D** — shareable link + QR code\n- 📄 **PDF with PRC** — Adobe Acrobat/Reader compatible\n- 📄 **PDF with U3D** — Foxit, PDF-XChange compatible",
+        "share_info_body": "You can share your 3D model in **2 different formats**, choosing the one that best suits your client.",
+        "share_info_features": "**What your client gets:**\n- ✅ Opens the file **without installing anything**\n- ✅ Works on **PC, Mac, Linux, smartphone**\n- ✅ **Permanent link** or **downloadable file**",
+        "share_info_use_cases": "**🎯 Available formats:**\n- 🌐 **HTML 3D** — shareable link + QR code\n- 📄 **PDF 3D** — viewable in Foxit Reader, PDF-XChange, etc.",
         "share_project_title": "Project name (visible to client)",
         "share_generate_qr": "Also generate QR Code",
         "share_generate_button": "🚀 Generate shareable file",
@@ -387,12 +385,10 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "share_info_id": "💡 **Viewer ID:** `{id}` — Keep this code for future reference.",
         "share_error": "❌ **Generation error:** {error}",
 
-        # --- OUTPUT FORMAT (NEW v7.4) ---
+        # --- OUTPUT FORMAT ---
         "share_format_label": "Output format",
         "share_format_html": "🌐 HTML 3D (viewable in any browser)",
-        "share_format_pdf_prc": "📄 PDF with PRC (Adobe Acrobat/Reader compatible)",
-        "share_format_pdf_u3d": "📄 PDF with U3D (Foxit, PDF-XChange compatible)",
-        "share_prc_info": "💡 **PDF with PRC** is the recommended format for maximum compatibility: it opens with **Adobe Acrobat Reader** (free).",
+        "share_format_pdf_u3d": "📄 3D PDF (Foxit, PDF-XChange compatible)",
         "share_download_pdf": "Download 3D PDF",
 
         # --- PROPRIETARY FORMATS BOX (DWG/SKP/RVT) ---
@@ -410,7 +406,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         # --- NOTES EXPANDER: PROPRIETARY FORMATS ---
         "notes_expander_title": "📝 Note: proprietary formats (DWG, SKP, RVT, STEP, IGES)",
         "notes_expander_intro": "ArtiFix natively supports 50+ formats. **Some proprietary formats cannot be read directly** because they require commercial libraries. Here's how to proceed:",
-        "notes_expander_native": "**✅ Natively supported:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, PRC, DXF, 3D PDF, SVG, DOCX, XLSX, IFC, SHP, GeoJSON, KML, GPX.",
+        "notes_expander_native": "**✅ Natively supported:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, DXF, 3D PDF, SVG, DOCX, XLSX, IFC, SHP, GeoJSON, KML, GPX.",
         "notes_expander_not_supported": "**❌ NOT directly supported:** DWG, SKP, RVT, STEP, IGES, DGN, DWT.",
         "notes_expander_howto": "**🔧 How to proceed for unsupported formats:**",
         "notes_expander_steps": """1. **Open the file** in the software it was created with (AutoCAD, SketchUp, Revit, FreeCAD, etc.)
@@ -438,7 +434,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         # --- REPAIR FILE (EN) ---
         "repair_header": "🛠️ File Repair Center",
         "repair_upload": "Select a file",
-        "repair_upload_hint": "💡 **Supported formats:** DXF, STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, IFC, SHP, GEOJSON, KML, GPX, SVG, **3D PDF** (with embedded 3D model **.u3d** or **.prc**), DOCX, XLSX. Proprietary formats (DWG, SKP, RVT, STEP, IGES) must be exported to DAE or OBJ.",
+        "repair_upload_hint": "💡 **Supported formats:** DXF, STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, IFC, SHP, GEOJSON, KML, GPX, SVG, **3D PDF** (with embedded 3D model **.u3d**), DOCX, XLSX. Proprietary formats (DWG, SKP, RVT, STEP, IGES) must be exported to DAE or OBJ.",
         "repair_status_analyzing": "Analyzing file... (30%)",
         "repair_status_verifying": "Verifying result... (60%)",
         "repair_status_completing": "Completing... (100%)",
@@ -452,7 +448,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "repair_error_non_mesh_title": "❌ **Format not supported for repair.**",
         "repair_error_non_mesh_desc": "The file `{ext}` is a **{tipo}** file, not a 3D mesh.",
         "repair_error_non_mesh_hint": "To work with {tipo} files, use the **Convert Formats** section or the **3D Viewer**.",
-        "repair_error_pdf_hint": "⚠️ **Warning:** standard PDFs (non-3D) cannot be repaired, converted, or viewed. Only **3D PDFs** with embedded 3D models (**U3D** or **PRC**) can be viewed in the **3D Viewer**.",
+        "repair_error_pdf_hint": "⚠️ **Warning:** standard PDFs (non-3D) cannot be repaired, converted, or viewed. Only **3D PDFs** with embedded 3D models (**U3D**) can be viewed in the **3D Viewer**.",
         "repair_error_invalid_mesh_title": "❌ **Unable to repair this file.**",
         "repair_error_invalid_mesh_desc": "The file `{ext}` does not contain a valid 3D mesh with vertices and faces.",
         "repair_error_invalid_mesh_hint": "Supported formats: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D**.",
@@ -498,7 +494,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         # --- 3D VIEWER (EN) ---
         "viewer_header": "🖥️ 3D Viewer",
         "viewer_upload": "Upload 3D model",
-        "viewer_upload_hint": "💡 **Supported formats:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, **3D PDF** (the PDF file must contain an embedded 3D model in **.u3d** or **.prc** format).",
+        "viewer_upload_hint": "💡 **Supported formats:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, **3D PDF** (the PDF file must contain an embedded 3D model in **.u3d** format).",
         "viewer_status_loading": "Loading model... (30%)",
         "viewer_status_processing": "Processing vertices and faces... (60%)",
         "viewer_status_building": "Building 3D view... (100%)",
@@ -511,17 +507,17 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
 
         # --- 3D PDF DETECTION (EN) ---
         "pdf_no_3d_title": "❌ **The PDF does not contain an embedded 3D model.**",
-        "pdf_no_3d_desc": "The file `{filename}` is a standard PDF, not a 3D PDF. To view it in the 3D Viewer, it must contain a 3D model in **U3D** or **PRC** format.",
+        "pdf_no_3d_desc": "The file `{filename}` is a standard PDF, not a 3D PDF. To view it in the 3D Viewer, it must contain a 3D model in **U3D** format.",
         "pdf_no_3d_howto_title": "📖 How to create a 3D PDF",
         "pdf_no_3d_howto_steps": """1. Open your model in CAD software (AutoCAD, SketchUp, Revit, FreeCAD, etc.)
-2. Export the model to **U3D** or **PRC** format (embeddable 3D formats)
+2. Export the model to **U3D** format (embeddable 3D format)
 3. Use **Adobe Acrobat Pro** or **Foxit PhantomPDF** to create a 3D PDF:
    - Open a blank PDF
    - Go to **Tools → 3D → Add 3D**
-   - Select the exported U3D or PRC file
+   - Select the exported U3D file
    - Save the PDF
 4. Upload the 3D PDF to ArtiFix to view it""",
-        "pdf_no_3d_alternative": "💡 **Simpler alternative:** upload the **U3D** or **PRC** file directly to the 3D Viewer (they are natively supported, no PDF needed).",
+        "pdf_no_3d_alternative": "💡 **Simpler alternative:** upload the **U3D** file directly to the 3D Viewer (it is natively supported, no PDF needed).",
         "pdf_3d_detected": "✅ **3D PDF detected!** It contains an embedded 3D model. Processing...",
 
         # --- CONVERT FORMATS (EN) ---
@@ -553,7 +549,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "convert_button_preview": "🖥️ Show interactive preview (rotate with mouse)",
         "convert_info_preview": "💡 Rotate the model 360° with the mouse or touchpad",
         "convert_warning_format": "⚠️ The **.{format}** format cannot be converted to other formats.",
-        "convert_info_formats": "💡 Convertible formats are: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF, PRC**.",
+        "convert_info_formats": "💡 Convertible formats are: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF**.",
         "convert_warning_no_target": "⚠️ No target format available for this file.",
         "convert_warning_no_preview": "⚠️ Unable to load model for preview. Make sure the file is a valid 3D model.",
         "convert_file_type": "Type: {type} | Extension: .{ext}",
