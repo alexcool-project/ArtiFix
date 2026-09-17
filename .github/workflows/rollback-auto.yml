@@ -1,0 +1,65 @@
+name: Rollback Auto
+
+on:
+  schedule:
+    # Ogni 6 ore: 02:00, 08:00, 14:00, 20:00 UTC
+    - cron: '0 2,8,14,20 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Esegui senza modificare (dry-run)'
+        type: boolean
+        default: false
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # necessario per git log --since
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Esegui rollback
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python .github/scripts/rollback.py --dry-run
+          else
+            python .github/scripts/rollback.py
+          fi
+        continue-on-error: true
+
+      - name: Commit eventuali modifiche
+        if: inputs.dry_run != true
+        run: |
+          git config user.name "ArtiFix Bot"
+          git config user.email "bot@artifix.it"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Nessuna modifica da committare."
+          else
+            git commit -m "[AUTO] Rollback $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+          fi
+
+      - name: Riepilogo
+        if: always()
+        run: |
+          echo "### Rollback Auto — Riepilogo" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Eseguito: $(date -u +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          if [ -f docs/roadmap/Log_Errors.md ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### Ultime righe di Log_Errors.md" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 10 docs/roadmap/Log_Errors.md >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
