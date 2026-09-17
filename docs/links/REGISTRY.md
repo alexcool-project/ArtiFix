@@ -34,9 +34,11 @@ link_stable: true
 
 | Data | Link | Contenuto | Stato |
 |------|------|-----------|-------|
-| (da creare) | — | — | — |
+| 2026-09-17 | [backup_2026-09-17](https://github.com/alexcool-project/Artifix/tree/main/docs/backups/2026-09-17) | Snapshot v7.4 (4 file critici) | ✅ Stabile |
 
-**Per ripristinare:** `python .github/scripts/rollback.py <backup_name>`
+**Documentazione:** [STABLE_STATE_v7.4.md](https://github.com/alexcool-project/Artifix/blob/main/docs/backups/STABLE_STATE_v7.4.md)
+
+**Per ripristinare:** vedi la sezione "Procedura di Rollback" in `STABLE_STATE_v7.4.md`
 
 ---
 
