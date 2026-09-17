@@ -1,1 +1,1 @@
-Versione 2 — modifica errata (simula un problema)
+Stato iniziale — versione 1 (prima del test)
