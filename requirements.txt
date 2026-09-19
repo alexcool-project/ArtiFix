@@ -50,3 +50,6 @@ PyGithub>=2.5.0
 python-dotenv>=1.0.0
 qrcode[pil]>=8.0
 mesh2u3d @ git+https://github.com/alexcool-project/mesh2u3d.git@666be25
+# Google Service Account (FASE B.2)
+gspread>=6.2.0
+google-auth>=2.58.0
