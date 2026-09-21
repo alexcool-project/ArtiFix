@@ -122,62 +122,6 @@ def roadmap_per_fase(roadmap: list[dict]) -> dict[str, dict]:
 
 
 # ============================================================
-# AUTENTICAZIONE (B.6+)
-# ============================================================
-def check_password() -> bool:
-    """Verifica la password della dashboard. Ritorna True se autenticato."""
-    # Se già autenticato in questa sessione, ok
-    if st.session_state.get("dashboard_auth", False):
-        return True
-
-    # ⚠️ DEBUG TEMPORANEO — rimuovere dopo la diagnosi
-    with st.expander("🔍 DEBUG secrets (temporaneo)", expanded=True):
-        st.write("**Chiavi disponibili in st.secrets:**")
-        try:
-            keys = list(st.secrets.keys())
-            st.write(keys)
-        except Exception as e:
-            st.write(f"Errore lettura keys: {e}")
-
-        st.write("**Valore DASHBOARD_PASSWORD:**")
-        try:
-            val = st.secrets.get("DASHBOARD_PASSWORD", "")
-            if val:
-                st.write(f"✅ Presente, lunghezza {len(val)}")
-            else:
-                st.write("❌ NON presente o vuoto")
-        except Exception as e:
-            st.write(f"Errore lettura: {e}")
-
-    # UI di login
-    st.title("🔒 Dashboard Sistema — Accesso riservato")
-    st.caption("Inserisci la password per accedere alla dashboard di stato del sistema ArtiFix.")
-
-    with st.form("login_dashboard"):
-        password_input = st.text_input("Password:", type="password", key="pwd_input")
-        submit = st.form_submit_button("🔓 Accedi", type="primary", use_container_width=True)
-
-        if submit:
-            expected = st.secrets.get("DASHBOARD_PASSWORD", "")
-            if not expected:
-                st.error("⚠️ `DASHBOARD_PASSWORD` non configurata nei secrets. Contatta l'amministratore.")
-                return False
-            if password_input == expected:
-                st.session_state.dashboard_auth = True
-                st.success("✅ Accesso autorizzato. Caricamento dashboard...")
-                st.rerun()
-            else:
-                st.error("❌ Password errata. Riprova.")
-
-    return False
-
-
-# Blocco di accesso: se non autenticato, mostra login e ferma l'esecuzione
-if not check_password():
-    st.stop()
-
-
-# ============================================================
 # RENDER: KPI
 # ============================================================
 def render_kpi(stato: dict) -> None:
