@@ -100,10 +100,8 @@ def stato_normalizzato(stato: str) -> str:
     """Ritorna 'done' | 'wip' | 'todo' | 'altro'.
     Robusto a emoji, spazi, maiuscole/minuscole."""
     s = (stato or "").strip().lower()
-    # Rimuove emoji/simboli comuni mantenendo lettere, numeri e spazi
     s = re.sub(r"[^\w\s]", " ", s).strip()
     s = re.sub(r"\s+", " ", s)
-    # Match su parole chiave (anche substring)
     for kw in STATI_DONE_KW:
         if kw in s: return "done"
     for kw in STATI_WIP_KW:
@@ -122,6 +120,7 @@ def roadmap_per_fase(roadmap: list[dict]) -> dict[str, dict]:
             out[fase] = r
     return out
 
+
 # ============================================================
 # AUTENTICAZIONE (B.6+)
 # ============================================================
@@ -130,6 +129,25 @@ def check_password() -> bool:
     # Se già autenticato in questa sessione, ok
     if st.session_state.get("dashboard_auth", False):
         return True
+
+    # ⚠️ DEBUG TEMPORANEO — rimuovere dopo la diagnosi
+    with st.expander("🔍 DEBUG secrets (temporaneo)", expanded=True):
+        st.write("**Chiavi disponibili in st.secrets:**")
+        try:
+            keys = list(st.secrets.keys())
+            st.write(keys)
+        except Exception as e:
+            st.write(f"Errore lettura keys: {e}")
+
+        st.write("**Valore DASHBOARD_PASSWORD:**")
+        try:
+            val = st.secrets.get("DASHBOARD_PASSWORD", "")
+            if val:
+                st.write(f"✅ Presente, lunghezza {len(val)}")
+            else:
+                st.write("❌ NON presente o vuoto")
+        except Exception as e:
+            st.write(f"Errore lettura: {e}")
 
     # UI di login
     st.title("🔒 Dashboard Sistema — Accesso riservato")
@@ -157,6 +175,7 @@ def check_password() -> bool:
 # Blocco di accesso: se non autenticato, mostra login e ferma l'esecuzione
 if not check_password():
     st.stop()
+
 
 # ============================================================
 # RENDER: KPI
