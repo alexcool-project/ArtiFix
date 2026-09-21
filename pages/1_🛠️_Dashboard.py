@@ -29,9 +29,9 @@ TAB_LOG_ERRORS  = "Log_Errors"
 TAB_QUEUE       = "Queue"
 
 FASI_ATTESE = [f"B.{i}" for i in range(1, 9)]
-STATI_DONE  = {"✅ done", "done", "completato", "completata"}
-STATI_WIP   = {"🟡 in corso", "in corso", "wip"}
-STATI_TODO  = {"⬜ to do", "to do", "todo", "da fare"}
+STATI_DONE_KW = {"done", "completato", "completata", "fatto"}
+STATI_WIP_KW  = {"in corso", "wip", "corso", "progress"}
+STATI_TODO_KW = {"to do", "todo", "da fare", "todo."}
 _FASE_RE = re.compile(r"\b(B\.\d+)\b", re.IGNORECASE)
 
 # ⚠️ NIENTE st.set_page_config qui: c'è già in app.py (pagina principale)
@@ -97,11 +97,19 @@ def estrai_fase(note: str) -> str | None:
 
 
 def stato_normalizzato(stato: str) -> str:
-    """Ritorna 'done' | 'wip' | 'todo' | 'altro'."""
+    """Ritorna 'done' | 'wip' | 'todo' | 'altro'.
+    Robusto a emoji, spazi, maiuscole/minuscole."""
     s = (stato or "").strip().lower()
-    if s in STATI_DONE: return "done"
-    if s in STATI_WIP:  return "wip"
-    if s in STATI_TODO: return "todo"
+    # Rimuove emoji/simboli comuni mantenendo lettere, numeri e spazi
+    s = re.sub(r"[^\w\s]", " ", s).strip()
+    s = re.sub(r"\s+", " ", s)
+    # Match su parole chiave (anche substring)
+    for kw in STATI_DONE_KW:
+        if kw in s: return "done"
+    for kw in STATI_WIP_KW:
+        if kw in s: return "wip"
+    for kw in STATI_TODO_KW:
+        if kw in s: return "todo"
     return "altro"
 
 
