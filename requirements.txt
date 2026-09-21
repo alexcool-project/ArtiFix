@@ -54,3 +54,5 @@ mesh2u3d @ git+https://github.com/alexcool-project/mesh2u3d.git@666be25
 # --- B.6: dashboard Roadmap via Service Account ---
 gspread>=6.1
 google-auth>=2.30
+
+# force rebuild 2026-09-21
