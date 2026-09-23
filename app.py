@@ -37,8 +37,8 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
-# --- YOUTUBE VIDEO ID (sostituisci con il TUO ID video) ---
-YOUTUBE_VIDEO_ID = "cnbLfM_QNw"
+# --- YOUTUBE VIDEO ID (case-sensitive!) ---
+YOUTUBE_VIDEO_ID = "qcnbLfM_QNw"
 YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@ArtiFix-Official"
 
 # --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
@@ -600,7 +600,6 @@ def extract_3d_from_pdf(file_bytes):
 # FUNZIONE VIDEO YOUTUBE (per pagina Progetto ArtiFix)
 # ============================================================
 def render_youtube_video():
-    """Renderizza il video YouTube embedded + link iscrizione."""
     st.subheader("🎥 Guarda ArtiFix in azione")
     st.markdown("In 60 secondi scopri come convertire, riparare e visualizzare i tuoi file CAD/CAM e mesh 3D — gratis, nel browser.")
     video_html = f"""
