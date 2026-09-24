@@ -1,0 +1,75 @@
+# ============================================
+# ArtiFix — .gitignore
+# Protegge segreti, cache, file IDE/OS
+# Ultimo aggiornamento: 24 Set 2026
+# ============================================
+
+# --- SEGRETI (CRITICO — NON RIMUOVERE) ---
+.streamlit/secrets.toml
+.streamlit/secrets.yaml
+*.key
+*.pem
+*.p12
+service_account*.json
+gcp*.json
+credentials.json
+.env
+.env.*
+!.env.example
+
+# --- BACKUP LOCALI ---
+*.bak
+*.backup
+backup_*/
+backup-*/
+
+# --- PYTHON ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+
+# --- STREAMLIT ---
+.streamlit/secrets.toml
+.streamlit/secrets.yaml
+
+# --- IDE / EDITOR ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- SISTEMA OPERATIVO ---
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- LOG ---
+*.log
+logs/
+
+# --- TEMPORANEI ---
+*.tmp
+*.temp
+tmp/
+temp/
+
+# --- DATI SENSIBILI ---
+# Aggiungi qui qualsiasi file con dati privati
+# Esempi:
+# sponsor_data.csv
+# metriche_private.csv
+# client_*.csv
