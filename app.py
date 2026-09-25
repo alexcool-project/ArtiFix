@@ -40,6 +40,10 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
+# --- YOUTUBE VIDEO ID ---
+YOUTUBE_VIDEO_ID = "qcnbLfM_QNw"
+YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@ArtiFix-Official"
+
 # --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
@@ -625,6 +629,43 @@ def extract_3d_from_pdf(file_bytes):
         return None
     except Exception:
         return None
+
+
+# ============================================================
+# FUNZIONE VIDEO YOUTUBE (per pagina Progetto ArtiFix)
+# ============================================================
+
+def render_youtube_video():
+    """Renderizza il video YouTube embedded + link iscrizione."""
+    st.subheader("🎥 Guarda ArtiFix in azione")
+    st.markdown("In 60 secondi scopri come convertire, riparare e visualizzare i tuoi file CAD/CAM e mesh 3D — gratis, nel browser.")
+
+    video_html = f"""
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+      <iframe 
+        src="https://www.youtube.com/embed/{YOUTUBE_VIDEO_ID}" 
+        title="Cos'è ArtiFix?"
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowfullscreen
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+      </iframe>
+    </div>
+    """
+    st.components.v1.html(video_html, height=400)
+
+    st.markdown(f"""
+    <div style="text-align: center; margin-top: 15px; margin-bottom: 30px;">
+      <a href="{YOUTUBE_CHANNEL_URL}" target="_blank" rel="noopener"
+         style="display: inline-block; padding: 12px 24px; background: #ff0000; color: white; 
+                text-decoration: none; border-radius: 8px; font-weight: 700;">
+        ▶️ Iscriviti al canale YouTube
+      </a>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.divider()
+
 
 # --- BARRA LATERALE ---
 with st.sidebar:
@@ -1229,6 +1270,9 @@ elif page == "Converti Formati":
 elif page == "Progetto ArtiFix":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
+        # --- VIDEO YOUTUBE ---
+        render_youtube_video()
+
         st.header(t("project_header"))
         st.markdown(t("project_text"))
         st.divider()
