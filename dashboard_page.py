@@ -1,6 +1,6 @@
 # dashboard_page.py
 # Pagina Dashboard di ArtiFix — carica metriche dinamiche da Google Sheets
-# Author: Alessandro (ArtiFix) — v1.0 — 25 Set 2026
+# Author: Alessandro (ArtiFix) — v1.1 — 25 Set 2026
 
 """
 Modulo per la pagina "Dashboard" di ArtiFix.
@@ -31,12 +31,70 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
 # Fallback valori hardcoded (se il foglio non è raggiungibile)
 FALLBACK_METRICS = {
-    "file_riparati": {"value": "14,280", "unit": "", "icon": "🛠️"},
-    "conversioni": {"value": "38,910", "unit": "", "icon": "🔄"},
+    "file_riparati": {"value": "14.280", "unit": "", "icon": "🛠️"},
+    "conversioni": {"value": "38.910", "unit": "", "icon": "🔄"},
     "formati_supportati": {"value": "50", "unit": "+", "icon": "📁"},
     "status": {"value": "Online", "unit": "", "icon": "🟢"},
     "uptime_30d": {"value": "99.8", "unit": "%", "icon": "⏱️"},
 }
+
+
+# ============================================================
+# UTILITY FORMATTAZIONE
+# ============================================================
+
+def _format_value(raw_value) -> str:
+    """
+    Formatta un valore grezzo dal foglio Google in stringa visibile.
+
+    Regole:
+    - Numero intero (es. "14280" o 14280) → "14.280" (separatore migliaia italiano)
+    - Numero decimale (es. "99.8" o 99.8) → "99,8" (virgola decimale italiana)
+    - Stringa non numerica (es. "Online") → invariata
+
+    Parameters
+    ----------
+    raw_value : any
+        Valore grezzo letto dal foglio (str, int, float, ecc.)
+
+    Returns
+    -------
+    str
+        Valore formattato per la visualizzazione
+    """
+    # Converte in stringa e pulisce spazi
+    value_str = str(raw_value).strip()
+
+    # Se è vuoto, ritorna stringa vuota
+    if not value_str:
+        return ""
+
+    # Prova a interpretarlo come numero
+    # Prima normalizza: rimuove separatori migliaia se presenti (es. "14,280" → "14280")
+    normalized = value_str.replace(",", "")
+
+    # Se contiene un punto decimale (es. "99.8")
+    if "." in normalized:
+        try:
+            # Interpreta come float
+            value_float = float(normalized)
+            # Formatta con virgola decimale italiana e max 2 decimali
+            # es. 99.8 → "99,8" ; 99.85 → "99,85"
+            formatted = f"{value_float:.2f}".rstrip("0").rstrip(".")
+            # Sostituisci punto con virgola (formato italiano)
+            return formatted.replace(".", ",")
+        except (ValueError, TypeError):
+            pass
+
+    # Prova come intero (es. "14280" → "14.280")
+    try:
+        value_int = int(normalized)
+        return f"{value_int:,}".replace(",", ".")
+    except (ValueError, TypeError):
+        pass
+
+    # Fallback: stringa non numerica (es. "Online")
+    return value_str
 
 
 # ============================================================
@@ -103,12 +161,8 @@ def load_metrics() -> dict:
             unit = str(row.get("unit", "")).strip()
             icon = str(row.get("icon", "")).strip()
 
-            # Formatta value: se numerico intero, aggiunge separatore migliaia
-            try:
-                value_num = int(str(value).replace(",", "").replace(".", "").strip())
-                value_str = f"{value_num:,}".replace(",", ".")
-            except (ValueError, TypeError):
-                value_str = str(value).strip()
+            # Formatta value con la utility dedicata
+            value_str = _format_value(value)
 
             result[name] = {
                 "value": value_str,
@@ -148,8 +202,6 @@ def _render_metric_card(col, value: str, unit: str, icon: str, label: str) -> No
     label : str
         Etichetta sotto il valore (es. "File Riparati")
     """
-    display_value = f"{icon} {value}{unit}" if icon else f"{value}{unit}"
-
     col.markdown(
         f"""
         <div class="metric-card">
