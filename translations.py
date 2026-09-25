@@ -110,6 +110,8 @@ TRANSLATIONS = {
         "dash_metric_conversions": "Conversioni",
         "dash_metric_formats": "Formati",
         "dash_metric_online": "Online",
+        "dash_metric_uptime": "Uptime 30 giorni",
+        "dash_error_load": "⚠️ Impossibile caricare le metriche dal foglio. Mostro i valori di fallback.",
         "dash_supported_formats": "📁 Formati Supportati (50+ estensioni)",
         "dash_info_select": "👈 Seleziona una funzionalità dal menu.",
 
@@ -453,6 +455,8 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "dash_metric_conversions": "Conversions",
         "dash_metric_formats": "Formats",
         "dash_metric_online": "Online",
+        "dash_metric_uptime": "30-day Uptime",
+        "dash_error_load": "⚠️ Unable to load metrics from sheet. Showing fallback values.",
         "dash_supported_formats": "📁 Supported Formats (50+ extensions)",
         "dash_info_select": "👈 Select a feature from the menu.",
 
