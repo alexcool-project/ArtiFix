@@ -22,9 +22,6 @@ from translations import TRANSLATIONS, get_text, detect_browser_language
 # --- UTILITY CONDIVISIONE VIEWER (v8.0) ---
 from share_utils import render_share_section
 
-# --- PAGINA DASHBOARD (v8.1 — dinamica) ---
-from dashboard_page import render_dashboard_page
-
 # --- LIBRERIA COOKIE (OPZIONALE) ---
 try:
     from streamlit_cookies_controller import CookieController
@@ -39,10 +36,6 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
-
-# --- YOUTUBE VIDEO ID ---
-YOUTUBE_VIDEO_ID = "qcnbLfM_QNw"
-YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@ArtiFix-Official"
 
 # --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
@@ -630,43 +623,6 @@ def extract_3d_from_pdf(file_bytes):
     except Exception:
         return None
 
-
-# ============================================================
-# FUNZIONE VIDEO YOUTUBE (per pagina Progetto ArtiFix)
-# ============================================================
-
-def render_youtube_video():
-    """Renderizza il video YouTube embedded + link iscrizione."""
-    st.subheader("🎥 Guarda ArtiFix in azione")
-    st.markdown("In 60 secondi scopri come convertire, riparare e visualizzare i tuoi file CAD/CAM e mesh 3D — gratis, nel browser.")
-
-    video_html = f"""
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-      <iframe 
-        src="https://www.youtube.com/embed/{YOUTUBE_VIDEO_ID}" 
-        title="Cos'è ArtiFix?"
-        frameborder="0" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-        allowfullscreen
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-      </iframe>
-    </div>
-    """
-    st.components.v1.html(video_html, height=400)
-
-    st.markdown(f"""
-    <div style="text-align: center; margin-top: 15px; margin-bottom: 30px;">
-      <a href="{YOUTUBE_CHANNEL_URL}" target="_blank" rel="noopener"
-         style="display: inline-block; padding: 12px 24px; background: #ff0000; color: white; 
-                text-decoration: none; border-radius: 8px; font-weight: 700;">
-        ▶️ Iscriviti al canale YouTube
-      </a>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.divider()
-
-
 # --- BARRA LATERALE ---
 with st.sidebar:
     if LOGO_URL:
@@ -793,16 +749,23 @@ if st.session_state.cookie_consent is None:
                 st.session_state.cookie_consent = "accepted"
                 st.rerun()
 
-# --- DASHBOARD (v8.1 — dinamica) ---
+# --- DASHBOARD ---
 if page == "Dashboard":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        render_dashboard_page(
-            t=t,
-            lang=st.session_state.lang,
-            supported_formats=SUPPORTED_FORMATS,
-            logo_url=LOGO_URL,
-        )
+        st.markdown('<div class="logo-container"><img src="' + LOGO_URL + '" alt="Logo ArtiFix"></div>', unsafe_allow_html=True)
+        st.header(t("dash_header"))
+        cols = st.columns(4)
+        metrics = [("14,280", t("dash_metric_repaired")), ("38,910", t("dash_metric_conversions")), ("50+", t("dash_metric_formats")), ("🟢", t("dash_metric_online"))]
+        for col, (val, label) in zip(cols, metrics):
+            col.markdown(f'<div class="metric-card"><div class="metric-value">{val}</div><div class="metric-label">{label}</div></div>', unsafe_allow_html=True)
+        st.markdown("---")
+        st.subheader(t("dash_supported_formats"))
+        cols = st.columns(4)
+        for idx, (category, info) in enumerate(SUPPORTED_FORMATS.items()):
+            with cols[idx % 4]:
+                st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
+        st.info(t("dash_info_select"))
     with col_side:
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
@@ -1270,9 +1233,6 @@ elif page == "Converti Formati":
 elif page == "Progetto ArtiFix":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        # --- VIDEO YOUTUBE ---
-        render_youtube_video()
-
         st.header(t("project_header"))
         st.markdown(t("project_text"))
         st.divider()
