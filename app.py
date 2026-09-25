@@ -22,6 +22,9 @@ from translations import TRANSLATIONS, get_text, detect_browser_language
 # --- UTILITY CONDIVISIONE VIEWER (v8.0) ---
 from share_utils import render_share_section
 
+# --- PAGINA DASHBOARD (v8.1 — dinamica) ---
+from dashboard_page import render_dashboard_page
+
 # --- LIBRERIA COOKIE (OPZIONALE) ---
 try:
     from streamlit_cookies_controller import CookieController
@@ -749,23 +752,16 @@ if st.session_state.cookie_consent is None:
                 st.session_state.cookie_consent = "accepted"
                 st.rerun()
 
-# --- DASHBOARD ---
+# --- DASHBOARD (v8.1 — dinamica) ---
 if page == "Dashboard":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        st.markdown('<div class="logo-container"><img src="' + LOGO_URL + '" alt="Logo ArtiFix"></div>', unsafe_allow_html=True)
-        st.header(t("dash_header"))
-        cols = st.columns(4)
-        metrics = [("14,280", t("dash_metric_repaired")), ("38,910", t("dash_metric_conversions")), ("50+", t("dash_metric_formats")), ("🟢", t("dash_metric_online"))]
-        for col, (val, label) in zip(cols, metrics):
-            col.markdown(f'<div class="metric-card"><div class="metric-value">{val}</div><div class="metric-label">{label}</div></div>', unsafe_allow_html=True)
-        st.markdown("---")
-        st.subheader(t("dash_supported_formats"))
-        cols = st.columns(4)
-        for idx, (category, info) in enumerate(SUPPORTED_FORMATS.items()):
-            with cols[idx % 4]:
-                st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
-        st.info(t("dash_info_select"))
+        render_dashboard_page(
+            t=t,
+            lang=st.session_state.lang,
+            supported_formats=SUPPORTED_FORMATS,
+            logo_url=LOGO_URL,
+        )
     with col_side:
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
