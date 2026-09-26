@@ -1,5 +1,6 @@
 # translations.py
 # Dizionario completo delle traduzioni IT/EN per ArtiFix
+# v1.5 (26 Set 2026): aggiunte chiavi project_video_title, project_video_intro
 
 TRANSLATIONS = {
     "it": {
@@ -235,6 +236,8 @@ TRANSLATIONS = {
         "project_header": "🚀 Progetto ArtiFix",
         "project_text": """**ArtiFix** è una piattaforma professionale per la riparazione, conversione e visualizzazione di file CAD/CAM.
 Questo progetto è in continua evoluzione. Per richieste di informazioni, collaborazioni o assistenza tecnica, contattaci.""",
+        "project_video_title": "🎥 Cos'è ArtiFix?",
+        "project_video_intro": "Guarda il video di presentazione del progetto.",
         "project_contact": "📧 Contattaci",
         "project_contact_text": "Invia una richiesta a info@artifix.it",
         "project_form_name": "Il tuo nome",
@@ -582,6 +585,8 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "project_header": "🚀 ArtiFix Project",
         "project_text": """**ArtiFix** is a professional platform for repairing, converting, and viewing CAD/CAM files.
 This project is constantly evolving. For information requests, collaborations, or technical assistance, contact us.""",
+        "project_video_title": "🎥 What is ArtiFix?",
+        "project_video_intro": "Watch the project presentation video.",
         "project_contact": "📧 Contact Us",
         "project_contact_text": "Send a request to info@artifix.it",
         "project_form_name": "Your name",
