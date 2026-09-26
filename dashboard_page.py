@@ -1,12 +1,17 @@
 # dashboard_page.py
 # Pagina Dashboard di ArtiFix — carica metriche dinamiche da Google Sheets
-# Author: Alessandro (ArtiFix) — v1.4 — 26 Set 2026
+# Author: Alessandro (ArtiFix) — v1.4.1 — 26 Set 2026
+#
+# Changelog v1.4.1:
+#   - Rimosso caption sotto card "Ultimo Deploy"
+#
+# Changelog v1.4:
+#   - Timestamp solo data: "%d/%m/%Y" (rimosso orario)
 #
 # Changelog v1.2:
 #   - Aggiunta metrica "Sponsor attivi" (foglio Artifix_Sponsors)
 #   - Aggiunta metrica "Ultimo aggiornamento" (foglio Metriche ArtiFix)
 #   - Aggiunta metrica "Ultimo deploy" (GitHub API, repo pubblico Artifix)
-#   - Timestamp solo data: "%d/%m/%Y" (rimosso orario)
 
 """
 Modulo per la pagina "Dashboard" di ArtiFix.
@@ -360,8 +365,7 @@ def render_dashboard_page(
             icon="🚀",
             label=deploy_label,
         )
-        if deploy and deploy.get("messaggio"):
-            cols_extra[3].caption(f"_{deploy['messaggio']}_")
+        # v1.4.1: caption deploy rimosso
 
     st.markdown("---")
     st.subheader(t("dash_supported_formats"))
