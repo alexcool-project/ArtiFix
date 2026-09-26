@@ -200,6 +200,34 @@ st.markdown("""
     a.yt-subscribe:hover {
         background: #cc0000;
     }
+
+    /* ===== v1.5: PULSANTE MENU MOBILE PIÙ CHIARO ===== */
+    /* Sostituisce l'icona "»" con "☰ Menu" per utenti mobile */
+    [data-testid="stSidebarCollapsedControl"] button::before {
+        content: "☰ Menu";
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f77b4;
+        white-space: nowrap;
+        display: inline-block;
+        padding: 2px 6px;
+    }
+    [data-testid="stSidebarCollapsedControl"] button svg {
+        display: none !important;
+    }
+
+    /* ===== v1.5: SIDEBAR SEMPRE VISIBILE SU MOBILE ===== */
+    /* Su schermi piccoli, forza la sidebar ad essere visibile */
+    @media (max-width: 768px) {
+        [data-testid="stSidebar"] {
+            display: block !important;
+            transform: translateX(0) !important;
+            min-width: 260px !important;
+        }
+        [data-testid="stSidebarCollapsedControl"] {
+            display: none !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -262,6 +290,16 @@ if 'lang' not in st.session_state:
         st.session_state.lang = detect_browser_language()
     except Exception:
         st.session_state.lang = "it"
+
+# --- v1.5: TOAST INFO MENU SU MOBILE (solo al primo accesso) ---
+try:
+    ua = st.context.headers.get("User-Agent", "").lower()
+    is_mobile = any(x in ua for x in ["android", "iphone", "ipad", "mobile"])
+    if is_mobile and "menu_hint_shown" not in st.session_state:
+        st.session_state.menu_hint_shown = True
+        st.toast("💡 Tocca ☰ Menu in alto a sinistra per aprire la navigazione", icon="📱")
+except Exception:
+    pass
 
 # --- FUNZIONE HELPER PER TRADUZIONE ---
 def t(key, **kwargs):
@@ -1226,7 +1264,6 @@ elif page == "Progetto ArtiFix":
         st.subheader(t("project_video_title"))
         st.markdown(t("project_video_intro"))
 
-        # Player YouTube (iframe nativo)
         st.markdown(
             f"""
             <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden;
