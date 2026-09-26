@@ -1,284 +1,380 @@
-"""
-ArtiFix — Dashboard stato sistema (B.6)
-Pagina multi-page nativa Streamlit.
-Legge il foglio ArtiFix_Roadmap via Service Account (gspread).
-NON tocca l'app v7.4 in app.py.
+# dashboard_page.py
+# Pagina Dashboard di ArtiFix — carica metriche dinamiche da Google Sheets
+# Author: Alessandro (ArtiFix) — v1.4 — 26 Set 2026
+#
+# Changelog v1.4:
+#   - Timestamp solo data: "%d/%m/%Y" (rimosso orario)
+#
+# Changelog v1.3:
+#   - Timestamp compatto: "%d/%m %H:%M" (rimosso anno)
+#   - Caption ultimo deploy troncato a 30 caratteri
+#
+# Changelog v1.2:
+#   - Aggiunta metrica "Sponsor attivi" (foglio Artifix_Sponsors)
+#   - Aggiunta metrica "Ultimo aggiornamento" (foglio Metriche ArtiFix)
+#   - Aggiunta metrica "Ultimo deploy" (GitHub API, repo pubblico Artifix)
 
-Changelog:
-  - v1.1 (26 Set 2026): aggiunto pulsante "Torna in ArtiFix" compatto in sidebar
 """
+Modulo per la pagina "Dashboard" di ArtiFix.
+
+Legge le metriche da:
+  - Foglio Google "Metriche ArtiFix" (via Service Account)
+  - Foglio Google "Artifix_Sponsors" (via Service Account)
+  - GitHub API (repo pubblico alexcool-project/Artifix)
+
+Cache: 5 minuti. In caso di errore, fallback ai valori hardcoded.
+
+Espone:
+    render_dashboard_page(t, lang, supported_formats, logo_url)
+"""
+
 from __future__ import annotations
 
-import re
-import streamlit as st
+from datetime import datetime
+
 import gspread
-import pandas as pd
+import requests
+import streamlit as st
 from google.oauth2.service_account import Credentials
 
-# ============================================================
-# CONFIG
-# ============================================================
-SHEET_ID = "1JnswXoOgmKa3ebrmWAkxtSA9v6oOTgyNgbEp8K8VwIg"
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.readonly",
-]
-
-TAB_CONFIG      = "Config"
-TAB_ROADMAP     = "Roadmap"
-TAB_LOG_FREEZE  = "Log_Freeze"
-TAB_LOG_VERIFY  = "Log_Verify"
-TAB_LOG_ERRORS  = "Log_Errors"
-TAB_QUEUE       = "Queue"
-
-FASI_ATTESE = [f"B.{i}" for i in range(1, 9)]
-STATI_DONE_KW = {"done", "completato", "completata", "fatto"}
-STATI_WIP_KW  = {"in corso", "wip", "corso", "progress"}
-STATI_TODO_KW = {"to do", "todo", "da fare", "todo."}
-_FASE_RE = re.compile(r"\b(B\.\d+)\b", re.IGNORECASE)
-
-# ⚠️ NIENTE st.set_page_config qui: c'è già in app.py (pagina principale)
 
 # ============================================================
-# SIDEBAR — Pulsante ritorno all'app principale
+# COSTANTI
 # ============================================================
-with st.sidebar:
-    # Pulsante "Torna in ArtiFix" in cima
-    st.markdown(
-        """
-        <a href="https://artifix.streamlit.app" target="_self"
-           style="display:block; text-align:center; background:#1f77b4;
-                  color:white; padding:10px 14px; border-radius:6px;
-                  text-decoration:none; font-weight:600; font-size:14px;
-                  white-space:nowrap; margin-bottom:20px;">
-            🏠 Torna in ArtiFix
-        </a>
+
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+
+# ID fogli Google
+SPONSORS_SHEET_ID = "16m8gY3YktT2ysYAkKqHGC28VX1qGghx6PL2typXK2b4"
+
+# GitHub repo (pubblico)
+GITHUB_REPO = "alexcool-project/Artifix"
+GITHUB_BRANCH = "main"
+
+# Fallback valori hardcoded (se i fogli non sono raggiungibili)
+FALLBACK_METRICS = {
+    "file_riparati": {"value": "14.280", "unit": "", "icon": "🛠️"},
+    "conversioni": {"value": "38.910", "unit": "", "icon": "🔄"},
+    "formati_supportati": {"value": "50", "unit": "+", "icon": "📁"},
+    "status": {"value": "Online", "unit": "", "icon": "🟢"},
+    "uptime_30d": {"value": "99.8", "unit": "%", "icon": "⏱️"},
+    "sponsor_attivi": {"value": "3", "unit": "", "icon": "🤝"},
+}
+
+
+# ============================================================
+# UTILITY FORMATTAZIONE
+# ============================================================
+
+def _format_value(raw_value) -> str:
+    """
+    Formatta un valore grezzo dal foglio Google in stringa visibile.
+    """
+    value_str = str(raw_value).strip()
+    if not value_str:
+        return ""
+
+    normalized = value_str.replace(",", "")
+
+    if "." in normalized:
+        try:
+            value_float = float(normalized)
+            formatted = f"{value_float:.2f}".rstrip("0").rstrip(".")
+            return formatted.replace(".", ",")
+        except (ValueError, TypeError):
+            pass
+
+    try:
+        value_int = int(normalized)
+        return f"{value_int:,}".replace(",", ".")
+    except (ValueError, TypeError):
+        pass
+
+    return value_str
+
+
+def _format_timestamp(raw_value) -> str:
+    """
+    Formatta un timestamp ISO/italiano in stringa compatta (solo data).
+
+    v1.4: formato "%d/%m/%Y" (senza orario).
+
+    Esempi:
+    - "2026-09-26 12:11:11" → "26/09/2026"
+    - "2026-09-26T12:11:11Z" → "26/09/2026"
+    """
+    if not raw_value:
+        return "—"
+
+    s = str(raw_value).strip()
+    if not s:
+        return "—"
+
+    for fmt in (
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%dT%H:%M:%S.%fZ",
+        "%Y-%m-%d",
+    ):
+        try:
+            dt = datetime.strptime(s[:len(fmt) + 6], fmt)
+            return dt.strftime("%d/%m/%Y")
+        except (ValueError, TypeError):
+            continue
+
+    return s
+
+
+# ============================================================
+# CARICAMENTO DATI
+# ============================================================
+
+@st.cache_resource(show_spinner=False)
+def _get_gspread_client():
+    """
+    Restituisce un client gspread autorizzato con il Service Account.
+    """
+    try:
+        creds_dict = dict(st.secrets["gcp_service_account"])
+    except (KeyError, FileNotFoundError) as e:
+        raise RuntimeError(
+            "Sezione [gcp_service_account] mancante nei secrets."
+        ) from e
+
+    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    return gspread.authorize(creds)
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def load_metrics() -> dict:
+    """
+    Legge le metriche dal foglio Google "Metriche ArtiFix".
+    """
+    result: dict = {}
+    error: str | None = None
+
+    try:
+        sheet_id = st.secrets["metrics"]["sheet_id"]
+        worksheet_name = st.secrets["metrics"].get("worksheet_name", "metriche")
+
+        client = _get_gspread_client()
+        sh = client.open_by_key(sheet_id)
+        ws = sh.worksheet(worksheet_name)
+
+        records = ws.get_all_records()
+
+        for row in records:
+            name = str(row.get("metric_name", "")).strip()
+            if not name:
+                continue
+
+            value = row.get("value", "")
+            unit = str(row.get("unit", "")).strip()
+            icon = str(row.get("icon", "")).strip()
+
+            if name == "ultimo_aggiornamento":
+                value_str = _format_timestamp(value)
+            else:
+                value_str = _format_value(value)
+
+            result[name] = {
+                "value": value_str,
+                "unit": unit,
+                "icon": icon,
+            }
+
+    except Exception as e:
+        error = str(e)
+
+    if not result:
+        result = FALLBACK_METRICS.copy()
+        result["_load_error"] = error or "Nessun dato ricevuto dal foglio."
+
+    return result
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def load_sponsors_attivi() -> int | None:
+    """
+    Conta gli sponsor attivi dal foglio "Artifix_Sponsors".
+    """
+    try:
+        client = _get_gspread_client()
+        sh = client.open_by_key(SPONSORS_SHEET_ID)
+        ws = sh.sheet1
+
+        records = ws.get_all_records()
+        count = 0
+        for row in records:
+            attivo = str(row.get("ATTIVO", "")).strip().upper()
+            if attivo in ("TRUE", "1", "SI", "SÌ"):
+                count += 1
+        return count
+    except Exception:
+        return None
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def load_ultimo_deploy() -> dict | None:
+    """
+    Recupera l'ultimo commit su main dal repo pubblico Artifix.
+    """
+    try:
+        url = f"https://api.github.com/repos/{GITHUB_REPO}/commits/{GITHUB_BRANCH}"
+        r = requests.get(url, timeout=5)
+        if r.status_code != 200:
+            return None
+
+        data = r.json()
+        commit = data.get("commit", {})
+        return {
+            "sha": data.get("sha", "")[:7],
+            "data": commit.get("committer", {}).get("date", ""),
+            "messaggio": commit.get("message", "").split("\n")[0][:60],
+        }
+    except Exception:
+        return None
+
+
+# ============================================================
+# COMPONENTI UI
+# ============================================================
+
+def _render_metric_card(col, value: str, unit: str, icon: str, label: str) -> None:
+    """
+    Renderizza una singola card metrica (HTML+CSS).
+    """
+    col.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-value">{value}{unit}</div>
+            <div class="metric-label">{label}</div>
+        </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # Info pagina (senza titolo "Dashboard" ridondante)
-    st.markdown("---")
-    st.caption("🛠️ **Dashboard Sistema**")
-    st.caption("Stato sistema in tempo reale")
+
+def _render_formats_grid(supported_formats: dict) -> None:
+    """
+    Renderizza la griglia dei formati supportati (4 colonne).
+    """
+    cols = st.columns(4)
+    for idx, (category, info) in enumerate(supported_formats.items()):
+        with cols[idx % 4]:
+            st.markdown(
+                f"""
+                <div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;">
+                    <div style="font-weight:600;">{info["icon"]} {category}</div>
+                    <div style="font-size:0.8rem;color:#666;">{info["description"]}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
 
 # ============================================================
-# GOOGLE SHEETS
+# ENTRY POINT
 # ============================================================
-@st.cache_resource(show_spinner=False)
-def _get_client() -> gspread.Client:
-    creds = Credentials.from_service_account_info(
-        dict(st.secrets["gcp_service_account"]), scopes=SCOPES
+
+def render_dashboard_page(
+    t,
+    lang: str,
+    supported_formats: dict,
+    logo_url: str,
+) -> None:
+    """
+    Renderizza l'intera pagina Dashboard.
+    """
+    st.markdown(
+        f'<div class="logo-container"><img src="{logo_url}" alt="Logo ArtiFix"></div>',
+        unsafe_allow_html=True,
     )
-    return gspread.authorize(creds)
 
+    st.header(t("dash_header"))
 
-@st.cache_resource(show_spinner=False)
-def _get_spreadsheet() -> gspread.Spreadsheet:
-    return _get_client().open_by_key(SHEET_ID)
+    metrics = load_metrics()
+    if "_load_error" in metrics:
+        st.warning(t("dash_error_load"))
 
+    metric_order = [
+        ("file_riparati", "dash_metric_repaired"),
+        ("conversioni", "dash_metric_conversions"),
+        ("formati_supportati", "dash_metric_formats"),
+        ("status", "dash_metric_online"),
+    ]
 
-@st.cache_data(ttl=60, show_spinner=False)
-def leggi_config() -> dict[str, str]:
-    """Config è key/value: ritorna {Chiave: Valore}."""
-    rows = _get_spreadsheet().worksheet(TAB_CONFIG).get_all_values()
-    out: dict[str, str] = {}
-    for row in rows[1:]:
-        if not row or not row[0].strip():
-            continue
-        out[row[0].strip()] = (row[1].strip() if len(row) > 1 else "")
-    return out
+    cols = st.columns(4)
+    for col, (metric_key, label_key) in zip(cols, metric_order):
+        m = metrics.get(metric_key, FALLBACK_METRICS.get(metric_key, {}))
+        _render_metric_card(
+            col=col,
+            value=str(m.get("value", "—")),
+            unit=str(m.get("unit", "")),
+            icon=str(m.get("icon", "")),
+            label=t(label_key),
+        )
 
+    st.markdown("")
+    cols_extra = st.columns(4)
 
-@st.cache_data(ttl=60, show_spinner=False)
-def leggi_tab(tab: str) -> list[dict]:
-    return _get_spreadsheet().worksheet(tab).get_all_records()
+    with cols_extra[0]:
+        m_uptime = metrics.get("uptime_30d", FALLBACK_METRICS["uptime_30d"])
+        _render_metric_card(
+            col=cols_extra[0],
+            value=str(m_uptime.get("value", "—")),
+            unit=str(m_uptime.get("unit", "")),
+            icon=str(m_uptime.get("icon", "⏱️")),
+            label=t("dash_metric_uptime"),
+        )
 
+    with cols_extra[1]:
+        n_sponsor = load_sponsors_attivi()
+        sponsor_value = str(n_sponsor) if n_sponsor is not None else "3"
+        _render_metric_card(
+            col=cols_extra[1],
+            value=sponsor_value,
+            unit="",
+            icon="🤝",
+            label=t("dash_metric_sponsors"),
+        )
 
-@st.cache_data(ttl=60, show_spinner=False)
-def leggi_stato_sistema() -> dict:
-    return {
-        "config":     leggi_config(),
-        "roadmap":    leggi_tab(TAB_ROADMAP),
-        "log_freeze": leggi_tab(TAB_LOG_FREEZE),
-        "log_verify": leggi_tab(TAB_LOG_VERIFY),
-        "log_errors": leggi_tab(TAB_LOG_ERRORS),
-        "queue":      leggi_tab(TAB_QUEUE),
-    }
+    with cols_extra[2]:
+        m_ultimo_agg = metrics.get("ultimo_aggiornamento", {"value": "—"})
+        _render_metric_card(
+            col=cols_extra[2],
+            value=str(m_ultimo_agg.get("value", "—")),
+            unit="",
+            icon="🕒",
+            label=t("dash_metric_last_update"),
+        )
 
+    with cols_extra[3]:
+        deploy = load_ultimo_deploy()
+        if deploy:
+            deploy_value = deploy["sha"]
+            deploy_label = t("dash_metric_last_deploy")
+        else:
+            deploy_value = "—"
+            deploy_label = t("dash_metric_last_deploy")
 
-def invalida_cache() -> None:
-    leggi_config.clear()
-    leggi_tab.clear()
-    leggi_stato_sistema.clear()
+        _render_metric_card(
+            col=cols_extra[3],
+            value=deploy_value,
+            unit="",
+            icon="🚀",
+            label=deploy_label,
+        )
+        # v1.3: caption deploy troncato a 30 caratteri (una riga)
+        if deploy and deploy.get("messaggio"):
+            msg = deploy["messaggio"]
+            if len(msg) > 30:
+                msg = msg[:30] + "..."
+            cols_extra[3].caption(f"_{msg}_")
 
+    st.markdown("---")
+    st.subheader(t("dash_supported_formats"))
+    _render_formats_grid(supported_formats)
 
-# ============================================================
-# HELPER DI DOMINIO
-# ============================================================
-def estrai_fase(note: str) -> str | None:
-    """Estrae 'B.6' da 'FASE B.6' o simile. None se assente."""
-    m = _FASE_RE.search(note or "")
-    return m.group(1).upper() if m else None
-
-
-def stato_normalizzato(stato: str) -> str:
-    """Ritorna 'done' | 'wip' | 'todo' | 'altro'.
-    Robusto a emoji, spazi, maiuscole/minuscole."""
-    s = (stato or "").strip().lower()
-    s = re.sub(r"[^\w\s]", " ", s).strip()
-    s = re.sub(r"\s+", " ", s)
-    for kw in STATI_DONE_KW:
-        if kw in s: return "done"
-    for kw in STATI_WIP_KW:
-        if kw in s: return "wip"
-    for kw in STATI_TODO_KW:
-        if kw in s: return "todo"
-    return "altro"
-
-
-def roadmap_per_fase(roadmap: list[dict]) -> dict[str, dict]:
-    """Mappa 'B.6' -> record Roadmap, estraendo la fase dalla colonna Note."""
-    out: dict[str, dict] = {}
-    for r in roadmap:
-        fase = estrai_fase(r.get("Note", ""))
-        if fase:
-            out[fase] = r
-    return out
-
-
-# ============================================================
-# RENDER: KPI
-# ============================================================
-def render_kpi(stato: dict) -> None:
-    roadmap = stato["roadmap"]
-    done = sum(1 for r in roadmap if stato_normalizzato(r.get("Stato", "")) == "done")
-    wip  = sum(1 for r in roadmap if stato_normalizzato(r.get("Stato", "")) == "wip")
-    todo = sum(1 for r in roadmap if stato_normalizzato(r.get("Stato", "")) == "todo")
-    total = len(roadmap) or 1
-
-    try:
-        pct_media = round(sum(int(r.get("%", 0) or 0) for r in roadmap) / total)
-    except Exception:
-        pct_media = round(100 * done / total)
-
-    errori = len(stato["log_errors"])
-    queue  = len(stato["queue"])
-
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
-    c1.metric("Task totali", total)
-    c2.metric("Done", done)
-    c3.metric("In corso", wip)
-    c4.metric("To do", todo)
-    c5.metric("Avanzamento medio", f"{pct_media}%")
-    c6.metric("Errori / Queue", f"{errori} / {queue}")
-    st.progress(min(pct_media, 100) / 100)
-
-
-# ============================================================
-# RENDER: TIMELINE
-# ============================================================
-def render_timeline(roadmap: list[dict]) -> None:
-    st.subheader("🗺️ Roadmap — FASI B (da colonna Note)")
-    by_fase = roadmap_per_fase(roadmap)
-    if not by_fase:
-        st.warning("Nessuna fase B.x trovata nelle Note di Roadmap.")
-        return
-    for fid in FASI_ATTESE:
-        r = by_fase.get(fid)
-        if not r:
-            st.info(f"**{fid}** — non pianificata")
-            continue
-        titolo = r.get("Task", "—")
-        pct    = r.get("%", 0)
-        owner  = r.get("Owner", "—")
-        scad   = r.get("Scadenza", "—")
-        stato  = stato_normalizzato(r.get("Stato", ""))
-        msg = f"**{fid}** — {titolo} · {pct}% · owner: {owner} · scad: {scad}"
-        if stato == "done":   st.success(msg)
-        elif stato == "wip":  st.warning(msg)
-        else:                 st.info(msg)
-
-
-# ============================================================
-# RENDER: QUEUE
-# ============================================================
-def render_queue(queue: list[dict]) -> None:
-    st.subheader("📥 Queue")
-    if not queue:
-        st.success("Queue vuota ✅")
-        return
-    st.dataframe(pd.DataFrame(queue), use_container_width=True, hide_index=True)
-
-
-# ============================================================
-# RENDER: LOG
-# ============================================================
-def render_log(nome: str, righe: list[dict], max_righe: int = 20) -> None:
-    st.subheader(f"📜 {nome}")
-    if not righe:
-        st.caption("Nessuna voce.")
-        return
-    df = pd.DataFrame(righe)
-    if "Timestamp" in df.columns:
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
-        df = df.sort_values("Timestamp", ascending=False)
-    st.dataframe(df.head(max_righe), use_container_width=True, hide_index=True)
-
-
-# ============================================================
-# RENDER: CONFIG
-# ============================================================
-def render_config(config: dict[str, str]) -> None:
-    st.subheader("⚙️ Config")
-    col1, col2 = st.columns(2)
-    with col1:
-        frozen = config.get("SYSTEM_FROZEN", "FALSE").upper() == "TRUE"
-        st.metric("Sistema congelato", "🔴 SÌ" if frozen else "🟢 NO")
-        st.metric("Freeze mode", config.get("FREEZE_MODE", "—"))
-        st.metric("Autorizzato da", config.get("AUTHORIZED_BY", "—"))
-        st.metric("Auto-fix", "✅" if config.get("AUTO_FIX_ENABLED", "").upper() == "TRUE" else "❌")
-    with col2:
-        st.metric("Hourly check", "✅" if config.get("HOURLY_CHECK_ENABLED", "").upper() == "TRUE" else "❌")
-        st.metric("Intervallo report (h)", config.get("REPORT_INTERVAL_HOURS", "—"))
-        st.metric("Ultima verifica", config.get("LAST_VERIFY", "—"))
-        st.metric("Prossima verifica", config.get("NEXT_VERIFY", "—"))
-
-
-# ============================================================
-# ENTRYPOINT PAGINA
-# ============================================================
-st.title("🛠️ ArtiFix — Dashboard Sistema")
-st.caption("Stato sistema in tempo reale · Google Sheet Roadmap via Service Account")
-
-col_t, col_r = st.columns([4, 1])
-with col_r:
-    if st.button("🔄 Aggiorna", use_container_width=True):
-        invalida_cache()
-        st.rerun()
-
-try:
-    stato = leggi_stato_sistema()
-except Exception as e:
-    st.error(f"Errore lettura Roadmap: {e}")
-    st.stop()
-
-render_kpi(stato)
-st.divider()
-
-col_a, col_b = st.columns([2, 1])
-with col_a:
-    render_timeline(stato["roadmap"])
-with col_b:
-    render_queue(stato["queue"])
-
-st.divider()
-tab1, tab2, tab3, tab4 = st.tabs(["⚙️ Config", "❄️ Freeze", "✅ Verify", "❌ Errors"])
-with tab1:
-    render_config(stato["config"])
-with tab2:
-    render_log("Log_Freeze", stato["log_freeze"])
-with tab3:
-    render_log("Log_Verify", stato["log_verify"])
-with tab4:
-    render_log("Log_Errors", stato["log_errors"])
+    st.info(t("dash_info_select"))
