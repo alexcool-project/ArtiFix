@@ -42,6 +42,9 @@ YOUTUBE_VIDEO_ID = "qcnbLfM_QNw"
 YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@ArtiFix-Official"
 YOUTUBE_SUBSCRIBE_URL = "https://www.youtube.com/@ArtiFix-Official?sub_confirmation=1"
 
+# --- GOOGLE ANALYTICS (v1.9) ---
+GA_MEASUREMENT_ID = "G-PFZYK7S6W"
+
 # --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
@@ -277,6 +280,22 @@ if 'lang' not in st.session_state:
 # --- FUNZIONE HELPER PER TRADUZIONE ---
 def t(key, **kwargs):
     return get_text(key, st.session_state.lang, **kwargs)
+
+# --- FUNZIONE HELPER PER GOOGLE ANALYTICS (v1.9) ---
+def track_event(event_name: str, **params):
+    """Traccia un evento in Google Analytics (solo se l'utente ha accettato i cookie)."""
+    if st.session_state.get('cookie_consent') != 'accepted':
+        return
+    if not GA_MEASUREMENT_ID:
+        return
+    params_str = ",".join([f"'{k}': '{v}'" for k, v in params.items()])
+    st.markdown(f"""
+    <script>
+        if (typeof gtag === 'function') {{
+            gtag('event', '{event_name}', {{{params_str}}});
+        }}
+    </script>
+    """, unsafe_allow_html=True)
 
 # --- SEO META TAG ---
 st.markdown("""
@@ -713,7 +732,7 @@ with st.sidebar:
 
     st.markdown(
         f"""
-        <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
+        <a href="{DONATE_LINK}" target="_blank" onclick="if(typeof gtag==='function')gtag('event','donate_click',{{'location':'sidebar'}});" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
             {t("nav_donate")}
         </a>
         """,
@@ -759,6 +778,21 @@ if st.session_state.cookie_consent is None:
             if st.button(t("cookie_accept_all"), key="accept_cookies", type="primary", use_container_width=True):
                 st.session_state.cookie_consent = "accepted"
                 st.rerun()
+
+# ============================================================
+# GOOGLE ANALYTICS — Caricamento condizionale (GDPR-safe)
+# Si carica SOLO se l'utente ha accettato TUTTI i cookie
+# ============================================================
+if st.session_state.get('cookie_consent') == 'accepted' and GA_MEASUREMENT_ID:
+    st.markdown(f"""
+    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+      gtag('config', '{GA_MEASUREMENT_ID}', {{'anonymize_ip': true}});
+    </script>
+    """, unsafe_allow_html=True)
 
 # --- DASHBOARD ---
 if page == "Dashboard":
@@ -1042,6 +1076,7 @@ elif page == "Converti Formati":
                                 original_name = os.path.splitext(file_name)[0]
                                 converted_filename = f"{original_name}.{target_ext}"
                                 st.download_button(label=t("convert_button_download", format=target_ext), data=result_bytes, file_name=converted_filename, mime=mime_types.get(target_ext, 'application/octet-stream'), use_container_width=True)
+                                track_event("conversion_completed", from_format=file_extension, to_format=target_ext)
                             else:
                                 st.error(t("convert_error", format=target_selected.split(' ')[0]))
                         else:
@@ -1248,7 +1283,8 @@ elif page == "Progetto ArtiFix":
                 </iframe>
             </div>
             <div style="text-align:right;">
-                <a href="{YOUTUBE_SUBSCRIBE_URL}" target="_blank" rel="noopener" class="yt-subscribe">
+                <a href="{YOUTUBE_SUBSCRIBE_URL}" target="_blank" rel="noopener" class="yt-subscribe"
+                   onclick="if(typeof gtag==='function')gtag('event','youtube_subscribe_click');">
                     ▶ Iscriviti
                 </a>
             </div>
@@ -1269,6 +1305,7 @@ elif page == "Progetto ArtiFix":
                     risultato = invia_email(nome_input, email_input, messaggio_input)
                     if risultato == True:
                         st.success(t("project_success"))
+                        track_event("contact_form_sent")
                     else:
                         st.error(t("project_error", error=risultato))
                 else:
@@ -1291,7 +1328,7 @@ elif page == "Diventa Sponsor":
         st.markdown(t("sponsor_how_text"))
         st.markdown(f"""
             <div style="text-align:center; margin: 20px 0;">
-                <a href="{DONATE_LINK}" target="_blank" style="display:inline-block; background:#0070ba; color:white; padding:14px 28px; border-radius:8px; text-decoration:none; font-weight:700; font-size:16px; box-shadow: 0 4px 12px rgba(0,112,186,0.3);">{t("sponsor_donate_button")}</a>
+                <a href="{DONATE_LINK}" target="_blank" onclick="if(typeof gtag==='function')gtag('event','donate_click',{{'location':'sponsor_page'}});" style="display:inline-block; background:#0070ba; color:white; padding:14px 28px; border-radius:8px; text-decoration:none; font-weight:700; font-size:16px; box-shadow: 0 4px 12px rgba(0,112,186,0.3);">{t("sponsor_donate_button")}</a>
             </div>
         """, unsafe_allow_html=True)
         st.divider()
@@ -1310,6 +1347,7 @@ elif page == "Diventa Sponsor":
                     esito = invia_email(nome_brand, email_ref, corpo)
                     if esito is True:
                         st.success(t("sponsor_form_success"))
+                        track_event("sponsor_form_sent")
                     else:
                         st.error(t("sponsor_form_error", error=esito))
                 else:
