@@ -37,6 +37,11 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
+# --- LINK VIDEO YOUTUBE (Video 1 — "Cos'è ArtiFix?") ---
+YOUTUBE_VIDEO_ID = "qcnbLfM_QNw"
+YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@ArtiFix-Official"
+YOUTUBE_SUBSCRIBE_URL = "https://www.youtube.com/@ArtiFix-Official?sub_confirmation=1"
+
 # --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
@@ -177,6 +182,23 @@ st.markdown("""
     /* ===== NASCONDI MENU MULTIPAGE NATIVO ===== */
     [data-testid="stSidebarNav"] {
         display: none !important;
+    }
+
+    /* ===== PULSANTE ISCRIVITI YOUTUBE (piccolo e discreto) ===== */
+    a.yt-subscribe {
+        display: inline-block;
+        background: #ff0000;
+        color: #ffffff !important;
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-decoration: none !important;
+        margin-top: 8px;
+        transition: background 0.15s ease;
+    }
+    a.yt-subscribe:hover {
+        background: #cc0000;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1196,6 +1218,37 @@ elif page == "Progetto ArtiFix":
     with col_main:
         st.header(t("project_header"))
         st.markdown(t("project_text"))
+        st.divider()
+
+        # ============================================================
+        # SEZIONE VIDEO YOUTUBE
+        # ============================================================
+        st.subheader(t("project_video_title"))
+        st.markdown(t("project_video_intro"))
+
+        # Player YouTube (iframe nativo)
+        st.markdown(
+            f"""
+            <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden;
+                        border-radius:10px; margin-bottom:8px;
+                        box-shadow:0 4px 16px rgba(0,0,0,0.12);">
+                <iframe src="https://www.youtube.com/embed/{YOUTUBE_VIDEO_ID}?rel=0&modestbranding=1"
+                        style="position:absolute; top:0; left:0; width:100%; height:100%;
+                               border:0; border-radius:10px;"
+                        title="Cos'è ArtiFix?"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+            </div>
+            <div style="text-align:right;">
+                <a href="{YOUTUBE_SUBSCRIBE_URL}" target="_blank" rel="noopener" class="yt-subscribe">
+                    ▶ Iscriviti
+                </a>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         st.divider()
         st.subheader(t("project_contact"))
         st.write(t("project_contact_text"))
