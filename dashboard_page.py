@@ -1,11 +1,12 @@
 # dashboard_page.py
 # Pagina Dashboard di ArtiFix — carica metriche dinamiche da Google Sheets
-# Author: Alessandro (ArtiFix) — v1.2 — 26 Set 2026
+# Author: Alessandro (ArtiFix) — v1.4 — 26 Set 2026
 #
 # Changelog v1.2:
 #   - Aggiunta metrica "Sponsor attivi" (foglio Artifix_Sponsors)
 #   - Aggiunta metrica "Ultimo aggiornamento" (foglio Metriche ArtiFix)
 #   - Aggiunta metrica "Ultimo deploy" (GitHub API, repo pubblico Artifix)
+#   - Timestamp solo data: "%d/%m/%Y" (rimosso orario)
 
 """
 Modulo per la pagina "Dashboard" di ArtiFix.
@@ -88,7 +89,13 @@ def _format_value(raw_value) -> str:
 
 def _format_timestamp(raw_value) -> str:
     """
-    Formatta un timestamp ISO/italiano in stringa leggibile.
+    Formatta un timestamp ISO/italiano in stringa compatta (solo data).
+
+    v1.4: formato "%d/%m/%Y" (senza orario).
+
+    Esempi:
+    - "2026-09-26 12:11:11" → "26/09/2026"
+    - "2026-09-26T12:11:11Z" → "26/09/2026"
     """
     if not raw_value:
         return "—"
@@ -106,7 +113,7 @@ def _format_timestamp(raw_value) -> str:
     ):
         try:
             dt = datetime.strptime(s[:len(fmt) + 6], fmt)
-            return dt.strftime("%d/%m/%Y %H:%M") if "%H" in fmt else dt.strftime("%d/%m/%Y")
+            return dt.strftime("%d/%m/%Y")
         except (ValueError, TypeError):
             continue
 
