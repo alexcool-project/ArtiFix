@@ -86,9 +86,12 @@ st.markdown("""
     .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
     .sidebar-logo img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
     .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
-    .metric-card { background-color: #f0f2f6; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-    .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
-    .metric-label { font-size: 0.85rem; color: #555; }
+
+    /* ===== CARD METRICHE COMPATTE (v1.4) ===== */
+    .metric-card { background-color: #f0f2f6; padding: 1rem 0.8rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .metric-value { font-size: 1.6rem; font-weight: 700; color: #1f77b4; line-height: 1.2; }
+    .metric-label { font-size: 0.75rem; color: #555; margin-top: 4px; }
+
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
     footer {visibility: hidden;}
     .footer-artifix {
