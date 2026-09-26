@@ -5,7 +5,7 @@ Legge il foglio ArtiFix_Roadmap via Service Account (gspread).
 NON tocca l'app v7.4 in app.py.
 
 Changelog:
-  - v1.1 (26 Set 2026): aggiunto pulsante "Torna all'App ArtiFix" in sidebar
+  - v1.1 (26 Set 2026): aggiunto pulsante "Torna in ArtiFix" compatto in sidebar
 """
 from __future__ import annotations
 
@@ -40,17 +40,18 @@ _FASE_RE = re.compile(r"\b(B\.\d+)\b", re.IGNORECASE)
 # ⚠️ NIENTE st.set_page_config qui: c'è già in app.py (pagina principale)
 
 # ============================================================
-# SIDEBAR — Pulsante ritorno all'app principale
+# SIDEBAR — Pulsante ritorno all'app principale (compatto)
 # ============================================================
 with st.sidebar:
     st.markdown(
         """
         <a href="https://artifix.streamlit.app" target="_self"
            style="display:block; text-align:center; background:#1f77b4;
-                  color:white; padding:12px; border-radius:8px;
-                  text-decoration:none; font-weight:700; font-size:14px;
-                  margin-bottom:20px; box-shadow:0 2px 6px rgba(31,119,180,0.25);">
-            🏠 Torna all'App ArtiFix
+                  color:white; padding:8px 12px; border-radius:6px;
+                  text-decoration:none; font-weight:600; font-size:13px;
+                  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+                  margin-bottom:16px;">
+            🏠 Torna in ArtiFix
         </a>
         """,
         unsafe_allow_html=True,
