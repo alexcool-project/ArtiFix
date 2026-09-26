@@ -171,9 +171,9 @@ st.markdown("""
         font-size: 0.85rem;
     }
 
-    /* ===== NASCONDI VOCE "app" DALLA SIDEBAR MULTIPAGE ===== */
-    [data-testid="stSidebarNav"] ul li:first-child {
-        display: none;
+    /* ===== NASCONDI MENU MULTIPAGE NATIVO ===== */
+    [data-testid="stSidebarNav"] {
+        display: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
