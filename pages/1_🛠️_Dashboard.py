@@ -40,24 +40,26 @@ _FASE_RE = re.compile(r"\b(B\.\d+)\b", re.IGNORECASE)
 # ⚠️ NIENTE st.set_page_config qui: c'è già in app.py (pagina principale)
 
 # ============================================================
-# SIDEBAR — Pulsante ritorno all'app principale (compatto)
+# SIDEBAR — Pulsante ritorno all'app principale
 # ============================================================
 with st.sidebar:
+    # Pulsante "Torna in ArtiFix" in cima
     st.markdown(
         """
         <a href="https://artifix.streamlit.app" target="_self"
            style="display:block; text-align:center; background:#1f77b4;
-                  color:white; padding:8px 12px; border-radius:6px;
-                  text-decoration:none; font-weight:600; font-size:13px;
-                  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-                  margin-bottom:16px;">
+                  color:white; padding:10px 14px; border-radius:6px;
+                  text-decoration:none; font-weight:600; font-size:14px;
+                  white-space:nowrap; margin-bottom:20px;">
             🏠 Torna in ArtiFix
         </a>
         """,
         unsafe_allow_html=True,
     )
+
+    # Info pagina (senza titolo "Dashboard" ridondante)
     st.markdown("---")
-    st.caption("🛠️ Dashboard Sistema")
+    st.caption("🛠️ **Dashboard Sistema**")
     st.caption("Stato sistema in tempo reale")
 
 # ============================================================
