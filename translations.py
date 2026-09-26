@@ -1,6 +1,5 @@
 # translations.py
 # Dizionario completo delle traduzioni IT/EN per ArtiFix
-# v1.5 (26 Set 2026): aggiunte chiavi project_video_title, project_video_intro
 
 TRANSLATIONS = {
     "it": {
@@ -111,10 +110,6 @@ TRANSLATIONS = {
         "dash_metric_conversions": "Conversioni",
         "dash_metric_formats": "Formati",
         "dash_metric_online": "Online",
-        "dash_metric_uptime": "Uptime 30gg",
-        "dash_metric_sponsors": "Sponsor Attivi",
-        "dash_metric_last_update": "Ultimo Aggiornamento",
-        "dash_metric_last_deploy": "Ultimo Deploy",
         "dash_supported_formats": "📁 Formati Supportati (50+ estensioni)",
         "dash_info_select": "👈 Seleziona una funzionalità dal menu.",
 
@@ -236,8 +231,6 @@ TRANSLATIONS = {
         "project_header": "🚀 Progetto ArtiFix",
         "project_text": """**ArtiFix** è una piattaforma professionale per la riparazione, conversione e visualizzazione di file CAD/CAM.
 Questo progetto è in continua evoluzione. Per richieste di informazioni, collaborazioni o assistenza tecnica, contattaci.""",
-        "project_video_title": "🎥 Cos'è ArtiFix?",
-        "project_video_intro": "Guarda il video di presentazione del progetto.",
         "project_contact": "📧 Contattaci",
         "project_contact_text": "Invia una richiesta a info@artifix.it",
         "project_form_name": "Il tuo nome",
@@ -460,10 +453,6 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "dash_metric_conversions": "Conversions",
         "dash_metric_formats": "Formats",
         "dash_metric_online": "Online",
-        "dash_metric_uptime": "Uptime 30d",
-        "dash_metric_sponsors": "Active Sponsors",
-        "dash_metric_last_update": "Last Update",
-        "dash_metric_last_deploy": "Last Deploy",
         "dash_supported_formats": "📁 Supported Formats (50+ extensions)",
         "dash_info_select": "👈 Select a feature from the menu.",
 
@@ -585,8 +574,6 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "project_header": "🚀 ArtiFix Project",
         "project_text": """**ArtiFix** is a professional platform for repairing, converting, and viewing CAD/CAM files.
 This project is constantly evolving. For information requests, collaborations, or technical assistance, contact us.""",
-        "project_video_title": "🎥 What is ArtiFix?",
-        "project_video_intro": "Watch the project presentation video.",
         "project_contact": "📧 Contact Us",
         "project_contact_text": "Send a request to info@artifix.it",
         "project_form_name": "Your name",

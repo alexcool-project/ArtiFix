@@ -37,14 +37,6 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
-# --- LINK VIDEO YOUTUBE (Video 1 — "Cos'è ArtiFix?") ---
-YOUTUBE_VIDEO_ID = "qcnbLfM_QNw"
-YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@ArtiFix-Official"
-YOUTUBE_SUBSCRIBE_URL = "https://www.youtube.com/@ArtiFix-Official?sub_confirmation=1"
-
-# --- GOOGLE ANALYTICS (v1.9) ---
-GA_MEASUREMENT_ID = "G-PFZYK7S6W"
-
 # --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
@@ -83,9 +75,27 @@ else:
         initial_sidebar_state="expanded"
     )
 
-# ============================================================
-# CSS GLOBALE
-# ============================================================
+# --- STATO LINGUA ---
+if 'lang' not in st.session_state:
+    try:
+        st.session_state.lang = detect_browser_language()
+    except Exception:
+        st.session_state.lang = "it"
+
+# --- FUNZIONE HELPER PER TRADUZIONE ---
+def t(key, **kwargs):
+    return get_text(key, st.session_state.lang, **kwargs)
+
+# --- SEO META TAG ---
+st.markdown("""
+<title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
+<meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF) in 3D PDF, STL, OBJ, GLTF e altri formati. Convertitore online gratuito e veloce per ingegneri e progettisti." />
+<meta name="robots" content="index, follow" />
+<meta property="og:title" content="ArtiFix - Convertitore CAD/CAM Universale" />
+<meta property="og:url" content="https://artifix.streamlit.app" />
+""", unsafe_allow_html=True)
+
+# --- CSS MINIMALE E PULITO ---
 st.markdown("""
 <style>
     .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
@@ -94,12 +104,9 @@ st.markdown("""
     .sidebar-logo { text-align: center; padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 1rem; }
     .sidebar-logo img { max-width: 100%; width: auto; height: auto; display: block; margin: 0 auto; }
     .stButton>button { width: 100%; border-radius: 6px; font-size: 14px; }
-
-    /* ===== CARD METRICHE COMPATTE (v1.4) ===== */
-    .metric-card { background-color: #f0f2f6; padding: 1rem 0.8rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-    .metric-value { font-size: 1.6rem; font-weight: 700; color: #1f77b4; line-height: 1.2; }
-    .metric-label { font-size: 0.75rem; color: #555; margin-top: 4px; }
-
+    .metric-card { background-color: #f0f2f6; padding: 1.2rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .metric-value { font-size: 2rem; font-weight: 700; color: #1f77b4; }
+    .metric-label { font-size: 0.85rem; color: #555; }
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
     footer {visibility: hidden;}
     .footer-artifix {
@@ -181,39 +188,6 @@ st.markdown("""
         line-height: 1.4;
         font-size: 0.85rem;
     }
-
-    /* ===== NASCONDI MENU MULTIPAGE NATIVO ===== */
-    [data-testid="stSidebarNav"] {
-        display: none !important;
-    }
-
-    /* ===== PULSANTE ISCRIVITI YOUTUBE (piccolo e discreto) ===== */
-    a.yt-subscribe {
-        display: inline-block;
-        background: #ff0000;
-        color: #ffffff !important;
-        padding: 5px 12px;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 600;
-        text-decoration: none !important;
-        margin-top: 8px;
-        transition: background 0.15s ease;
-    }
-    a.yt-subscribe:hover {
-        background: #cc0000;
-    }
-
-    /* ===== PULSANTE MENU MOBILE PIÙ VISIBILE ===== */
-    [data-testid="stSidebarCollapsedControl"] button {
-        background-color: #f0f2f6 !important;
-        border-radius: 8px !important;
-        padding: 6px 10px !important;
-        transition: background-color 0.15s ease !important;
-    }
-    [data-testid="stSidebarCollapsedControl"] button:hover {
-        background-color: #e0e5ea !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -269,42 +243,6 @@ if 'cookie_consent' not in st.session_state:
         st.session_state.cookie_consent = cookie_controller.get('cookie_consent')
     else:
         st.session_state.cookie_consent = None
-
-# --- STATO LINGUA ---
-if 'lang' not in st.session_state:
-    try:
-        st.session_state.lang = detect_browser_language()
-    except Exception:
-        st.session_state.lang = "it"
-
-# --- FUNZIONE HELPER PER TRADUZIONE ---
-def t(key, **kwargs):
-    return get_text(key, st.session_state.lang, **kwargs)
-
-# --- FUNZIONE HELPER PER GOOGLE ANALYTICS (v1.9) ---
-def track_event(event_name: str, **params):
-    """Traccia un evento in Google Analytics (solo se l'utente ha accettato i cookie)."""
-    if st.session_state.get('cookie_consent') != 'accepted':
-        return
-    if not GA_MEASUREMENT_ID:
-        return
-    params_str = ",".join([f"'{k}': '{v}'" for k, v in params.items()])
-    st.markdown(f"""
-    <script>
-        if (typeof gtag === 'function') {{
-            gtag('event', '{event_name}', {{{params_str}}});
-        }}
-    </script>
-    """, unsafe_allow_html=True)
-
-# --- SEO META TAG ---
-st.markdown("""
-<title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
-<meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF) in 3D PDF, STL, OBJ, GLTF e altri formati. Convertitore online gratuito e veloce per ingegneri e progettisti." />
-<meta name="robots" content="index, follow" />
-<meta property="og:title" content="ArtiFix - Convertitore CAD/CAM Universale" />
-<meta property="og:url" content="https://artifix.streamlit.app" />
-""", unsafe_allow_html=True)
 
 # --- DEFINIZIONE VARIABILI ---
 SUPPORTED_FORMATS = {
@@ -548,6 +486,19 @@ def invia_email(nome, email_utente, messaggio):
 # ============================================================
 
 def render_html_viewer_info(t_func):
+    """
+    Mostra una sezione informativa sull'HTML 3D Viewer.
+
+    Usa le traduzioni IT/EN fornite dal dizionario `translations.py`.
+    Lo stile è coerente con il resto dell'app (bordi blu, sfondo chiaro, icone).
+
+    Parameters
+    ----------
+    t_func : callable
+        Funzione di traduzione `t(key)` che restituisce la stringa tradotta
+        nella lingua corrente.
+    """
+    # --- Intro ---
     st.markdown(f"""
     <div class="html-viewer-intro">
         <h3>{t_func('html_viewer_title')}</h3>
@@ -556,6 +507,7 @@ def render_html_viewer_info(t_func):
     </div>
     """, unsafe_allow_html=True)
 
+    # --- Benefici (6 box) ---
     st.markdown(f"""
     <div class="html-viewer-benefits">
         <div class="html-viewer-benefit">
@@ -593,18 +545,34 @@ def render_html_viewer_info(t_func):
 
 
 def render_proprietary_formats_help():
+    """Mostra una tendina (expander) con le note sui formati proprietari.
+
+    Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
+    Sostituisce il precedente box grande sempre visibile.
+    """
     with st.expander(t("notes_expander_title"), expanded=False):
+        # Intro
         st.markdown(t("notes_expander_intro"))
+
         st.markdown("---")
+
+        # Due colonne: supportati vs non supportati
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(t("notes_expander_native"))
         with col2:
             st.markdown(t("notes_expander_not_supported"))
+
         st.markdown("---")
+
+        # Come procedere
         st.markdown(t("notes_expander_howto"))
         st.markdown(t("notes_expander_steps"))
+
+        # Tip
         st.info(t("notes_expander_tip"))
+
+        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO + CLASSE CSS)
         st.markdown(
             f"""
             <div style="text-align: center; margin-top: 12px;">
@@ -618,6 +586,7 @@ def render_proprietary_formats_help():
         )
 
 def is_3d_pdf(file_bytes):
+    """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
     try:
         if not PDF_AVAILABLE:
             return False
@@ -632,6 +601,7 @@ def is_3d_pdf(file_bytes):
 
 
 def extract_3d_from_pdf(file_bytes):
+    """Tenta di estrarre un modello 3D da un PDF con U3D o PRC."""
     try:
         if not FITZ_AVAILABLE:
             return None
@@ -732,7 +702,7 @@ with st.sidebar:
 
     st.markdown(
         f"""
-        <a href="{DONATE_LINK}" target="_blank" onclick="if(typeof gtag==='function')gtag('event','donate_click',{{'location':'sidebar'}});" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
+        <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
             {t("nav_donate")}
         </a>
         """,
@@ -779,27 +749,23 @@ if st.session_state.cookie_consent is None:
                 st.session_state.cookie_consent = "accepted"
                 st.rerun()
 
-# ============================================================
-# GOOGLE ANALYTICS — Caricamento condizionale (GDPR-safe)
-# Si carica SOLO se l'utente ha accettato TUTTI i cookie
-# ============================================================
-if st.session_state.get('cookie_consent') == 'accepted' and GA_MEASUREMENT_ID:
-    st.markdown(f"""
-    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', '{GA_MEASUREMENT_ID}', {{'anonymize_ip': true}});
-    </script>
-    """, unsafe_allow_html=True)
-
 # --- DASHBOARD ---
 if page == "Dashboard":
-    from dashboard_page import render_dashboard_page
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        render_dashboard_page(t, st.session_state.lang, SUPPORTED_FORMATS, LOGO_URL)
+        st.markdown('<div class="logo-container"><img src="' + LOGO_URL + '" alt="Logo ArtiFix"></div>', unsafe_allow_html=True)
+        st.header(t("dash_header"))
+        cols = st.columns(4)
+        metrics = [("14,280", t("dash_metric_repaired")), ("38,910", t("dash_metric_conversions")), ("50+", t("dash_metric_formats")), ("🟢", t("dash_metric_online"))]
+        for col, (val, label) in zip(cols, metrics):
+            col.markdown(f'<div class="metric-card"><div class="metric-value">{val}</div><div class="metric-label">{label}</div></div>', unsafe_allow_html=True)
+        st.markdown("---")
+        st.subheader(t("dash_supported_formats"))
+        cols = st.columns(4)
+        for idx, (category, info) in enumerate(SUPPORTED_FORMATS.items()):
+            with cols[idx % 4]:
+                st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
+        st.info(t("dash_info_select"))
     with col_side:
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
@@ -821,9 +787,11 @@ elif page == "Viewer 3D":
     with col_main:
         st.header(t("viewer_header"))
 
+        # --- SEZIONE INFORMATIVA HTML 3D VIEWER ---
         render_html_viewer_info(t)
         st.markdown("---")
 
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         viewer_file = st.file_uploader(
             t("viewer_upload"),
             type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
@@ -832,6 +800,7 @@ elif page == "Viewer 3D":
         )
 
         if viewer_file:
+            # ✅ Controllo 3D PDF
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
@@ -985,6 +954,7 @@ elif page == "Viewer 3D":
                         """
                         st.components.v1.html(viewer_html, height=580)
 
+                        # --- SEZIONE CONDIVISIONE (v8.0) ---
                         render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
                     st.warning(t("viewer_warning_no_model"))
@@ -1001,6 +971,7 @@ elif page == "Converti Formati":
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
 
+        # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
 
         with st.expander(t("convert_expander_matrix")):
@@ -1021,6 +992,7 @@ elif page == "Converti Formati":
             """)
             st.caption(t("convert_caption_matrix"))
 
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         uploaded_file = st.file_uploader(
             t("convert_upload"),
             type=[ext[1:] for ext in ALL_EXTENSIONS],
@@ -1076,7 +1048,6 @@ elif page == "Converti Formati":
                                 original_name = os.path.splitext(file_name)[0]
                                 converted_filename = f"{original_name}.{target_ext}"
                                 st.download_button(label=t("convert_button_download", format=target_ext), data=result_bytes, file_name=converted_filename, mime=mime_types.get(target_ext, 'application/octet-stream'), use_container_width=True)
-                                track_event("conversion_completed", from_format=file_extension, to_format=target_ext)
                             else:
                                 st.error(t("convert_error", format=target_selected.split(' ')[0]))
                         else:
@@ -1265,34 +1236,6 @@ elif page == "Progetto ArtiFix":
         st.header(t("project_header"))
         st.markdown(t("project_text"))
         st.divider()
-
-        st.subheader(t("project_video_title"))
-        st.markdown(t("project_video_intro"))
-
-        st.markdown(
-            f"""
-            <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden;
-                        border-radius:10px; margin-bottom:8px;
-                        box-shadow:0 4px 16px rgba(0,0,0,0.12);">
-                <iframe src="https://www.youtube.com/embed/{YOUTUBE_VIDEO_ID}?rel=0&modestbranding=1"
-                        style="position:absolute; top:0; left:0; width:100%; height:100%;
-                               border:0; border-radius:10px;"
-                        title="Cos'è ArtiFix?"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                </iframe>
-            </div>
-            <div style="text-align:right;">
-                <a href="{YOUTUBE_SUBSCRIBE_URL}" target="_blank" rel="noopener" class="yt-subscribe"
-                   onclick="if(typeof gtag==='function')gtag('event','youtube_subscribe_click');">
-                    ▶ Iscriviti
-                </a>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        st.divider()
         st.subheader(t("project_contact"))
         st.write(t("project_contact_text"))
         with st.form("contatti"):
@@ -1305,7 +1248,6 @@ elif page == "Progetto ArtiFix":
                     risultato = invia_email(nome_input, email_input, messaggio_input)
                     if risultato == True:
                         st.success(t("project_success"))
-                        track_event("contact_form_sent")
                     else:
                         st.error(t("project_error", error=risultato))
                 else:
@@ -1328,7 +1270,7 @@ elif page == "Diventa Sponsor":
         st.markdown(t("sponsor_how_text"))
         st.markdown(f"""
             <div style="text-align:center; margin: 20px 0;">
-                <a href="{DONATE_LINK}" target="_blank" onclick="if(typeof gtag==='function')gtag('event','donate_click',{{'location':'sponsor_page'}});" style="display:inline-block; background:#0070ba; color:white; padding:14px 28px; border-radius:8px; text-decoration:none; font-weight:700; font-size:16px; box-shadow: 0 4px 12px rgba(0,112,186,0.3);">{t("sponsor_donate_button")}</a>
+                <a href="{DONATE_LINK}" target="_blank" style="display:inline-block; background:#0070ba; color:white; padding:14px 28px; border-radius:8px; text-decoration:none; font-weight:700; font-size:16px; box-shadow: 0 4px 12px rgba(0,112,186,0.3);">{t("sponsor_donate_button")}</a>
             </div>
         """, unsafe_allow_html=True)
         st.divider()
@@ -1347,7 +1289,6 @@ elif page == "Diventa Sponsor":
                     esito = invia_email(nome_brand, email_ref, corpo)
                     if esito is True:
                         st.success(t("sponsor_form_success"))
-                        track_event("sponsor_form_sent")
                     else:
                         st.error(t("sponsor_form_error", error=esito))
                 else:

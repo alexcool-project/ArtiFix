@@ -23,3 +23,5 @@ _(nessun evento registrato)_
 - **[2026-09-25 20:04:44]** `app.py` — Rollback da `app_v7.4.py`
 - **[2026-09-25 20:04:44]** `translations.py` — Rollback da `translations_v7.4.py`
 - **[2026-09-25 20:04:44]** `requirements.txt` — Rollback da `requirements_v7.4.txt`
+- **[2026-09-26 20:04:45]** `app.py` — Rollback da `app_v7.4.py`
+- **[2026-09-26 20:04:45]** `translations.py` — Rollback da `translations_v7.4.py`
