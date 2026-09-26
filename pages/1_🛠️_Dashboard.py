@@ -3,6 +3,9 @@ ArtiFix — Dashboard stato sistema (B.6)
 Pagina multi-page nativa Streamlit.
 Legge il foglio ArtiFix_Roadmap via Service Account (gspread).
 NON tocca l'app v7.4 in app.py.
+
+Changelog:
+  - v1.1 (26 Set 2026): aggiunto pulsante "Torna all'App ArtiFix" in sidebar
 """
 from __future__ import annotations
 
@@ -35,6 +38,26 @@ STATI_TODO_KW = {"to do", "todo", "da fare", "todo."}
 _FASE_RE = re.compile(r"\b(B\.\d+)\b", re.IGNORECASE)
 
 # ⚠️ NIENTE st.set_page_config qui: c'è già in app.py (pagina principale)
+
+# ============================================================
+# SIDEBAR — Pulsante ritorno all'app principale
+# ============================================================
+with st.sidebar:
+    st.markdown(
+        """
+        <a href="https://artifix.streamlit.app" target="_self"
+           style="display:block; text-align:center; background:#1f77b4;
+                  color:white; padding:12px; border-radius:8px;
+                  text-decoration:none; font-weight:700; font-size:14px;
+                  margin-bottom:20px; box-shadow:0 2px 6px rgba(31,119,180,0.25);">
+            🏠 Torna all'App ArtiFix
+        </a>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("---")
+    st.caption("🛠️ Dashboard Sistema")
+    st.caption("Stato sistema in tempo reale")
 
 # ============================================================
 # GOOGLE SHEETS
