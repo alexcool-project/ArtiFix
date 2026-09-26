@@ -75,27 +75,9 @@ else:
         initial_sidebar_state="expanded"
     )
 
-# --- STATO LINGUA ---
-if 'lang' not in st.session_state:
-    try:
-        st.session_state.lang = detect_browser_language()
-    except Exception:
-        st.session_state.lang = "it"
-
-# --- FUNZIONE HELPER PER TRADUZIONE ---
-def t(key, **kwargs):
-    return get_text(key, st.session_state.lang, **kwargs)
-
-# --- SEO META TAG ---
-st.markdown("""
-<title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
-<meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF) in 3D PDF, STL, OBJ, GLTF e altri formati. Convertitore online gratuito e veloce per ingegneri e progettisti." />
-<meta name="robots" content="index, follow" />
-<meta property="og:title" content="ArtiFix - Convertitore CAD/CAM Universale" />
-<meta property="og:url" content="https://artifix.streamlit.app" />
-""", unsafe_allow_html=True)
-
-# --- CSS MINIMALE E PULITO ---
+# ============================================================
+# CSS GLOBALE
+# ============================================================
 st.markdown("""
 <style>
     .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
@@ -188,6 +170,11 @@ st.markdown("""
         line-height: 1.4;
         font-size: 0.85rem;
     }
+
+    /* ===== NASCONDI VOCE "app" DALLA SIDEBAR MULTIPAGE ===== */
+    [data-testid="stSidebarNav"] ul li:first-child {
+        display: none;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -243,6 +230,26 @@ if 'cookie_consent' not in st.session_state:
         st.session_state.cookie_consent = cookie_controller.get('cookie_consent')
     else:
         st.session_state.cookie_consent = None
+
+# --- STATO LINGUA ---
+if 'lang' not in st.session_state:
+    try:
+        st.session_state.lang = detect_browser_language()
+    except Exception:
+        st.session_state.lang = "it"
+
+# --- FUNZIONE HELPER PER TRADUZIONE ---
+def t(key, **kwargs):
+    return get_text(key, st.session_state.lang, **kwargs)
+
+# --- SEO META TAG ---
+st.markdown("""
+<title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
+<meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF) in 3D PDF, STL, OBJ, GLTF e altri formati. Convertitore online gratuito e veloce per ingegneri e progettisti." />
+<meta name="robots" content="index, follow" />
+<meta property="og:title" content="ArtiFix - Convertitore CAD/CAM Universale" />
+<meta property="og:url" content="https://artifix.streamlit.app" />
+""", unsafe_allow_html=True)
 
 # --- DEFINIZIONE VARIABILI ---
 SUPPORTED_FORMATS = {
@@ -486,19 +493,6 @@ def invia_email(nome, email_utente, messaggio):
 # ============================================================
 
 def render_html_viewer_info(t_func):
-    """
-    Mostra una sezione informativa sull'HTML 3D Viewer.
-
-    Usa le traduzioni IT/EN fornite dal dizionario `translations.py`.
-    Lo stile è coerente con il resto dell'app (bordi blu, sfondo chiaro, icone).
-
-    Parameters
-    ----------
-    t_func : callable
-        Funzione di traduzione `t(key)` che restituisce la stringa tradotta
-        nella lingua corrente.
-    """
-    # --- Intro ---
     st.markdown(f"""
     <div class="html-viewer-intro">
         <h3>{t_func('html_viewer_title')}</h3>
@@ -507,7 +501,6 @@ def render_html_viewer_info(t_func):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Benefici (6 box) ---
     st.markdown(f"""
     <div class="html-viewer-benefits">
         <div class="html-viewer-benefit">
@@ -545,34 +538,18 @@ def render_html_viewer_info(t_func):
 
 
 def render_proprietary_formats_help():
-    """Mostra una tendina (expander) con le note sui formati proprietari.
-
-    Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
-    Sostituisce il precedente box grande sempre visibile.
-    """
     with st.expander(t("notes_expander_title"), expanded=False):
-        # Intro
         st.markdown(t("notes_expander_intro"))
-
         st.markdown("---")
-
-        # Due colonne: supportati vs non supportati
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(t("notes_expander_native"))
         with col2:
             st.markdown(t("notes_expander_not_supported"))
-
         st.markdown("---")
-
-        # Come procedere
         st.markdown(t("notes_expander_howto"))
         st.markdown(t("notes_expander_steps"))
-
-        # Tip
         st.info(t("notes_expander_tip"))
-
-        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO + CLASSE CSS)
         st.markdown(
             f"""
             <div style="text-align: center; margin-top: 12px;">
@@ -586,7 +563,6 @@ def render_proprietary_formats_help():
         )
 
 def is_3d_pdf(file_bytes):
-    """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
     try:
         if not PDF_AVAILABLE:
             return False
@@ -601,7 +577,6 @@ def is_3d_pdf(file_bytes):
 
 
 def extract_3d_from_pdf(file_bytes):
-    """Tenta di estrarre un modello 3D da un PDF con U3D o PRC."""
     try:
         if not FITZ_AVAILABLE:
             return None
@@ -751,21 +726,10 @@ if st.session_state.cookie_consent is None:
 
 # --- DASHBOARD ---
 if page == "Dashboard":
+    from dashboard_page import render_dashboard_page
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
-        st.markdown('<div class="logo-container"><img src="' + LOGO_URL + '" alt="Logo ArtiFix"></div>', unsafe_allow_html=True)
-        st.header(t("dash_header"))
-        cols = st.columns(4)
-        metrics = [("14,280", t("dash_metric_repaired")), ("38,910", t("dash_metric_conversions")), ("50+", t("dash_metric_formats")), ("🟢", t("dash_metric_online"))]
-        for col, (val, label) in zip(cols, metrics):
-            col.markdown(f'<div class="metric-card"><div class="metric-value">{val}</div><div class="metric-label">{label}</div></div>', unsafe_allow_html=True)
-        st.markdown("---")
-        st.subheader(t("dash_supported_formats"))
-        cols = st.columns(4)
-        for idx, (category, info) in enumerate(SUPPORTED_FORMATS.items()):
-            with cols[idx % 4]:
-                st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
-        st.info(t("dash_info_select"))
+        render_dashboard_page(t, st.session_state.lang, SUPPORTED_FORMATS, LOGO_URL)
     with col_side:
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
@@ -787,11 +751,9 @@ elif page == "Viewer 3D":
     with col_main:
         st.header(t("viewer_header"))
 
-        # --- SEZIONE INFORMATIVA HTML 3D VIEWER ---
         render_html_viewer_info(t)
         st.markdown("---")
 
-        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         viewer_file = st.file_uploader(
             t("viewer_upload"),
             type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
@@ -800,7 +762,6 @@ elif page == "Viewer 3D":
         )
 
         if viewer_file:
-            # ✅ Controllo 3D PDF
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
@@ -954,7 +915,6 @@ elif page == "Viewer 3D":
                         """
                         st.components.v1.html(viewer_html, height=580)
 
-                        # --- SEZIONE CONDIVISIONE (v8.0) ---
                         render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
                     st.warning(t("viewer_warning_no_model"))
@@ -971,7 +931,6 @@ elif page == "Converti Formati":
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
 
-        # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
 
         with st.expander(t("convert_expander_matrix")):
@@ -992,7 +951,6 @@ elif page == "Converti Formati":
             """)
             st.caption(t("convert_caption_matrix"))
 
-        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         uploaded_file = st.file_uploader(
             t("convert_upload"),
             type=[ext[1:] for ext in ALL_EXTENSIONS],
