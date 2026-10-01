@@ -22,6 +22,7 @@ TRANSLATIONS = {
         "nav_terms": "📜 Termini di Servizio",
         "nav_donate": "💙 Dona con PayPal",
         "nav_become_sponsor": "🤝 Diventa Sponsor",
+        "nav_youtube": "Canale YouTube",
 
         # --- CONDIVIDI VIEWER 3D (v8.0) ---
         "share_button": "📤 Condividi il file 3D generato",
@@ -403,6 +404,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "nav_terms": "📜 Terms of Service",
         "nav_donate": "💙 Donate with PayPal",
         "nav_become_sponsor": "🤝 Become a Sponsor",
+        "nav_youtube": "YouTube Channel",
 
         # --- SHARE 3D VIEWER (v8.0) ---
         "share_button": "📤 Share the generated 3D file",
