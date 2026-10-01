@@ -37,6 +37,9 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
+# --- LINK CANALE YOUTUBE ---
+YOUTUBE_URL = "https://www.youtube.com/@ArtiFix-Official?sub_confirmation=1"
+
 # --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
@@ -77,7 +80,6 @@ else:
 
 # --- STATO LINGUA (con supporto ?lang= nell'URL, salvato in session_state) ---
 if 'lang' not in st.session_state:
-    # 1. Priorità: query param ?lang= (letto UNA SOLA VOLTA al primo caricamento)
     _url_lang = None
     try:
         _qp = st.query_params.get("lang", None)
@@ -88,7 +90,6 @@ if 'lang' not in st.session_state:
     except Exception:
         pass
 
-    # 2. Se trovato ?lang=, usalo. Altrimenti rileva dal browser.
     if _url_lang:
         st.session_state.lang = _url_lang
     else:
@@ -694,6 +695,33 @@ with st.sidebar:
         f"""
         <a href="{SPONSOR_MAILTO}" style="display:block; text-align:center; background:#fff4e6; color:#c26a00; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px; border:1px solid #ffd9a8;">
             {t("nav_become_sponsor")}
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # --- PULSANTE YOUTUBE (piccolo) ---
+    st.markdown(
+        f"""
+        <a href="{YOUTUBE_URL}"
+           target="_blank"
+           rel="noopener"
+           style="display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  gap:8px;
+                  padding:8px;
+                  background:#ff0000;
+                  color:#ffffff;
+                  border-radius:6px;
+                  text-decoration:none;
+                  font-weight:600;
+                  font-size:13px;
+                  margin-top:8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <span>{t("nav_youtube")}</span>
         </a>
         """,
         unsafe_allow_html=True
