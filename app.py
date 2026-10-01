@@ -37,9 +37,6 @@ LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs
 # --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
-# --- LINK CANALE YOUTUBE ---
-YOUTUBE_URL = "https://www.youtube.com/@ArtiFix-Official?sub_confirmation=1"
-
 # --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
@@ -78,25 +75,12 @@ else:
         initial_sidebar_state="expanded"
     )
 
-# --- STATO LINGUA (con supporto ?lang= nell'URL, salvato in session_state) ---
+# --- STATO LINGUA ---
 if 'lang' not in st.session_state:
-    _url_lang = None
     try:
-        _qp = st.query_params.get("lang", None)
-        if isinstance(_qp, list):
-            _qp = _qp[0] if _qp else None
-        if _qp in ["it", "en"]:
-            _url_lang = _qp
+        st.session_state.lang = detect_browser_language()
     except Exception:
-        pass
-
-    if _url_lang:
-        st.session_state.lang = _url_lang
-    else:
-        try:
-            st.session_state.lang = detect_browser_language()
-        except Exception:
-            st.session_state.lang = "it"
+        st.session_state.lang = "it"
 
 # --- FUNZIONE HELPER PER TRADUZIONE ---
 def t(key, **kwargs):
@@ -133,6 +117,7 @@ st.markdown("""
     .main .block-container { padding-bottom: 80px !important; }
     .lang-selector { padding: 8px 0; margin-bottom: 15px; }
 
+    /* ===== FIX TESTO BIANCO PULSANTE GUIDA ===== */
     a.guide-button, a.guide-button:link, a.guide-button:visited,
     a.guide-button:hover, a.guide-button:active, a.guide-button:focus {
         color: #ffffff !important;
@@ -149,6 +134,7 @@ st.markdown("""
         background: #155a8a !important;
     }
 
+    /* ===== HTML 3D VIEWER INFO SECTION ===== */
     .html-viewer-intro {
         background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
         border-left: 4px solid #1f77b4;
@@ -500,6 +486,19 @@ def invia_email(nome, email_utente, messaggio):
 # ============================================================
 
 def render_html_viewer_info(t_func):
+    """
+    Mostra una sezione informativa sull'HTML 3D Viewer.
+
+    Usa le traduzioni IT/EN fornite dal dizionario `translations.py`.
+    Lo stile è coerente con il resto dell'app (bordi blu, sfondo chiaro, icone).
+
+    Parameters
+    ----------
+    t_func : callable
+        Funzione di traduzione `t(key)` che restituisce la stringa tradotta
+        nella lingua corrente.
+    """
+    # --- Intro ---
     st.markdown(f"""
     <div class="html-viewer-intro">
         <h3>{t_func('html_viewer_title')}</h3>
@@ -508,6 +507,7 @@ def render_html_viewer_info(t_func):
     </div>
     """, unsafe_allow_html=True)
 
+    # --- Benefici (6 box) ---
     st.markdown(f"""
     <div class="html-viewer-benefits">
         <div class="html-viewer-benefit">
@@ -545,18 +545,34 @@ def render_html_viewer_info(t_func):
 
 
 def render_proprietary_formats_help():
+    """Mostra una tendina (expander) con le note sui formati proprietari.
+
+    Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
+    Sostituisce il precedente box grande sempre visibile.
+    """
     with st.expander(t("notes_expander_title"), expanded=False):
+        # Intro
         st.markdown(t("notes_expander_intro"))
+
         st.markdown("---")
+
+        # Due colonne: supportati vs non supportati
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(t("notes_expander_native"))
         with col2:
             st.markdown(t("notes_expander_not_supported"))
+
         st.markdown("---")
+
+        # Come procedere
         st.markdown(t("notes_expander_howto"))
         st.markdown(t("notes_expander_steps"))
+
+        # Tip
         st.info(t("notes_expander_tip"))
+
+        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO + CLASSE CSS)
         st.markdown(
             f"""
             <div style="text-align: center; margin-top: 12px;">
@@ -570,6 +586,7 @@ def render_proprietary_formats_help():
         )
 
 def is_3d_pdf(file_bytes):
+    """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
     try:
         if not PDF_AVAILABLE:
             return False
@@ -584,6 +601,7 @@ def is_3d_pdf(file_bytes):
 
 
 def extract_3d_from_pdf(file_bytes):
+    """Tenta di estrarre un modello 3D da un PDF con U3D o PRC."""
     try:
         if not FITZ_AVAILABLE:
             return None
@@ -700,33 +718,6 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
-    # --- PULSANTE YOUTUBE (piccolo) ---
-    st.markdown(
-        f"""
-        <a href="{YOUTUBE_URL}"
-           target="_blank"
-           rel="noopener"
-           style="display:flex;
-                  align-items:center;
-                  justify-content:center;
-                  gap:8px;
-                  padding:8px;
-                  background:#ff0000;
-                  color:#ffffff;
-                  border-radius:6px;
-                  text-decoration:none;
-                  font-weight:600;
-                  font-size:13px;
-                  margin-top:8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-            </svg>
-            <span>{t("nav_youtube")}</span>
-        </a>
-        """,
-        unsafe_allow_html=True
-    )
-
 # --- LOGICA PAGINE ---
 if st.session_state.page_attuale == "Privacy Policy":
     page = "Privacy Policy"
@@ -796,9 +787,11 @@ elif page == "Viewer 3D":
     with col_main:
         st.header(t("viewer_header"))
 
+        # --- SEZIONE INFORMATIVA HTML 3D VIEWER ---
         render_html_viewer_info(t)
         st.markdown("---")
 
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         viewer_file = st.file_uploader(
             t("viewer_upload"),
             type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
@@ -807,6 +800,7 @@ elif page == "Viewer 3D":
         )
 
         if viewer_file:
+            # ✅ Controllo 3D PDF
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
@@ -960,6 +954,7 @@ elif page == "Viewer 3D":
                         """
                         st.components.v1.html(viewer_html, height=580)
 
+                        # --- SEZIONE CONDIVISIONE (v8.0) ---
                         render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
                     st.warning(t("viewer_warning_no_model"))
@@ -976,6 +971,7 @@ elif page == "Converti Formati":
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
 
+        # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
 
         with st.expander(t("convert_expander_matrix")):
@@ -996,6 +992,7 @@ elif page == "Converti Formati":
             """)
             st.caption(t("convert_caption_matrix"))
 
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         uploaded_file = st.file_uploader(
             t("convert_upload"),
             type=[ext[1:] for ext in ALL_EXTENSIONS],

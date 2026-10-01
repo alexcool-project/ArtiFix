@@ -22,7 +22,6 @@ TRANSLATIONS = {
         "nav_terms": "📜 Termini di Servizio",
         "nav_donate": "💙 Dona con PayPal",
         "nav_become_sponsor": "🤝 Diventa Sponsor",
-        "nav_youtube": "Canale YouTube",
 
         # --- CONDIVIDI VIEWER 3D (v8.0) ---
         "share_button": "📤 Condividi il file 3D generato",
@@ -126,44 +125,6 @@ TRANSLATIONS = {
         "repair_button_repair": "🔧 Ripara",
         "repair_button_download": "📥 Scarica",
         "repair_success": "✅ Riparato!",
-
-        # --- PROCESSI RIPARAZIONE (STEP-BY-STEP) ---
-        "repair_processing_info": "⏱️ **Elaborazione in corso.** Il tempo di riparazione varia in base alla complessità del file (numero di vertici, facce, presenza di errori geometrici). Per file di grandi dimensioni l'operazione può richiedere **diversi minuti**. La pagina potrebbe non aggiornarsi per alcuni istanti, ma il processo è attivo. **Attendere prego.**",
-        "repair_processes_title": "📋 Processi in corso",
-        "repair_step_receive": "📂 Ricezione del file",
-        "repair_step_read_mesh": "📖 Lettura struttura mesh",
-        "repair_step_initial_analysis": "🔍 Analisi iniziale",
-        "repair_step_detect_issues": "🔎 Rilevamento problemi geometrici",
-        "repair_step_repair_mesh": "🔧 Riparazione mesh",
-        "repair_step_final_analysis": "📊 Analisi finale",
-        "repair_step_report": "📄 Generazione report",
-        "repair_status_in_progress": "in corso",
-        "repair_status_done": "completata",
-        "repair_status_failed": "fallita",
-        "repair_read_failed": "❌ Errore durante la lettura del file: {error}",
-        "repair_diagnosis_critical_info": "📋 **Analisi completata** — consulta la diagnosi sopra per capire come procedere.",
-        "repair_diagnosis_warning_success": "✅ **File elaborato con successo** — alcune anomalie minori sono state corrette.",
-        "repair_diagnosis_ok_success": "✅ **File elaborato con successo!** La mesh era già valida e ottimale.",
-        "repair_diagnosis_issues_title": "**🔍 Problemi rilevati:**",
-        "repair_diagnosis_suggestions_header": "💡 Consigli",
-        "repair_diagnosis_details_header": "🔧 Dettagli tecnici",
-        "repair_reportlab_warning": "Libreria 'reportlab' non trovata. Impossibile generare il PDF.",
-
-        # --- STEP LABELS CON CONTEGGI ---
-        "repair_step_receive_done": "✅ 📂 Ricezione del file ({size:.1f} MB)",
-        "repair_step_read_mesh_progress": "🔄 📖 Lettura struttura mesh — in corso (0%)",
-        "repair_step_read_mesh_done": "✅ 📖 Lettura struttura mesh ({vertices:,} vertici, {faces:,} facce)",
-        "repair_step_read_mesh_failed": "❌ 📖 Lettura fallita",
-        "repair_step_initial_analysis_progress": "🔄 🔍 Analisi iniziale — in corso (0%)",
-        "repair_step_initial_analysis_done": "✅ 🔍 Analisi iniziale completata",
-        "repair_step_detect_issues_progress": "🔄 🔎 Rilevamento problemi — in corso (0%)",
-        "repair_step_detect_issues_done": "✅ 🔎 Rilevamento problemi ({count:,} problemi trovati)",
-        "repair_step_repair_mesh_progress": "🔄 🔧 Riparazione mesh — in corso (0%)",
-        "repair_step_repair_mesh_done": "✅ 🔧 Riparazione mesh completata",
-        "repair_step_final_analysis_progress": "🔄 📊 Analisi finale — in corso (0%)",
-        "repair_step_final_analysis_done": "✅ 📊 Analisi finale completata",
-        "repair_step_report_progress": "🔄 📄 Generazione report — in corso (0%)",
-        "repair_step_report_done": "✅ 📄 Report generato",
 
         # --- ERRORI RIPARAZIONE ---
         "repair_error_non_mesh_title": "❌ **Formato non supportato per la riparazione.**",
@@ -404,7 +365,6 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "nav_terms": "📜 Terms of Service",
         "nav_donate": "💙 Donate with PayPal",
         "nav_become_sponsor": "🤝 Become a Sponsor",
-        "nav_youtube": "YouTube Channel",
 
         # --- SHARE 3D VIEWER (v8.0) ---
         "share_button": "📤 Share the generated 3D file",
@@ -508,44 +468,6 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "repair_button_repair": "🔧 Repair",
         "repair_button_download": "📥 Download",
         "repair_success": "✅ Repaired!",
-
-        # --- REPAIR PROCESSES (STEPS) ---
-        "repair_processing_info": "⏱️ **Processing in progress.** Repair time varies based on file complexity (number of vertices, faces, presence of geometric errors). For large files the operation may take **several minutes**. The page may not update for a few moments, but the process is active. **Please wait.**",
-        "repair_processes_title": "📋 Processes in progress",
-        "repair_step_receive": "📂 File reception",
-        "repair_step_read_mesh": "📖 Reading mesh structure",
-        "repair_step_initial_analysis": "🔍 Initial analysis",
-        "repair_step_detect_issues": "🔎 Detecting geometric issues",
-        "repair_step_repair_mesh": "🔧 Mesh repair",
-        "repair_step_final_analysis": "📊 Final analysis",
-        "repair_step_report": "📄 Generating report",
-        "repair_status_in_progress": "in progress",
-        "repair_status_done": "completed",
-        "repair_status_failed": "failed",
-        "repair_read_failed": "❌ Error reading file: {error}",
-        "repair_diagnosis_critical_info": "📋 **Analysis completed** — see the diagnosis above to understand how to proceed.",
-        "repair_diagnosis_warning_success": "✅ **File processed successfully** — some minor anomalies were corrected.",
-        "repair_diagnosis_ok_success": "✅ **File processed successfully!** The mesh was already valid and optimal.",
-        "repair_diagnosis_issues_title": "**🔍 Detected issues:**",
-        "repair_diagnosis_suggestions_header": "💡 Suggestions",
-        "repair_diagnosis_details_header": "🔧 Technical details",
-        "repair_reportlab_warning": "Library 'reportlab' not found. Cannot generate PDF.",
-
-        # --- STEP LABELS WITH COUNTS ---
-        "repair_step_receive_done": "✅ 📂 File reception ({size:.1f} MB)",
-        "repair_step_read_mesh_progress": "🔄 📖 Reading mesh structure — in progress (0%)",
-        "repair_step_read_mesh_done": "✅ 📖 Reading mesh structure ({vertices:,} vertices, {faces:,} faces)",
-        "repair_step_read_mesh_failed": "❌ 📖 Reading failed",
-        "repair_step_initial_analysis_progress": "🔄 🔍 Initial analysis — in progress (0%)",
-        "repair_step_initial_analysis_done": "✅ 🔍 Initial analysis completed",
-        "repair_step_detect_issues_progress": "🔄 🔎 Detecting issues — in progress (0%)",
-        "repair_step_detect_issues_done": "✅ 🔎 Detecting issues ({count:,} issues found)",
-        "repair_step_repair_mesh_progress": "🔄 🔧 Mesh repair — in progress (0%)",
-        "repair_step_repair_mesh_done": "✅ 🔧 Mesh repair completed",
-        "repair_step_final_analysis_progress": "🔄 📊 Final analysis — in progress (0%)",
-        "repair_step_final_analysis_done": "✅ 📊 Final analysis completed",
-        "repair_step_report_progress": "🔄 📄 Generating report — in progress (0%)",
-        "repair_step_report_done": "✅ 📄 Report generated",
 
         # --- REPAIR ERRORS (EN) ---
         "repair_error_non_mesh_title": "❌ **Format not supported for repair.**",
@@ -778,29 +700,15 @@ def get_text(key, lang="it", **kwargs):
             pass
     return text
 
-# Rilevamento lingua: 1) URL ?lang=xx  2) header browser  3) default IT
+# Rilevamento lingua browser
 def detect_browser_language():
     try:
         import streamlit as st
-
-        # --- 1. Priorità: query parameter ?lang=xx nell'URL ---
-        try:
-            query_lang = st.query_params.get("lang", None)
-            if isinstance(query_lang, list):
-                query_lang = query_lang[0] if query_lang else None
-            if query_lang in ["it", "en"]:
-                return query_lang
-        except Exception:
-            pass
-
-        # --- 2. Fallback: header Accept-Language del browser ---
         browser_lang = st.context.headers.get('Accept-Language', 'it')
         if browser_lang:
             primary_lang = browser_lang.split(',')[0].split(';')[0].split('-')[0].lower()
             if primary_lang == 'en':
                 return 'en'
-
-        # --- 3. Default: italiano ---
         return 'it'
     except Exception:
         return 'it'
