@@ -115,47 +115,42 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         progress_bar = st.progress(0, text="0%")
 
         time_info_placeholder = st.empty()
-        time_info_placeholder.info(
-            "⏱️ **Elaborazione in corso.** Il tempo di riparazione varia in base alla complessità del file "
-            "(numero di vertici, facce, presenza di errori geometrici). Per file di grandi dimensioni "
-            "l'operazione può richiedere **diversi minuti**. La pagina potrebbe non aggiornarsi per alcuni istanti, "
-            "ma il processo è attivo. **Attendere prego.**"
-        )
+        time_info_placeholder.info(t("repair_processing_info"))
 
-        st.markdown("##### 📋 Processi in corso")
+        st.markdown(f"##### {t('repair_processes_title')}")
         step_container = st.container()
         step_placeholders = {}
 
         steps = [
-            ("ricezione", "📂 Ricezione del file"),
-            ("lettura", "📖 Lettura struttura mesh"),
-            ("analisi_iniziale", "🔍 Analisi iniziale"),
-            ("rilevamento", "🔎 Rilevamento problemi geometrici"),
-            ("riparazione", "🔧 Riparazione mesh"),
-            ("analisi_finale", "📊 Analisi finale"),
-            ("report", "📄 Generazione report"),
+            ("ricezione", "repair_step_receive"),
+            ("lettura", "repair_step_read_mesh"),
+            ("analisi_iniziale", "repair_step_initial_analysis"),
+            ("rilevamento", "repair_step_detect_issues"),
+            ("riparazione", "repair_step_repair_mesh"),
+            ("analisi_finale", "repair_step_final_analysis"),
+            ("report", "repair_step_report"),
         ]
 
         with step_container:
-            for key, label in steps:
+            for key, label_key in steps:
                 step_placeholders[key] = st.empty()
-                step_placeholders[key].markdown(f"⏸️ {label}")
+                step_placeholders[key].markdown(f"⏸️ {t(label_key)}")
 
         # --- STEP 1: RICEZIONE ---
         progress_bar.progress(5, text="5%")
-        step_placeholders["ricezione"].markdown(f"✅ 📂 Ricezione del file ({file_size_mb:.1f} MB)")
+        step_placeholders["ricezione"].markdown(t("repair_step_receive_done", size=file_size_mb))
         time.sleep(0.3)
 
         # --- STEP 2: LETTURA ---
         progress_bar.progress(15, text="15%")
-        step_placeholders["lettura"].markdown(f"🔄 📖 Lettura struttura mesh — in corso (0%)")
+        step_placeholders["lettura"].markdown(t("repair_step_read_mesh_progress"))
         time.sleep(0.3)
 
         try:
             mesh_before = load_3d_file_func(file_bytes, file_extension)
         except Exception as e:
-            step_placeholders["lettura"].markdown(f"❌ 📖 Lettura fallita")
-            st.error(f"❌ Errore durante la lettura del file: {str(e)}")
+            step_placeholders["lettura"].markdown(t("repair_step_read_mesh_failed"))
+            st.error(t("repair_read_failed", error=str(e)))
             return
 
         is_valid_mesh = (
@@ -169,7 +164,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         )
 
         if not is_valid_mesh:
-            step_placeholders["lettura"].markdown(f"❌ 📖 Lettura fallita")
+            step_placeholders["lettura"].markdown(t("repair_step_read_mesh_failed"))
             st.error(
                 f"{t('repair_error_invalid_mesh_title')}\n\n"
                 f"{t('repair_error_invalid_mesh_desc', ext=file_extension)}\n\n"
@@ -178,22 +173,24 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             return
 
         step_placeholders["lettura"].markdown(
-            f"✅ 📖 Lettura struttura mesh ({len(mesh_before.vertices):,} vertici, {len(mesh_before.faces):,} facce)"
+            t("repair_step_read_mesh_done",
+              vertices=len(mesh_before.vertices),
+              faces=len(mesh_before.faces))
         )
 
         # --- STEP 3: ANALISI INIZIALE ---
         progress_bar.progress(30, text="30%")
-        step_placeholders["analisi_iniziale"].markdown(f"🔄 🔍 Analisi iniziale — in corso (0%)")
+        step_placeholders["analisi_iniziale"].markdown(t("repair_step_initial_analysis_progress"))
         time.sleep(0.3)
 
         report_before = analyze_mesh(mesh_before)
 
-        step_placeholders["analisi_iniziale"].markdown(f"✅ 🔍 Analisi iniziale completata")
+        step_placeholders["analisi_iniziale"].markdown(t("repair_step_initial_analysis_done"))
         progress_bar.progress(40, text="40%")
         time.sleep(0.2)
 
         # --- STEP 4: RILEVAMENTO ---
-        step_placeholders["rilevamento"].markdown(f"🔄 🔎 Rilevamento problemi — in corso (0%)")
+        step_placeholders["rilevamento"].markdown(t("repair_step_detect_issues_progress"))
         time.sleep(0.3)
 
         problemi_totali = (
@@ -204,39 +201,39 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         )
 
         step_placeholders["rilevamento"].markdown(
-            f"✅ 🔎 Rilevamento problemi ({problemi_totali:,} problemi trovati)"
+            t("repair_step_detect_issues_done", count=problemi_totali)
         )
         progress_bar.progress(50, text="50%")
         time.sleep(0.2)
 
         # --- STEP 5: RIPARAZIONE ---
-        step_placeholders["riparazione"].markdown(f"🔄 🔧 Riparazione mesh — in corso (0%)")
+        step_placeholders["riparazione"].markdown(t("repair_step_repair_mesh_progress"))
         time.sleep(0.3)
 
         mesh_after, actions = repair_mesh(mesh_before)
 
-        step_placeholders["riparazione"].markdown(f"✅ 🔧 Riparazione mesh completata")
+        step_placeholders["riparazione"].markdown(t("repair_step_repair_mesh_done"))
         progress_bar.progress(70, text="70%")
         time.sleep(0.3)
 
         # --- STEP 6: ANALISI FINALE ---
-        step_placeholders["analisi_finale"].markdown(f"🔄 📊 Analisi finale — in corso (0%)")
+        step_placeholders["analisi_finale"].markdown(t("repair_step_final_analysis_progress"))
         time.sleep(0.3)
 
         report_after = analyze_mesh(mesh_after)
 
-        step_placeholders["analisi_finale"].markdown(f"✅ 📊 Analisi finale completata")
+        step_placeholders["analisi_finale"].markdown(t("repair_step_final_analysis_done"))
         progress_bar.progress(85, text="85%")
         time.sleep(0.2)
 
         # --- STEP 7: REPORT ---
-        step_placeholders["report"].markdown(f"🔄 📄 Generazione report — in corso (0%)")
+        step_placeholders["report"].markdown(t("repair_step_report_progress"))
         time.sleep(0.3)
 
         report_data = generate_report_data(mesh_before, mesh_after, actions, lang=st.session_state.lang)
         pdf_bytes = generate_pdf_report(report_data, lang=st.session_state.lang)
 
-        step_placeholders["report"].markdown(f"✅ 📄 Report generato")
+        step_placeholders["report"].markdown(t("repair_step_report_done"))
         progress_bar.progress(100, text="100%")
         time.sleep(0.3)
 
@@ -268,7 +265,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             st.markdown(diagnosis['description'])
 
             if diagnosis['issues']:
-                st.markdown("**🔍 Problemi rilevati:**")
+                st.markdown(t("repair_diagnosis_issues_title"))
                 for issue in diagnosis['issues']:
                     st.markdown(f"- {issue}")
 
@@ -289,7 +286,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             st.markdown(diagnosis['description'])
 
             if diagnosis['issues']:
-                st.markdown("**🔍 Problemi rilevati:**")
+                st.markdown(t("repair_diagnosis_issues_title"))
                 for issue in diagnosis['issues']:
                     st.markdown(f"- {issue}")
 
@@ -315,11 +312,11 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     # ============================================================
     if diagnosis:
         if diagnosis['severity'] == 'critical':
-            st.info("📋 **Analisi completata** — consulta la diagnosi sopra per capire come procedere.")
+            st.info(t("repair_diagnosis_critical_info"))
         elif diagnosis['severity'] == 'warning':
-            st.success("✅ **File elaborato con successo** — alcune anomalie minori sono state corrette.")
+            st.success(t("repair_diagnosis_warning_success"))
         else:  # ok
-            st.success("✅ **File elaborato con successo!** La mesh era già valida e ottimale.")
+            st.success(t("repair_diagnosis_ok_success"))
     else:
         st.success(t("repair_success"))
     # ============================================================
@@ -397,4 +394,4 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
                 key="download_report_pdf"
             )
         else:
-            st.warning("Libreria 'reportlab' non trovata. Impossibile generare il PDF.")
+            st.warning(t("repair_reportlab_warning"))
