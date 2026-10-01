@@ -75,6 +75,18 @@ else:
         initial_sidebar_state="expanded"
     )
 
+# ============================================================
+# --- 🔍 DEBUG TEMPORANEO — RIMUOVERE DOPO IL TEST ---
+# ============================================================
+st.warning("🔍 **DEBUG MODE ATTIVO** — rimuovere dopo il test")
+st.write("**1. Query params (nuova API):**", dict(st.query_params))
+try:
+    st.write("**2. Query params (vecchia API):**", st.experimental_get_query_params())
+except Exception as e:
+    st.write("**2. Vecchia API errore:**", str(e))
+st.write("**3. Session state lang (prima):**", st.session_state.get('lang', '❌ non impostato'))
+# ============================================================
+
 # --- STATO LINGUA (con supporto ?lang= nell'URL, salvato in session_state) ---
 if 'lang' not in st.session_state:
     # 1. Priorità: query param ?lang= (letto UNA SOLA VOLTA al primo caricamento)
@@ -109,6 +121,14 @@ if 'lang' not in st.session_state:
             st.session_state.lang = detect_browser_language()
         except Exception:
             st.session_state.lang = "it"
+
+# ============================================================
+# --- 🔍 DEBUG TEMPORANEO — RIMUOVERE DOPO IL TEST ---
+# ============================================================
+st.write("**4. Session state lang (dopo):**", st.session_state.get('lang', '❌ non impostato'))
+st.write("**5. URL lang trovato:**", _url_lang if '_url_lang' in dir() else 'variabile non definita')
+st.markdown("---")
+# ============================================================
 
 # --- FUNZIONE HELPER PER TRADUZIONE ---
 def t(key, **kwargs):
@@ -145,7 +165,6 @@ st.markdown("""
     .main .block-container { padding-bottom: 80px !important; }
     .lang-selector { padding: 8px 0; margin-bottom: 15px; }
 
-    /* ===== FIX TESTO BIANCO PULSANTE GUIDA ===== */
     a.guide-button, a.guide-button:link, a.guide-button:visited,
     a.guide-button:hover, a.guide-button:active, a.guide-button:focus {
         color: #ffffff !important;
@@ -162,7 +181,6 @@ st.markdown("""
         background: #155a8a !important;
     }
 
-    /* ===== HTML 3D VIEWER INFO SECTION ===== */
     .html-viewer-intro {
         background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
         border-left: 4px solid #1f77b4;
@@ -514,19 +532,6 @@ def invia_email(nome, email_utente, messaggio):
 # ============================================================
 
 def render_html_viewer_info(t_func):
-    """
-    Mostra una sezione informativa sull'HTML 3D Viewer.
-
-    Usa le traduzioni IT/EN fornite dal dizionario `translations.py`.
-    Lo stile è coerente con il resto dell'app (bordi blu, sfondo chiaro, icone).
-
-    Parameters
-    ----------
-    t_func : callable
-        Funzione di traduzione `t(key)` che restituisce la stringa tradotta
-        nella lingua corrente.
-    """
-    # --- Intro ---
     st.markdown(f"""
     <div class="html-viewer-intro">
         <h3>{t_func('html_viewer_title')}</h3>
@@ -535,7 +540,6 @@ def render_html_viewer_info(t_func):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Benefici (6 box) ---
     st.markdown(f"""
     <div class="html-viewer-benefits">
         <div class="html-viewer-benefit">
@@ -573,34 +577,18 @@ def render_html_viewer_info(t_func):
 
 
 def render_proprietary_formats_help():
-    """Mostra una tendina (expander) con le note sui formati proprietari.
-
-    Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
-    Sostituisce il precedente box grande sempre visibile.
-    """
     with st.expander(t("notes_expander_title"), expanded=False):
-        # Intro
         st.markdown(t("notes_expander_intro"))
-
         st.markdown("---")
-
-        # Due colonne: supportati vs non supportati
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(t("notes_expander_native"))
         with col2:
             st.markdown(t("notes_expander_not_supported"))
-
         st.markdown("---")
-
-        # Come procedere
         st.markdown(t("notes_expander_howto"))
         st.markdown(t("notes_expander_steps"))
-
-        # Tip
         st.info(t("notes_expander_tip"))
-
-        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO + CLASSE CSS)
         st.markdown(
             f"""
             <div style="text-align: center; margin-top: 12px;">
@@ -614,7 +602,6 @@ def render_proprietary_formats_help():
         )
 
 def is_3d_pdf(file_bytes):
-    """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
     try:
         if not PDF_AVAILABLE:
             return False
@@ -629,7 +616,6 @@ def is_3d_pdf(file_bytes):
 
 
 def extract_3d_from_pdf(file_bytes):
-    """Tenta di estrarre un modello 3D da un PDF con U3D o PRC."""
     try:
         if not FITZ_AVAILABLE:
             return None
@@ -815,11 +801,9 @@ elif page == "Viewer 3D":
     with col_main:
         st.header(t("viewer_header"))
 
-        # --- SEZIONE INFORMATIVA HTML 3D VIEWER ---
         render_html_viewer_info(t)
         st.markdown("---")
 
-        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         viewer_file = st.file_uploader(
             t("viewer_upload"),
             type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
@@ -828,7 +812,6 @@ elif page == "Viewer 3D":
         )
 
         if viewer_file:
-            # ✅ Controllo 3D PDF
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
@@ -982,7 +965,6 @@ elif page == "Viewer 3D":
                         """
                         st.components.v1.html(viewer_html, height=580)
 
-                        # --- SEZIONE CONDIVISIONE (v8.0) ---
                         render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
                     st.warning(t("viewer_warning_no_model"))
@@ -999,7 +981,6 @@ elif page == "Converti Formati":
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
 
-        # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
 
         with st.expander(t("convert_expander_matrix")):
@@ -1020,7 +1001,6 @@ elif page == "Converti Formati":
             """)
             st.caption(t("convert_caption_matrix"))
 
-        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         uploaded_file = st.file_uploader(
             t("convert_upload"),
             type=[ext[1:] for ext in ALL_EXTENSIONS],
