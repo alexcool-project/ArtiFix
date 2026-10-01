@@ -75,12 +75,40 @@ else:
         initial_sidebar_state="expanded"
     )
 
-# --- STATO LINGUA (con supporto ?lang= nell'URL) ---
+# --- STATO LINGUA (con supporto ?lang= nell'URL, salvato in session_state) ---
 if 'lang' not in st.session_state:
+    # 1. Priorità: query param ?lang= (letto UNA SOLA VOLTA al primo caricamento)
+    _url_lang = None
     try:
-        st.session_state.lang = detect_browser_language()
+        _qp = st.query_params.get("lang", None)
+        if isinstance(_qp, list):
+            _qp = _qp[0] if _qp else None
+        if _qp in ["it", "en"]:
+            _url_lang = _qp
     except Exception:
-        st.session_state.lang = "it"
+        pass
+
+    # Fallback: vecchia API (Streamlit < 1.30)
+    if not _url_lang:
+        try:
+            _old = st.experimental_get_query_params()
+            if "lang" in _old:
+                _v = _old["lang"]
+                if isinstance(_v, list):
+                    _v = _v[0] if _v else None
+                if _v in ["it", "en"]:
+                    _url_lang = _v
+        except Exception:
+            pass
+
+    # 2. Se trovato ?lang=, usalo. Altrimenti rileva dal browser.
+    if _url_lang:
+        st.session_state.lang = _url_lang
+    else:
+        try:
+            st.session_state.lang = detect_browser_language()
+        except Exception:
+            st.session_state.lang = "it"
 
 # --- FUNZIONE HELPER PER TRADUZIONE ---
 def t(key, **kwargs):
