@@ -75,18 +75,6 @@ else:
         initial_sidebar_state="expanded"
     )
 
-# ============================================================
-# --- 🔍 DEBUG TEMPORANEO — RIMUOVERE DOPO IL TEST ---
-# ============================================================
-st.warning("🔍 **DEBUG MODE ATTIVO** — rimuovere dopo il test")
-st.write("**1. Query params (nuova API):**", dict(st.query_params))
-try:
-    st.write("**2. Query params (vecchia API):**", st.experimental_get_query_params())
-except Exception as e:
-    st.write("**2. Vecchia API errore:**", str(e))
-st.write("**3. Session state lang (prima):**", st.session_state.get('lang', '❌ non impostato'))
-# ============================================================
-
 # --- STATO LINGUA (con supporto ?lang= nell'URL, salvato in session_state) ---
 if 'lang' not in st.session_state:
     # 1. Priorità: query param ?lang= (letto UNA SOLA VOLTA al primo caricamento)
@@ -100,19 +88,6 @@ if 'lang' not in st.session_state:
     except Exception:
         pass
 
-    # Fallback: vecchia API (Streamlit < 1.30)
-    if not _url_lang:
-        try:
-            _old = st.experimental_get_query_params()
-            if "lang" in _old:
-                _v = _old["lang"]
-                if isinstance(_v, list):
-                    _v = _v[0] if _v else None
-                if _v in ["it", "en"]:
-                    _url_lang = _v
-        except Exception:
-            pass
-
     # 2. Se trovato ?lang=, usalo. Altrimenti rileva dal browser.
     if _url_lang:
         st.session_state.lang = _url_lang
@@ -121,14 +96,6 @@ if 'lang' not in st.session_state:
             st.session_state.lang = detect_browser_language()
         except Exception:
             st.session_state.lang = "it"
-
-# ============================================================
-# --- 🔍 DEBUG TEMPORANEO — RIMUOVERE DOPO IL TEST ---
-# ============================================================
-st.write("**4. Session state lang (dopo):**", st.session_state.get('lang', '❌ non impostato'))
-st.write("**5. URL lang trovato:**", _url_lang if '_url_lang' in dir() else 'variabile non definita')
-st.markdown("---")
-# ============================================================
 
 # --- FUNZIONE HELPER PER TRADUZIONE ---
 def t(key, **kwargs):
