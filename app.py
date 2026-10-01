@@ -75,7 +75,7 @@ else:
         initial_sidebar_state="expanded"
     )
 
-# --- STATO LINGUA ---
+# --- STATO LINGUA (con supporto ?lang= nell'URL) ---
 if 'lang' not in st.session_state:
     try:
         st.session_state.lang = detect_browser_language()

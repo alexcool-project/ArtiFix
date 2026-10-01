@@ -148,7 +148,7 @@ TRANSLATIONS = {
         "repair_diagnosis_details_header": "🔧 Dettagli tecnici",
         "repair_reportlab_warning": "Libreria 'reportlab' non trovata. Impossibile generare il PDF.",
 
-        # --- STEP LABELS CON CONTEGGI (per repair_page.py) ---
+        # --- STEP LABELS CON CONTEGGI ---
         "repair_step_receive_done": "✅ 📂 Ricezione del file ({size:.1f} MB)",
         "repair_step_read_mesh_progress": "🔄 📖 Lettura struttura mesh — in corso (0%)",
         "repair_step_read_mesh_done": "✅ 📖 Lettura struttura mesh ({vertices:,} vertici, {faces:,} facce)",
@@ -529,7 +529,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "repair_diagnosis_details_header": "🔧 Technical details",
         "repair_reportlab_warning": "Library 'reportlab' not found. Cannot generate PDF.",
 
-        # --- STEP LABELS WITH COUNTS (for repair_page.py) ---
+        # --- STEP LABELS WITH COUNTS ---
         "repair_step_receive_done": "✅ 📂 File reception ({size:.1f} MB)",
         "repair_step_read_mesh_progress": "🔄 📖 Reading mesh structure — in progress (0%)",
         "repair_step_read_mesh_done": "✅ 📖 Reading mesh structure ({vertices:,} vertices, {faces:,} faces)",
@@ -776,15 +776,29 @@ def get_text(key, lang="it", **kwargs):
             pass
     return text
 
-# Rilevamento lingua browser
+# Rilevamento lingua: 1) URL ?lang=xx  2) header browser  3) default IT
 def detect_browser_language():
     try:
         import streamlit as st
+
+        # --- 1. Priorità: query parameter ?lang=xx nell'URL ---
+        try:
+            query_lang = st.query_params.get("lang", None)
+            if isinstance(query_lang, list):
+                query_lang = query_lang[0] if query_lang else None
+            if query_lang in ["it", "en"]:
+                return query_lang
+        except Exception:
+            pass
+
+        # --- 2. Fallback: header Accept-Language del browser ---
         browser_lang = st.context.headers.get('Accept-Language', 'it')
         if browser_lang:
             primary_lang = browser_lang.split(',')[0].split(';')[0].split('-')[0].lower()
             if primary_lang == 'en':
                 return 'en'
+
+        # --- 3. Default: italiano ---
         return 'it'
     except Exception:
         return 'it'
