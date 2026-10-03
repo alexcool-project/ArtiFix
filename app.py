@@ -998,7 +998,7 @@ elif page == "Converti Formati":
             file_type, icon = detect_file_type(file_extension)
             st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">{t("convert_file_type", type=file_type, ext=file_extension)}</div></div></div></div>', unsafe_allow_html=True)
 
-            MESH_FORMATS = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off"]
+            MESH_FORMATS = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off", "u3d"]
             VECTOR_FORMATS = ["svg"]
             DOC_FORMATS = ["pdf", "docx", "xlsx"]
             BIM_FORMATS = ["ifc"]
