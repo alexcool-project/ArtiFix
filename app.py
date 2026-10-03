@@ -297,8 +297,31 @@ def detect_file_type(file_extension):
 def load_3d_file(file_bytes, file_extension):
     try:
         file_extension = file_extension.lower().replace('.', '')
+        
+        # --- U3D: conversione in-memory con Aspose.3D FOSS ---
+        if file_extension == 'u3d':
+            try:
+                from aspose.threed import Scene
+                import io
+                
+                # 1. Carica il file U3D da stream con Aspose
+                u3d_stream = io.BytesIO(file_bytes)
+                scene = Scene.from_stream(u3d_stream)
+                
+                # 2. Esporta la scena in GLB (formato che trimesh capisce)
+                glb_stream = io.BytesIO()
+                scene.save(glb_stream, a3d.FileFormat.GLTF_BINARY)
+                glb_bytes = glb_stream.getvalue()
+                
+                # 3. Passa i bytes GLB a trimesh
+                mesh = trimesh.load(io.BytesIO(glb_bytes), file_type='glb')
+                return mesh
+            except Exception:
+                return None
+        # --- FINE BLOCCO U3D ---
+
         format_map = {
-            'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'fbx':'fbx', '3mf':'3mf', 'dae':'dae', 'wrl':'wrl', 'off':'off', 'u3d':'u3d'
+            'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'fbx':'fbx', '3mf':'3mf', 'dae':'dae', 'wrl':'wrl', 'off':'off'
         }
         file_type = format_map.get(file_extension, file_extension)
 
@@ -800,48 +823,6 @@ elif page == "Viewer 3D":
 
         if viewer_file:
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
-
-            # --- DEBUG U3D (temporaneo) ---
-            if file_ext_check == "u3d":
-                with st.expander("🔍 DEBUG u3d-studio (solo per test)", expanded=True):
-                    st.write(f"**File:** `{viewer_file.name}` — **{len(viewer_file.getvalue())} bytes**")
-                    try:
-                        import u3d_studio
-                        st.success("Libreria `u3d_studio` importata ✅")
-
-                        st.write("**Contenuto `dir(u3d_studio)`:**")
-                        st.code(str(dir(u3d_studio)))
-
-                        import inspect
-                        st.write("**Firme funzioni:**")
-                        funcs = []
-                        for name in dir(u3d_studio):
-                            if not name.startswith('_'):
-                                obj = getattr(u3d_studio, name)
-                                if callable(obj):
-                                    try:
-                                        funcs.append(f"{name}{inspect.signature(obj)}")
-                                    except Exception:
-                                        funcs.append(f"{name} (firma non leggibile)")
-                                else:
-                                    funcs.append(f"{name} = {type(obj).__name__}")
-                        st.code("\n".join(funcs) if funcs else "Nessuna funzione trovata")
-
-                        st.write("**Test funzioni di unpack:**")
-                        test_data = viewer_file.getvalue()
-                        for func_name in ['unpack', 'load', 'parse', 'read', 'open', 'decode']:
-                            if hasattr(u3d_studio, func_name):
-                                st.write(f"--- `u3d_studio.{func_name}()` ---")
-                                try:
-                                    result = getattr(u3d_studio, func_name)(test_data)
-                                    st.write(f"Tipo: `{type(result)}`")
-                                    st.write(f"Contenuto: `{result}`")
-                                except Exception as e:
-                                    st.error(f"Errore: {e}")
-                    except Exception as e:
-                        st.error(f"Errore import `u3d_studio`: {e}")
-            # --- FINE DEBUG U3D ---
-
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
                 if not is_3d_pdf(file_bytes_check):
