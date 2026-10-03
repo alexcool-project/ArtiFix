@@ -117,7 +117,6 @@ st.markdown("""
     .main .block-container { padding-bottom: 80px !important; }
     .lang-selector { padding: 8px 0; margin-bottom: 15px; }
 
-    /* ===== FIX TESTO BIANCO PULSANTE GUIDA ===== */
     a.guide-button, a.guide-button:link, a.guide-button:visited,
     a.guide-button:hover, a.guide-button:active, a.guide-button:focus {
         color: #ffffff !important;
@@ -134,7 +133,6 @@ st.markdown("""
         background: #155a8a !important;
     }
 
-    /* ===== HTML 3D VIEWER INFO SECTION ===== */
     .html-viewer-intro {
         background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
         border-left: 4px solid #1f77b4;
@@ -388,6 +386,35 @@ def convert_mesh(mesh, target_format):
             return None
     except Exception:
         return None
+def convert_pdf_to_pdfa(pdf_bytes):
+    """
+    Converte un PDF standard in PDF/A-2b usando pdftopdfa.
+    """
+    try:
+        from pdftopdfa import convert_to_pdfa
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp_in:
+            tmp_in.write(pdf_bytes)
+            tmp_in_path = tmp_in.name
+
+        tmp_out_path = tmp_in_path.replace('.pdf', '_pdfa.pdf')
+
+        convert_to_pdfa(
+            input_path=tmp_in_path,
+            output_path=tmp_out_path,
+            level="2b"
+        )
+
+        with open(tmp_out_path, 'rb') as f:
+            pdfa_bytes = f.read()
+
+        os.unlink(tmp_in_path)
+        os.unlink(tmp_out_path)
+
+        return pdfa_bytes
+    except Exception:
+        return None
 
 def process_file(file_bytes, file_name):
     file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
@@ -486,19 +513,6 @@ def invia_email(nome, email_utente, messaggio):
 # ============================================================
 
 def render_html_viewer_info(t_func):
-    """
-    Mostra una sezione informativa sull'HTML 3D Viewer.
-
-    Usa le traduzioni IT/EN fornite dal dizionario `translations.py`.
-    Lo stile è coerente con il resto dell'app (bordi blu, sfondo chiaro, icone).
-
-    Parameters
-    ----------
-    t_func : callable
-        Funzione di traduzione `t(key)` che restituisce la stringa tradotta
-        nella lingua corrente.
-    """
-    # --- Intro ---
     st.markdown(f"""
     <div class="html-viewer-intro">
         <h3>{t_func('html_viewer_title')}</h3>
@@ -507,7 +521,6 @@ def render_html_viewer_info(t_func):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Benefici (6 box) ---
     st.markdown(f"""
     <div class="html-viewer-benefits">
         <div class="html-viewer-benefit">
@@ -545,34 +558,18 @@ def render_html_viewer_info(t_func):
 
 
 def render_proprietary_formats_help():
-    """Mostra una tendina (expander) con le note sui formati proprietari.
-
-    Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
-    Sostituisce il precedente box grande sempre visibile.
-    """
     with st.expander(t("notes_expander_title"), expanded=False):
-        # Intro
         st.markdown(t("notes_expander_intro"))
-
         st.markdown("---")
-
-        # Due colonne: supportati vs non supportati
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(t("notes_expander_native"))
         with col2:
             st.markdown(t("notes_expander_not_supported"))
-
         st.markdown("---")
-
-        # Come procedere
         st.markdown(t("notes_expander_howto"))
         st.markdown(t("notes_expander_steps"))
-
-        # Tip
         st.info(t("notes_expander_tip"))
-
-        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO + CLASSE CSS)
         st.markdown(
             f"""
             <div style="text-align: center; margin-top: 12px;">
@@ -586,7 +583,6 @@ def render_proprietary_formats_help():
         )
 
 def is_3d_pdf(file_bytes):
-    """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
     try:
         if not PDF_AVAILABLE:
             return False
@@ -601,7 +597,6 @@ def is_3d_pdf(file_bytes):
 
 
 def extract_3d_from_pdf(file_bytes):
-    """Tenta di estrarre un modello 3D da un PDF con U3D o PRC."""
     try:
         if not FITZ_AVAILABLE:
             return None
@@ -787,11 +782,9 @@ elif page == "Viewer 3D":
     with col_main:
         st.header(t("viewer_header"))
 
-        # --- SEZIONE INFORMATIVA HTML 3D VIEWER ---
         render_html_viewer_info(t)
         st.markdown("---")
 
-        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         viewer_file = st.file_uploader(
             t("viewer_upload"),
             type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
@@ -800,7 +793,6 @@ elif page == "Viewer 3D":
         )
 
         if viewer_file:
-            # ✅ Controllo 3D PDF
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
@@ -954,7 +946,6 @@ elif page == "Viewer 3D":
                         """
                         st.components.v1.html(viewer_html, height=580)
 
-                        # --- SEZIONE CONDIVISIONE (v8.0) ---
                         render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
                     st.warning(t("viewer_warning_no_model"))
@@ -971,7 +962,6 @@ elif page == "Converti Formati":
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
 
-        # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
 
         with st.expander(t("convert_expander_matrix")):
@@ -992,7 +982,6 @@ elif page == "Converti Formati":
             """)
             st.caption(t("convert_caption_matrix"))
 
-        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         uploaded_file = st.file_uploader(
             t("convert_upload"),
             type=[ext[1:] for ext in ALL_EXTENSIONS],
@@ -1159,22 +1148,46 @@ elif page == "Converti Formati":
 
             elif file_extension == "pdf":
                 st.info("📄 **PDF rilevato** — questo è un formato documento.")
-                is_3d = is_3d_pdf(file_bytes)
-                if is_3d:
-                    st.success("🎯 **3D PDF rilevato!** Questo PDF contiene un modello 3D.")
-                    if FITZ_AVAILABLE:
-                        st.info("💡 Libreria `PyMuPDF` disponibile. Estrazione 3D in sviluppo.")
-                else:
-                    st.warning("⚠️ **PDF standard (non 3D)**: non contiene un modello 3D incorporato.")
-                    with st.expander("📖 Come creare un 3D PDF", expanded=True):
-                        st.markdown(t("pdf_no_3d_howto_steps"))
-                    st.info(t("pdf_no_3d_alternative"))
+
                 if PDF_AVAILABLE:
                     try:
                         pdf_reader = PdfReader(io.BytesIO(file_bytes))
                         st.metric("Pagine", len(pdf_reader.pages))
                     except Exception:
                         pass
+
+                st.markdown("---")
+                st.markdown("### 📄 Converti in PDF/A")
+                st.caption("Il formato PDF/A è ideale per l'archiviazione a lungo termine (ISO 19005).")
+
+                if st.button("🔄 Converti in PDF/A", type="primary", use_container_width=True):
+                    with st.spinner("Conversione in PDF/A in corso..."):
+                        pdfa_bytes = convert_pdf_to_pdfa(file_bytes)
+
+                        if pdfa_bytes:
+                            st.success("✅ **PDF/A generato!**")
+
+                            original_size = len(file_bytes) / 1024
+                            pdfa_size = len(pdfa_bytes) / 1024
+                            delta_size = pdfa_size - original_size
+
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.metric("Originale", f"{original_size:.1f} KB")
+                            with col2:
+                                st.metric("PDF/A", f"{pdfa_size:.1f} KB", delta=f"{delta_size:+.1f} KB")
+
+                            original_name = os.path.splitext(file_name)[0]
+                            st.download_button(
+                                label="📥 Scarica PDF/A",
+                                data=pdfa_bytes,
+                                file_name=f"{original_name}_PDFA.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
+                        else:
+                            st.error("❌ Conversione fallita. Il PDF potrebbe essere protetto, corrotto o contenere elementi non supportati.")
+                            st.info("💡 Suggerimento: prova con un PDF non protetto da password.")
 
             elif file_extension == "docx":
                 st.info("📝 **DOCX rilevato** — documento Word.")
