@@ -52,4 +52,4 @@ qrcode[pil]>=8.0
 mesh2u3d @ git+https://github.com/alexcool-project/mesh2u3d.git@666be25
 
 # --- PDF/A conversion ---
-pdftopdfa>=0.9.0
+pikepdf>=8.0.0
