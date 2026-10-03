@@ -1015,11 +1015,18 @@ elif page == "Converti Formati":
 
                 if not target_options:
                     st.warning(t("convert_warning_no_target"))
-                    st.info("💡 **Suggerimento:** usa il **Viewer 3D** di ArtiFix per visualizzare questo modello direttamente nel browser, senza convertirlo.")
-                    if st.button("🖥️ Apri Viewer 3D", type="primary", use_container_width=True):
-                        st.session_state.page_attuale = "Viewer 3D"
-                        st.session_state.force_nav = True
-                        st.rerun()
+                    if file_extension == "u3d":
+                        st.info("ℹ️ **Il formato U3D non è supportato per la conversione diretta.** Per visualizzarlo e condividerlo con il **Viewer 3D** di ArtiFix, esporta il modello in **STL**, **OBJ** o **DAE** dal tuo software di progettazione, poi caricalo qui.")
+                        if st.button("🖥️ Vai al Viewer 3D", type="primary", use_container_width=True):
+                            st.session_state.page_attuale = "Viewer 3D"
+                            st.session_state.force_nav = True
+                            st.rerun()
+                    else:
+                        st.info("💡 **Suggerimento:** usa il **Viewer 3D** di ArtiFix per visualizzare questo modello direttamente nel browser, senza convertirlo.")
+                        if st.button("🖥️ Apri Viewer 3D", type="primary", use_container_width=True):
+                            st.session_state.page_attuale = "Viewer 3D"
+                            st.session_state.force_nav = True
+                            st.rerun()
                 else:
                     target_selected = st.selectbox(t("convert_target_format"), target_options)
                     target_ext = target_selected.split(".")[1].replace(")", "").strip()
