@@ -1009,7 +1009,11 @@ elif page == "Converti Formati":
                 target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
 
                 if not target_options:
-                    st.warning(t("convert_warning_no_target"))
+    st.warning(t("convert_warning_no_target"))
+    st.info("💡 **Suggerimento:** usa il **Viewer 3D** di ArtiFix per visualizzare questo modello direttamente nel browser, senza convertirlo.")
+    if st.button("🖥️ Apri Viewer 3D", type="primary", use_container_width=True):
+        st.session_state.page_attuale = "Viewer 3D"
+        st.rerun()
                 else:
                     target_selected = st.selectbox(t("convert_target_format"), target_options)
                     target_ext = target_selected.split(".")[1].replace(")", "").strip()
