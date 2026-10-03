@@ -1061,20 +1061,37 @@ elif page == "Converti Formati":
                             st.error(t("convert_error_load"))
 
                     st.markdown("---")
+
+                    # Chiave univoca per questa sessione/file
+                    preview_key = f"preview_{file_name}_{file_extension}"
+
+                    # Inizializza stato anteprima
+                    if "preview_html" not in st.session_state:
+                        st.session_state.preview_html = None
+                    if "preview_file_key" not in st.session_state:
+                        st.session_state.preview_file_key = None
+
+                    # Se è cambiato il file, resetta l'anteprima
+                    if st.session_state.preview_file_key != preview_key:
+                        st.session_state.preview_html = None
+                        st.session_state.preview_file_key = preview_key
+
                     if st.button(t("convert_button_preview")):
-                        # Barra di progresso per l'anteprima
+                        # Reset dell'anteprima precedente
+                        st.session_state.preview_html = None
+
                         preview_progress = st.progress(0)
                         preview_status = st.empty()
 
                         preview_status.text(t("preview_status_loading"))
-                        preview_progress.progress(15)
-                        time.sleep(0.2)
+                        preview_progress.progress(10)
+                        time.sleep(0.3)
 
                         mesh_preview = load_3d_file(file_bytes, file_extension)
 
                         preview_status.text(t("preview_status_optimizing"))
-                        preview_progress.progress(45)
-                        time.sleep(0.2)
+                        preview_progress.progress(35)
+                        time.sleep(0.3)
 
                         if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
                             try:
@@ -1086,8 +1103,8 @@ elif page == "Converti Formati":
                                 pass
 
                             preview_status.text(t("preview_status_geometry"))
-                            preview_progress.progress(75)
-                            time.sleep(0.2)
+                            preview_progress.progress(65)
+                            time.sleep(0.3)
 
                             if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
                                 preview_progress.empty()
@@ -1109,12 +1126,10 @@ elif page == "Converti Formati":
                                 mesh_json = json.dumps(mesh_data)
 
                                 preview_status.text(t("preview_status_rendering"))
-                                preview_progress.progress(100)
+                                preview_progress.progress(90)
                                 time.sleep(0.3)
 
-                                preview_progress.empty()
-                                preview_status.empty()
-
+                                # Costruisci l'HTML
                                 viewer_html = """
                                 <html><head><style>body{margin:0;overflow:hidden;background:#f0f2f6;}#c{width:100%;height:400px;}</style>
                                 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1170,11 +1185,29 @@ elif page == "Converti Formati":
                                 });
                                 </script></body></html>
                                 """
-                                st.components.v1.html(viewer_html, height=420)
+
+                                # Salva in session_state
+                                st.session_state.preview_html = viewer_html
+
+                                # Completa la barra
+                                preview_status.text(t("preview_status_rendering"))
+                                preview_progress.progress(100)
+                                time.sleep(0.5)
+
+                                # Rimuovi barra e status
+                                preview_progress.empty()
+                                preview_status.empty()
+
+                                # Forza rerun per far persistere il viewer
+                                st.rerun()
                         else:
                             preview_progress.empty()
                             preview_status.empty()
                             st.warning(t("convert_warning_no_preview"))
+
+                    # Mostra il viewer persistente (fuori dal blocco if del bottone)
+                    if st.session_state.preview_html is not None:
+                        st.components.v1.html(st.session_state.preview_html, height=420)
 
             elif file_extension == "svg":
                 st.info("🎨 **SVG rilevato** — questo è un formato vettoriale, non una mesh 3D.")
