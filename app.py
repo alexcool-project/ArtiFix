@@ -1062,8 +1062,20 @@ elif page == "Converti Formati":
 
                     st.markdown("---")
                     if st.button(t("convert_button_preview")):
-                        st.info(t("convert_info_preview"))
+                        # Barra di progresso per l'anteprima
+                        preview_progress = st.progress(0)
+                        preview_status = st.empty()
+
+                        preview_status.text(t("preview_status_loading"))
+                        preview_progress.progress(15)
+                        time.sleep(0.2)
+
                         mesh_preview = load_3d_file(file_bytes, file_extension)
+
+                        preview_status.text(t("preview_status_optimizing"))
+                        preview_progress.progress(45)
+                        time.sleep(0.2)
+
                         if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
                             try:
                                 mesh_preview.merge_vertices()
@@ -1073,7 +1085,13 @@ elif page == "Converti Formati":
                             except Exception:
                                 pass
 
+                            preview_status.text(t("preview_status_geometry"))
+                            preview_progress.progress(75)
+                            time.sleep(0.2)
+
                             if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
+                                preview_progress.empty()
+                                preview_status.empty()
                                 st.error(t("viewer_error_processing"))
                             else:
                                 vp = mesh_preview.vertices.copy()
@@ -1089,6 +1107,14 @@ elif page == "Converti Formati":
                                 vp[:, 2] -= (min_z + max_z) / 2
                                 mesh_data = {"vertices": vp.tolist(), "faces": mesh_preview.faces.tolist()}
                                 mesh_json = json.dumps(mesh_data)
+
+                                preview_status.text(t("preview_status_rendering"))
+                                preview_progress.progress(100)
+                                time.sleep(0.3)
+
+                                preview_progress.empty()
+                                preview_status.empty()
+
                                 viewer_html = """
                                 <html><head><style>body{margin:0;overflow:hidden;background:#f0f2f6;}#c{width:100%;height:400px;}</style>
                                 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1146,6 +1172,8 @@ elif page == "Converti Formati":
                                 """
                                 st.components.v1.html(viewer_html, height=420)
                         else:
+                            preview_progress.empty()
+                            preview_status.empty()
                             st.warning(t("convert_warning_no_preview"))
 
             elif file_extension == "svg":
