@@ -800,6 +800,48 @@ elif page == "Viewer 3D":
 
         if viewer_file:
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
+
+            # --- DEBUG U3D (temporaneo) ---
+            if file_ext_check == "u3d":
+                with st.expander("🔍 DEBUG u3d-studio (solo per test)", expanded=True):
+                    st.write(f"**File:** `{viewer_file.name}` — **{len(viewer_file.getvalue())} bytes**")
+                    try:
+                        import u3d_studio
+                        st.success("Libreria `u3d_studio` importata ✅")
+
+                        st.write("**Contenuto `dir(u3d_studio)`:**")
+                        st.code(str(dir(u3d_studio)))
+
+                        import inspect
+                        st.write("**Firme funzioni:**")
+                        funcs = []
+                        for name in dir(u3d_studio):
+                            if not name.startswith('_'):
+                                obj = getattr(u3d_studio, name)
+                                if callable(obj):
+                                    try:
+                                        funcs.append(f"{name}{inspect.signature(obj)}")
+                                    except Exception:
+                                        funcs.append(f"{name} (firma non leggibile)")
+                                else:
+                                    funcs.append(f"{name} = {type(obj).__name__}")
+                        st.code("\n".join(funcs) if funcs else "Nessuna funzione trovata")
+
+                        st.write("**Test funzioni di unpack:**")
+                        test_data = viewer_file.getvalue()
+                        for func_name in ['unpack', 'load', 'parse', 'read', 'open', 'decode']:
+                            if hasattr(u3d_studio, func_name):
+                                st.write(f"--- `u3d_studio.{func_name}()` ---")
+                                try:
+                                    result = getattr(u3d_studio, func_name)(test_data)
+                                    st.write(f"Tipo: `{type(result)}`")
+                                    st.write(f"Contenuto: `{result}`")
+                                except Exception as e:
+                                    st.error(f"Errore: {e}")
+                    except Exception as e:
+                        st.error(f"Errore import `u3d_studio`: {e}")
+            # --- FINE DEBUG U3D ---
+
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
                 if not is_3d_pdf(file_bytes_check):
