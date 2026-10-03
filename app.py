@@ -1194,12 +1194,12 @@ elif page == "Converti Formati":
                                 # Salva in session_state
                                 st.session_state.preview_html = viewer_html
 
-                                # Completa la barra
+                                # Completa la barra e mantienila visibile 1s
                                 preview_status.text(t("preview_status_rendering"))
                                 preview_progress.progress(100)
-                                time.sleep(0.5)
+                                time.sleep(1.0)
 
-                                # Rimuovi barra e status
+                                # Svuota barra e status
                                 preview_progress.empty()
                                 preview_status.empty()
 
