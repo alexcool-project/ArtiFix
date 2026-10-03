@@ -212,15 +212,15 @@ def render_sponsor_band(lang="it"):
             mask-image: linear-gradient(
                 to bottom,
                 transparent 0%,
-                #000 8%,
-                #000 92%,
+                #000 2%,
+                #000 98%,
                 transparent 100%
             );
             -webkit-mask-image: linear-gradient(
                 to bottom,
                 transparent 0%,
-                #000 8%,
-                #000 92%,
+                #000 2%,
+                #000 98%,
                 transparent 100%
             );
         }}
