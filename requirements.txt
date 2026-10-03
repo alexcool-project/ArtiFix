@@ -44,7 +44,6 @@ trimesh[all]
 PyPDF2
 pymeshlab
 reportlab
-aspose-3d-foss
 
 # --- mesh2u3d: libreria per viewer HTML 3D, PRC e U3D condivisibile ---
 PyGithub>=2.5.0
