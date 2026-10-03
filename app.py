@@ -793,7 +793,7 @@ elif page == "Viewer 3D":
 
         viewer_file = st.file_uploader(
             t("viewer_upload"),
-            type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
+            type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","pdf"],
             key=f"viewer_{st.session_state.lang}",
             help=t("viewer_upload_hint")
         )
