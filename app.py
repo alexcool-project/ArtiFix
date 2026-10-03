@@ -666,6 +666,11 @@ with st.sidebar:
 
         nav_key = f"navigation_{st.session_state.lang}"
 
+        # Se un pulsante esterno ha forzato la navigazione, sincronizza il radio
+        if st.session_state.get("force_nav", False):
+            st.session_state[nav_key] = st.session_state.page_attuale
+            st.session_state.force_nav = False
+
         page = st.radio(
             t("sidebar_navigation"),
             PAGE_ORDER,
@@ -1013,6 +1018,7 @@ elif page == "Converti Formati":
                     st.info("💡 **Suggerimento:** usa il **Viewer 3D** di ArtiFix per visualizzare questo modello direttamente nel browser, senza convertirlo.")
                     if st.button("🖥️ Apri Viewer 3D", type="primary", use_container_width=True):
                         st.session_state.page_attuale = "Viewer 3D"
+                        st.session_state.force_nav = True
                         st.rerun()
                 else:
                     target_selected = st.selectbox(t("convert_target_format"), target_options)
