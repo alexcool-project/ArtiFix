@@ -386,35 +386,36 @@ def convert_mesh(mesh, target_format):
             return None
     except Exception:
         return None
+
+
 def convert_pdf_to_pdfa(pdf_bytes):
     """
-    Converte un PDF standard in PDF/A-2b usando pdftopdfa.
+    Converte un PDF standard in PDF/A-2b usando pikepdf.
+    Versione light: metadata PDF/A + linearizzazione.
     """
     try:
-        from pdftopdfa import convert_to_pdfa
-        import tempfile
+        import pikepdf
+        from pikepdf import Pdf
 
-        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp_in:
-            tmp_in.write(pdf_bytes)
-            tmp_in_path = tmp_in.name
+        pdf = Pdf.open(io.BytesIO(pdf_bytes))
 
-        tmp_out_path = tmp_in_path.replace('.pdf', '_pdfa.pdf')
+        with pdf.open_metadata() as meta:
+            meta['pdfaid:part'] = '2'
+            meta['pdfaid:conformance'] = 'B'
 
-        convert_to_pdfa(
-            input_path=tmp_in_path,
-            output_path=tmp_out_path,
-            level="2b"
+        output = io.BytesIO()
+        pdf.save(
+            output,
+            linearize=True,
+            compress_streams=True,
+            object_stream_mode=pikepdf.ObjectStreamMode.generate
         )
+        pdf.close()
 
-        with open(tmp_out_path, 'rb') as f:
-            pdfa_bytes = f.read()
-
-        os.unlink(tmp_in_path)
-        os.unlink(tmp_out_path)
-
-        return pdfa_bytes
+        return output.getvalue()
     except Exception:
         return None
+
 
 def process_file(file_bytes, file_name):
     file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
@@ -506,7 +507,7 @@ def invia_email(nome, email_utente, messaggio):
         return True
     except Exception as e:
         return str(e)
-
+    
 
 # ============================================================
 # FUNZIONI HELPER PER FORMATI PROPRIETARI, 3D PDF E HTML VIEWER
