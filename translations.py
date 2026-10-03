@@ -176,7 +176,7 @@ TRANSLATIONS = {
         # --- VIEWER 3D ---
         "viewer_header": "🖥️ Viewer 3D",
         "viewer_upload": "Carica modello 3D",
-        "viewer_upload_hint": "💡 **Formati supportati:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, **3D PDF** (il file PDF deve contenere un modello 3D incorporato in formato **.u3d**).",
+        "viewer_upload_hint": "💡 **Formati supportati:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, **3D PDF** (il file PDF deve contenere un modello 3D incorporato in formato **.u3d**).",
         "viewer_status_loading": "Caricamento del modello... (30%)",
         "viewer_status_processing": "Elaborazione vertici e facce... (60%)",
         "viewer_status_building": "Costruzione della vista 3D... (100%)",
@@ -226,6 +226,12 @@ TRANSLATIONS = {
         "convert_warning_no_target": "⚠️ Nessun formato di destinazione disponibile per questo file.",
         "convert_warning_no_preview": "⚠️ Impossibile caricare il modello per l'anteprima. Assicurati che il file sia un modello 3D valido.",
         "convert_file_type": "Tipo: {type} | Estensione: .{ext}",
+
+        # --- MESSAGGI DI STATO ANTEPRIMA (BARRA DI PROGRESSO) ---
+        "preview_status_loading": "🔄 Caricamento modello...",
+        "preview_status_optimizing": "🔧 Ottimizzazione mesh...",
+        "preview_status_geometry": "📐 Calcolo geometria...",
+        "preview_status_rendering": "🎨 Rendering anteprima...",
 
         # --- PROGETTO ARTIFIX ---
         "project_header": "🚀 Progetto ArtiFix",
@@ -519,7 +525,7 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         # --- 3D VIEWER (EN) ---
         "viewer_header": "🖥️ 3D Viewer",
         "viewer_upload": "Upload 3D model",
-        "viewer_upload_hint": "💡 **Supported formats:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, U3D, **3D PDF** (the PDF file must contain an embedded 3D model in **.u3d** format).",
+        "viewer_upload_hint": "💡 **Supported formats:** STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, **3D PDF** (the PDF file must contain an embedded 3D model in **.u3d** format).",
         "viewer_status_loading": "Loading model... (30%)",
         "viewer_status_processing": "Processing vertices and faces... (60%)",
         "viewer_status_building": "Building 3D view... (100%)",
@@ -569,6 +575,12 @@ La presente Cookie Policy può essere soggetta ad aggiornamenti.""",
         "convert_warning_no_target": "⚠️ No target format available for this file.",
         "convert_warning_no_preview": "⚠️ Unable to load model for preview. Make sure the file is a valid 3D model.",
         "convert_file_type": "Type: {type} | Extension: .{ext}",
+
+        # --- PREVIEW STATUS MESSAGES (PROGRESS BAR) ---
+        "preview_status_loading": "🔄 Loading model...",
+        "preview_status_optimizing": "🔧 Optimizing mesh...",
+        "preview_status_geometry": "📐 Computing geometry...",
+        "preview_status_rendering": "🎨 Rendering preview...",
 
         # --- ARTIFIX PROJECT (EN) ---
         "project_header": "🚀 ArtiFix Project",
