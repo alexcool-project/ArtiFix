@@ -1062,14 +1062,19 @@ elif page == "Converti Formati":
 
                     st.markdown("---")
 
-                    # Chiave univoca per questa sessione/file
-                    preview_key = f"preview_{file_name}_{file_extension}"
+                    # Chiave univoca per questa sessione/file/lingua
+                    preview_key = f"preview_{file_name}_{file_extension}_{st.session_state.lang}"
 
                     # Inizializza stato anteprima
                     if "preview_html" not in st.session_state:
                         st.session_state.preview_html = None
                     if "preview_file_key" not in st.session_state:
                         st.session_state.preview_file_key = None
+
+                    # Reset anteprima al cambio lingua
+                    if st.session_state.get("preview_lang") != st.session_state.lang:
+                        st.session_state.preview_html = None
+                        st.session_state.preview_lang = st.session_state.lang
 
                     # Se è cambiato il file, resetta l'anteprima
                     if st.session_state.preview_file_key != preview_key:
