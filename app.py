@@ -297,31 +297,8 @@ def detect_file_type(file_extension):
 def load_3d_file(file_bytes, file_extension):
     try:
         file_extension = file_extension.lower().replace('.', '')
-        
-        # --- U3D: conversione in-memory con Aspose.3D FOSS ---
-        if file_extension == 'u3d':
-            try:
-                from aspose.threed import Scene
-                import io
-                
-                # 1. Carica il file U3D da stream con Aspose
-                u3d_stream = io.BytesIO(file_bytes)
-                scene = Scene.from_stream(u3d_stream)
-                
-                # 2. Esporta la scena in GLB (formato che trimesh capisce)
-                glb_stream = io.BytesIO()
-                scene.save(glb_stream, a3d.FileFormat.GLTF_BINARY)
-                glb_bytes = glb_stream.getvalue()
-                
-                # 3. Passa i bytes GLB a trimesh
-                mesh = trimesh.load(io.BytesIO(glb_bytes), file_type='glb')
-                return mesh
-            except Exception:
-                return None
-        # --- FINE BLOCCO U3D ---
-
         format_map = {
-            'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'fbx':'fbx', '3mf':'3mf', 'dae':'dae', 'wrl':'wrl', 'off':'off'
+            'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'fbx':'fbx', '3mf':'3mf', 'dae':'dae', 'wrl':'wrl', 'off':'off', 'u3d':'u3d'
         }
         file_type = format_map.get(file_extension, file_extension)
 
