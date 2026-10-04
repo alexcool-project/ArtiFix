@@ -117,6 +117,7 @@ st.markdown("""
     .main .block-container { padding-bottom: 80px !important; }
     .lang-selector { padding: 8px 0; margin-bottom: 15px; }
 
+    /* ===== FIX TESTO BIANCO PULSANTE GUIDA ===== */
     a.guide-button, a.guide-button:link, a.guide-button:visited,
     a.guide-button:hover, a.guide-button:active, a.guide-button:focus {
         color: #ffffff !important;
@@ -133,6 +134,7 @@ st.markdown("""
         background: #155a8a !important;
     }
 
+    /* ===== HTML 3D VIEWER INFO SECTION ===== */
     .html-viewer-intro {
         background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
         border-left: 4px solid #1f77b4;
@@ -387,36 +389,6 @@ def convert_mesh(mesh, target_format):
     except Exception:
         return None
 
-
-def convert_pdf_to_pdfa(pdf_bytes):
-    """
-    Converte un PDF standard in PDF/A-2b usando pikepdf.
-    Versione light: metadata PDF/A + linearizzazione.
-    """
-    try:
-        import pikepdf
-        from pikepdf import Pdf
-
-        pdf = Pdf.open(io.BytesIO(pdf_bytes))
-
-        with pdf.open_metadata() as meta:
-            meta['pdfaid:part'] = '2'
-            meta['pdfaid:conformance'] = 'B'
-
-        output = io.BytesIO()
-        pdf.save(
-            output,
-            linearize=True,
-            compress_streams=True,
-            object_stream_mode=pikepdf.ObjectStreamMode.generate
-        )
-        pdf.close()
-
-        return output.getvalue()
-    except Exception:
-        return None
-
-
 def process_file(file_bytes, file_name):
     file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
     file_type, icon = detect_file_type(file_extension)
@@ -507,13 +479,26 @@ def invia_email(nome, email_utente, messaggio):
         return True
     except Exception as e:
         return str(e)
-    
+
 
 # ============================================================
 # FUNZIONI HELPER PER FORMATI PROPRIETARI, 3D PDF E HTML VIEWER
 # ============================================================
 
 def render_html_viewer_info(t_func):
+    """
+    Mostra una sezione informativa sull'HTML 3D Viewer.
+
+    Usa le traduzioni IT/EN fornite dal dizionario `translations.py`.
+    Lo stile è coerente con il resto dell'app (bordi blu, sfondo chiaro, icone).
+
+    Parameters
+    ----------
+    t_func : callable
+        Funzione di traduzione `t(key)` che restituisce la stringa tradotta
+        nella lingua corrente.
+    """
+    # --- Intro ---
     st.markdown(f"""
     <div class="html-viewer-intro">
         <h3>{t_func('html_viewer_title')}</h3>
@@ -522,6 +507,7 @@ def render_html_viewer_info(t_func):
     </div>
     """, unsafe_allow_html=True)
 
+    # --- Benefici (6 box) ---
     st.markdown(f"""
     <div class="html-viewer-benefits">
         <div class="html-viewer-benefit">
@@ -559,18 +545,34 @@ def render_html_viewer_info(t_func):
 
 
 def render_proprietary_formats_help():
+    """Mostra una tendina (expander) con le note sui formati proprietari.
+
+    Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
+    Sostituisce il precedente box grande sempre visibile.
+    """
     with st.expander(t("notes_expander_title"), expanded=False):
+        # Intro
         st.markdown(t("notes_expander_intro"))
+
         st.markdown("---")
+
+        # Due colonne: supportati vs non supportati
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(t("notes_expander_native"))
         with col2:
             st.markdown(t("notes_expander_not_supported"))
+
         st.markdown("---")
+
+        # Come procedere
         st.markdown(t("notes_expander_howto"))
         st.markdown(t("notes_expander_steps"))
+
+        # Tip
         st.info(t("notes_expander_tip"))
+
+        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO + CLASSE CSS)
         st.markdown(
             f"""
             <div style="text-align: center; margin-top: 12px;">
@@ -584,6 +586,7 @@ def render_proprietary_formats_help():
         )
 
 def is_3d_pdf(file_bytes):
+    """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
     try:
         if not PDF_AVAILABLE:
             return False
@@ -598,6 +601,7 @@ def is_3d_pdf(file_bytes):
 
 
 def extract_3d_from_pdf(file_bytes):
+    """Tenta di estrarre un modello 3D da un PDF con U3D o PRC."""
     try:
         if not FITZ_AVAILABLE:
             return None
@@ -665,11 +669,6 @@ with st.sidebar:
                 break
 
         nav_key = f"navigation_{st.session_state.lang}"
-
-        # Se un pulsante esterno ha forzato la navigazione, sincronizza il radio
-        if st.session_state.get("force_nav", False):
-            st.session_state[nav_key] = st.session_state.page_attuale
-            st.session_state.force_nav = False
 
         page = st.radio(
             t("sidebar_navigation"),
@@ -788,17 +787,20 @@ elif page == "Viewer 3D":
     with col_main:
         st.header(t("viewer_header"))
 
+        # --- SEZIONE INFORMATIVA HTML 3D VIEWER ---
         render_html_viewer_info(t)
         st.markdown("---")
 
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         viewer_file = st.file_uploader(
             t("viewer_upload"),
-            type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","pdf"],
+            type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
             key=f"viewer_{st.session_state.lang}",
             help=t("viewer_upload_hint")
         )
 
         if viewer_file:
+            # ✅ Controllo 3D PDF
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
@@ -952,6 +954,7 @@ elif page == "Viewer 3D":
                         """
                         st.components.v1.html(viewer_html, height=580)
 
+                        # --- SEZIONE CONDIVISIONE (v8.0) ---
                         render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
                     st.warning(t("viewer_warning_no_model"))
@@ -968,6 +971,7 @@ elif page == "Converti Formati":
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
 
+        # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
 
         with st.expander(t("convert_expander_matrix")):
@@ -988,6 +992,7 @@ elif page == "Converti Formati":
             """)
             st.caption(t("convert_caption_matrix"))
 
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         uploaded_file = st.file_uploader(
             t("convert_upload"),
             type=[ext[1:] for ext in ALL_EXTENSIONS],
@@ -1003,7 +1008,7 @@ elif page == "Converti Formati":
             file_type, icon = detect_file_type(file_extension)
             st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">{t("convert_file_type", type=file_type, ext=file_extension)}</div></div></div></div>', unsafe_allow_html=True)
 
-            MESH_FORMATS = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off", "u3d"]
+            MESH_FORMATS = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off"]
             VECTOR_FORMATS = ["svg"]
             DOC_FORMATS = ["pdf", "docx", "xlsx"]
             BIM_FORMATS = ["ifc"]
@@ -1015,18 +1020,6 @@ elif page == "Converti Formati":
 
                 if not target_options:
                     st.warning(t("convert_warning_no_target"))
-                    if file_extension == "u3d":
-                        st.info("ℹ️ **Il formato U3D non è supportato per la conversione diretta.** Per visualizzarlo e condividerlo con il **Viewer 3D** di ArtiFix, esporta il modello in **STL**, **OBJ** o **DAE** dal tuo software di progettazione, poi caricalo qui.")
-                        if st.button("🖥️ Vai al Viewer 3D", type="primary", use_container_width=True):
-                            st.session_state.page_attuale = "Viewer 3D"
-                            st.session_state.force_nav = True
-                            st.rerun()
-                    else:
-                        st.info("💡 **Suggerimento:** usa il **Viewer 3D** di ArtiFix per visualizzare questo modello direttamente nel browser, senza convertirlo.")
-                        if st.button("🖥️ Apri Viewer 3D", type="primary", use_container_width=True):
-                            st.session_state.page_attuale = "Viewer 3D"
-                            st.session_state.force_nav = True
-                            st.rerun()
                 else:
                     target_selected = st.selectbox(t("convert_target_format"), target_options)
                     target_ext = target_selected.split(".")[1].replace(")", "").strip()
@@ -1061,43 +1054,9 @@ elif page == "Converti Formati":
                             st.error(t("convert_error_load"))
 
                     st.markdown("---")
-
-                    # Chiave univoca per questa sessione/file/lingua
-                    preview_key = f"preview_{file_name}_{file_extension}_{st.session_state.lang}"
-
-                    # Inizializza stato anteprima
-                    if "preview_html" not in st.session_state:
-                        st.session_state.preview_html = None
-                    if "preview_file_key" not in st.session_state:
-                        st.session_state.preview_file_key = None
-
-                    # Reset anteprima al cambio lingua
-                    if st.session_state.get("preview_lang") != st.session_state.lang:
-                        st.session_state.preview_html = None
-                        st.session_state.preview_lang = st.session_state.lang
-
-                    # Se è cambiato il file, resetta l'anteprima
-                    if st.session_state.preview_file_key != preview_key:
-                        st.session_state.preview_html = None
-                        st.session_state.preview_file_key = preview_key
-
                     if st.button(t("convert_button_preview")):
-                        # Reset dell'anteprima precedente
-                        st.session_state.preview_html = None
-
-                        preview_progress = st.progress(0)
-                        preview_status = st.empty()
-
-                        preview_status.text(t("preview_status_loading"))
-                        preview_progress.progress(10)
-                        time.sleep(0.3)
-
+                        st.info(t("convert_info_preview"))
                         mesh_preview = load_3d_file(file_bytes, file_extension)
-
-                        preview_status.text(t("preview_status_optimizing"))
-                        preview_progress.progress(35)
-                        time.sleep(0.3)
-
                         if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
                             try:
                                 mesh_preview.merge_vertices()
@@ -1107,13 +1066,7 @@ elif page == "Converti Formati":
                             except Exception:
                                 pass
 
-                            preview_status.text(t("preview_status_geometry"))
-                            preview_progress.progress(65)
-                            time.sleep(0.3)
-
                             if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
-                                preview_progress.empty()
-                                preview_status.empty()
                                 st.error(t("viewer_error_processing"))
                             else:
                                 vp = mesh_preview.vertices.copy()
@@ -1129,12 +1082,6 @@ elif page == "Converti Formati":
                                 vp[:, 2] -= (min_z + max_z) / 2
                                 mesh_data = {"vertices": vp.tolist(), "faces": mesh_preview.faces.tolist()}
                                 mesh_json = json.dumps(mesh_data)
-
-                                preview_status.text(t("preview_status_rendering"))
-                                preview_progress.progress(90)
-                                time.sleep(0.3)
-
-                                # Costruisci l'HTML
                                 viewer_html = """
                                 <html><head><style>body{margin:0;overflow:hidden;background:#f0f2f6;}#c{width:100%;height:400px;}</style>
                                 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1190,29 +1137,9 @@ elif page == "Converti Formati":
                                 });
                                 </script></body></html>
                                 """
-
-                                # Salva in session_state
-                                st.session_state.preview_html = viewer_html
-
-                                # Completa la barra e mantienila visibile 1s
-                                preview_status.text(t("preview_status_rendering"))
-                                preview_progress.progress(100)
-                                time.sleep(1.0)
-
-                                # Svuota barra e status
-                                preview_progress.empty()
-                                preview_status.empty()
-
-                                # Forza rerun per far persistere il viewer
-                                st.rerun()
+                                st.components.v1.html(viewer_html, height=420)
                         else:
-                            preview_progress.empty()
-                            preview_status.empty()
                             st.warning(t("convert_warning_no_preview"))
-
-                    # Mostra il viewer persistente (fuori dal blocco if del bottone)
-                    if st.session_state.preview_html is not None:
-                        st.components.v1.html(st.session_state.preview_html, height=420)
 
             elif file_extension == "svg":
                 st.info("🎨 **SVG rilevato** — questo è un formato vettoriale, non una mesh 3D.")
@@ -1232,46 +1159,22 @@ elif page == "Converti Formati":
 
             elif file_extension == "pdf":
                 st.info("📄 **PDF rilevato** — questo è un formato documento.")
-
+                is_3d = is_3d_pdf(file_bytes)
+                if is_3d:
+                    st.success("🎯 **3D PDF rilevato!** Questo PDF contiene un modello 3D.")
+                    if FITZ_AVAILABLE:
+                        st.info("💡 Libreria `PyMuPDF` disponibile. Estrazione 3D in sviluppo.")
+                else:
+                    st.warning("⚠️ **PDF standard (non 3D)**: non contiene un modello 3D incorporato.")
+                    with st.expander("📖 Come creare un 3D PDF", expanded=True):
+                        st.markdown(t("pdf_no_3d_howto_steps"))
+                    st.info(t("pdf_no_3d_alternative"))
                 if PDF_AVAILABLE:
                     try:
                         pdf_reader = PdfReader(io.BytesIO(file_bytes))
                         st.metric("Pagine", len(pdf_reader.pages))
                     except Exception:
                         pass
-
-                st.markdown("---")
-                st.markdown("### 📄 Converti in PDF/A")
-                st.caption("Il formato PDF/A è ideale per l'archiviazione a lungo termine (ISO 19005).")
-
-                if st.button("🔄 Converti in PDF/A", type="primary", use_container_width=True):
-                    with st.spinner("Conversione in PDF/A in corso..."):
-                        pdfa_bytes = convert_pdf_to_pdfa(file_bytes)
-
-                        if pdfa_bytes:
-                            st.success("✅ **PDF/A generato!**")
-
-                            original_size = len(file_bytes) / 1024
-                            pdfa_size = len(pdfa_bytes) / 1024
-                            delta_size = pdfa_size - original_size
-
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                st.metric("Originale", f"{original_size:.1f} KB")
-                            with col2:
-                                st.metric("PDF/A", f"{pdfa_size:.1f} KB", delta=f"{delta_size:+.1f} KB")
-
-                            original_name = os.path.splitext(file_name)[0]
-                            st.download_button(
-                                label="📥 Scarica PDF/A",
-                                data=pdfa_bytes,
-                                file_name=f"{original_name}_PDFA.pdf",
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
-                        else:
-                            st.error("❌ Conversione fallita. Il PDF potrebbe essere protetto, corrotto o contenere elementi non supportati.")
-                            st.info("💡 Suggerimento: prova con un PDF non protetto da password.")
 
             elif file_extension == "docx":
                 st.info("📝 **DOCX rilevato** — documento Word.")
