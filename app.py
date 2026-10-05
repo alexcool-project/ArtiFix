@@ -725,7 +725,7 @@ elif page == "Viewer 3D":
                         if not st.session_state.get(_share_key, False):
                             st.session_state[_share_key] = True
                             try:
-                                render_share_section(mesh, viewer_file.name, st.session_state.lang)
+                                render_share_section(viewer_file, t, st.session_state.lang)
                             except Exception as _e_share:
                                 st.warning(f"Condivisione temporaneamente non disponibile: {_e_share}")
                 else:
