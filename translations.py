@@ -22,6 +22,7 @@ TRANSLATIONS = {
         "nav_terms": "📜 Termini di Servizio",
         "nav_donate": "💙 Dona con PayPal",
         "nav_become_sponsor": "🤝 Diventa Sponsor",
+        "nav_youtube": "YouTube",
 
         # --- DASHBOARD ---
         "dash_header": "📊 Dashboard",
@@ -234,6 +235,7 @@ TRANSLATIONS = {
         "nav_terms": "📜 Terms of Service",
         "nav_donate": "💙 Donate with PayPal",
         "nav_become_sponsor": "🤝 Become a Sponsor",
+        "nav_youtube": "YouTube",
 
         # --- DASHBOARD ---
         "dash_header": "📊 Dashboard",
