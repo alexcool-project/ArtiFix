@@ -793,7 +793,6 @@ elif page == "Viewer 3D":
         )
 
         if viewer_file:
-            # Chiave univoca per questo file
             _vkey = f"viewer_ready_{viewer_file.name}_{len(viewer_file.getvalue())}"
 
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
@@ -812,18 +811,11 @@ elif page == "Viewer 3D":
                     if extracted:
                         st.info(f"✅ Modello 3D estratto con successo ({extracted['method']}). Elaborazione in corso...")
 
-            # ============================================================
-            # SE IL MODELLO È GIÀ PRONTO: mostralo e basta (no ricarica)
-            # ============================================================
             if st.session_state.get(_vkey):
                 cached = st.session_state[_vkey]
                 st.success(t("viewer_success", vertices=cached["v"], faces=cached["f"]))
                 st.components.v1.html(cached["html"], height=580)
                 render_share_section(viewer_file, t, lang=st.session_state.lang)
-
-            # ============================================================
-            # ALTRIMENTI: mostra la card di attesa ed elabora
-            # ============================================================
             else:
                 wait_placeholder = st.empty()
                 with wait_placeholder.container():
@@ -845,17 +837,12 @@ elif page == "Viewer 3D":
                             wait_placeholder.empty()
                             st.error(t("viewer_error_processing"))
                         else:
-                            # Costruisci HTML viewer
                             viewer_html = build_viewer_html(mesh, t)
-
-                            # Salva in session_state per evitare ricarica
                             st.session_state[_vkey] = {
                                 "html": viewer_html,
                                 "v": len(mesh.vertices),
                                 "f": len(mesh.faces),
                             }
-
-                            # Forza un rerun per mostrare il viewer
                             wait_placeholder.empty()
                             st.rerun()
                     else:
@@ -942,25 +929,6 @@ elif page == "Converti Formati":
                                 st.error(t("convert_error", format=target_selected.split(' ')[0]))
                         else:
                             st.error(t("convert_error_load"))
-                    st.markdown("---")
-                    if st.button(t("convert_button_preview")):
-                        st.info(t("convert_info_preview"))
-                        mesh_preview = load_3d_file(file_bytes, file_extension)
-                        if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
-                            try:
-                                mesh_preview.merge_vertices()
-                                mesh_preview.remove_degenerate_faces()
-                                mesh_preview.remove_unreferenced_vertices()
-                                trimesh.repair.fix_normals(mesh_preview)
-                            except Exception:
-                                pass
-                            if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
-                                st.error(t("viewer_error_processing"))
-                            else:
-                                preview_html = build_viewer_html(mesh_preview, t)
-                                st.components.v1.html(preview_html, height=580)
-                        else:
-                            st.warning(t("convert_warning_no_preview"))
             elif file_extension == "svg":
                 st.info("🎨 **SVG rilevato** — questo è un formato vettoriale, non una mesh 3D.")
                 if SVG_AVAILABLE:
