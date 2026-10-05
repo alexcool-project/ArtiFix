@@ -718,6 +718,61 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
+
+# ============================================================
+# FUNZIONE CACHATA PER IL VIEWER 3D
+# ============================================================
+# Risolve il loop infinito di Streamlit: l'elaborazione della mesh
+# (potenzialmente pesante per file grandi) viene eseguita UNA SOLA VOLTA
+# per ogni combinazione unica di (file_bytes, file_name, lang).
+# A ogni rerun di Streamlit, il risultato viene recuperato dalla cache
+# invece di rieseguire tutta la pipeline di pulizia mesh.
+# ============================================================
+@st.cache_data(show_spinner=False, max_entries=5)
+def _process_mesh_for_viewer(file_bytes: bytes, file_name: str, lang: str):
+    """
+    Elabora la mesh e restituisce (mesh_json, mesh_ok, error_code).
+    Cachata per non ripetere l'elaborazione a ogni rerun di Streamlit.
+    Il parametro `lang` fa parte della chiave di cache perché l'HTML
+    contiene stringhe tradotte.
+    """
+    file_ext = os.path.splitext(file_name)[1].lower()
+    mesh = load_3d_file(file_bytes, file_ext)
+    if not (mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0):
+        return None, False, "load_failed"
+
+    try:
+        mesh.merge_vertices()
+        # FIX deprecation: remove_degenerate_faces() è deprecata dal 2024.
+        # Sostituita con update_faces(nondegenerate_faces(...)) come da messaggio.
+        mesh.update_faces(mesh.nondegenerate_faces(height=1e-8))
+        mesh.remove_unreferenced_vertices()
+        trimesh.repair.fix_normals(mesh)
+    except Exception:
+        pass
+
+    if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
+        return None, False, "no_faces"
+
+    # Rotazione e centratura (come nel codice originale)
+    vertices = mesh.vertices.copy()
+    rotated = np.empty_like(vertices)
+    rotated[:, 0] = vertices[:, 0]
+    rotated[:, 1] = vertices[:, 2]
+    rotated[:, 2] = -vertices[:, 1]
+    vertices = rotated
+
+    min_x, min_y, min_z = vertices.min(axis=0)
+    max_x, max_y, max_z = vertices.max(axis=0)
+    vertices[:, 0] -= (min_x + max_x) / 2
+    vertices[:, 1] -= min_y
+    vertices[:, 2] -= (min_z + max_z) / 2
+
+    faces = mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()
+    mesh_data = {"vertices": vertices.tolist(), "faces": faces}
+    return json.dumps(mesh_data), True, None
+
+
 # --- LOGICA PAGINE ---
 if st.session_state.page_attuale == "Privacy Policy":
     page = "Privacy Policy"
@@ -821,143 +876,123 @@ elif page == "Viewer 3D":
             status_text = st.empty()
             status_text.text(t("viewer_status_loading"))
             progress_bar.progress(30)
-            time.sleep(0.5)
 
             try:
-                mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
-                status_text.text(t("viewer_status_processing"))
-                progress_bar.progress(60)
-                time.sleep(0.5)
+                # ⚡ CHIAMATA CACHATA: esegue l'elaborazione una sola volta per file
+                mesh_json, mesh_ok, err = _process_mesh_for_viewer(
+                    viewer_file.getvalue(),
+                    viewer_file.name,
+                    st.session_state.lang,
+                )
 
-                if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                    st.success(t("viewer_success", vertices=len(mesh.vertices), faces=len(mesh.faces)))
-                    try:
-                        mesh.merge_vertices()
-                        mesh.remove_degenerate_faces()
-                        mesh.remove_unreferenced_vertices()
-                        trimesh.repair.fix_normals(mesh)
-                    except Exception:
-                        pass
+                progress_bar.progress(100)
+                status_text.empty()
+                progress_bar.empty()
 
-                    if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
-                        st.error(t("viewer_error_processing"))
+                if not mesh_ok:
+                    if err == "load_failed":
+                        st.warning(t("viewer_warning_no_model"))
                     else:
-                        vertices = mesh.vertices.copy()
-                        rotated = np.empty_like(vertices)
-                        rotated[:, 0] = vertices[:, 0]
-                        rotated[:, 1] = vertices[:, 2]
-                        rotated[:, 2] = -vertices[:, 1]
-                        vertices = rotated
+                        st.error(t("viewer_error_processing"))
+                    st.stop()
 
-                        min_x, min_y, min_z = vertices.min(axis=0)
-                        max_x, max_y, max_z = vertices.max(axis=0)
-                        center_x = (min_x + max_x) / 2
-                        center_z = (min_z + max_z) / 2
+                # Ricostruisci il numero di vertici/facce per il messaggio di successo
+                mesh_preview = json.loads(mesh_json)
+                n_verts = len(mesh_preview["vertices"])
+                n_faces = len(mesh_preview["faces"])
+                st.success(t("viewer_success", vertices=n_verts, faces=n_faces))
 
-                        vertices[:, 0] -= center_x
-                        vertices[:, 1] -= min_y
-                        vertices[:, 2] -= center_z
+                viewer_html = """
+                <html><head><style>
+                body{margin:0;overflow:hidden;background:#f0f2f6;}
+                #c{width:100%;height:550px;display:block;}
+                #info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.85);padding:6px 16px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+                .legend{position:absolute;top:10px;left:10px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}
+                .legend span{display:inline-block;width:12px;height:12px;margin-right:4px;border-radius:2px;}
+                .axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}
+                </style>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+                </head><body>
+                <div id="c"></div>
+                <div class="legend"><span class="axis-x"></span> """ + t("viewer_legend_axes") + """</div>
+                <div id="info">""" + t("viewer_legend") + """</div>
+                <script>
+                const data = """ + mesh_json + """;
+                const container = document.getElementById('c');
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xf0f2f6);
+                const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 5000);
+                camera.position.set(15,12,15);
+                camera.lookAt(0,3,0);
+                const renderer = new THREE.WebGLRenderer({antialias:true});
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                container.appendChild(renderer.domElement);
+                const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.08;
+                controls.target.set(0,3,0);
+                controls.screenSpacePanning = true;
+                controls.update();
+                const al = 8;
+                scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff4444, 0.5, 0.3));
+                scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), al, 0x44ff44, 0.5, 0.3));
+                scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), al, 0x4444ff, 0.5, 0.3));
+                const grid = new THREE.GridHelper(40, 40, 0x888888, 0xcccccc);
+                grid.position.y = 0;
+                scene.add(grid);
+                scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+                const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+                dirLight.position.set(15, 30, 15);
+                dirLight.castShadow = true;
+                dirLight.shadow.mapSize.width = 2048;
+                dirLight.shadow.mapSize.height = 2048;
+                scene.add(dirLight);
+                const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
+                fillLight.position.set(-15, 10, -15);
+                scene.add(fillLight);
+                if (data.vertices && data.vertices.length > 0) {
+                    const geo = new THREE.BufferGeometry();
+                    const verts = new Float32Array(data.vertices.flat());
+                    geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+                    if (data.faces && data.faces.length > 0) {
+                        geo.setIndex(new THREE.BufferAttribute(new Uint32Array(data.faces.flat()), 1));
+                        geo.computeVertexNormals();
+                    }
+                    const mat = new THREE.MeshStandardMaterial({color: 0x1f77b4, roughness: 0.45, metalness: 0.1, flatShading: false, side: THREE.DoubleSide});
+                    const mesh = new THREE.Mesh(geo, mat);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    const box = new THREE.Box3().setFromObject(mesh);
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim > 0 && maxDim < 1000) {
+                        const s = 10 / maxDim;
+                        mesh.scale.set(s, s, s);
+                    }
+                    scene.add(mesh);
+                }
+                function animate() {
+                    requestAnimationFrame(animate);
+                    controls.update();
+                    renderer.render(scene, camera);
+                }
+                animate();
+                window.addEventListener('resize', () => {
+                    camera.aspect = container.clientWidth / container.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                });
+                </script></body></html>
+                """
+                st.components.v1.html(viewer_html, height=580)
 
-                        faces = mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()
-                        mesh_data = {"vertices": vertices.tolist(), "faces": faces}
-                        mesh_json = json.dumps(mesh_data)
+                # --- SEZIONE CONDIVISIONE (v8.0) ---
+                render_share_section(viewer_file, t, lang=st.session_state.lang)
 
-                        status_text.text(t("viewer_status_building"))
-                        progress_bar.progress(100)
-                        time.sleep(0.5)
-
-                        viewer_html = """
-                        <html><head><style>
-                        body{margin:0;overflow:hidden;background:#f0f2f6;}
-                        #c{width:100%;height:550px;display:block;}
-                        #info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.85);padding:6px 16px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-                        .legend{position:absolute;top:10px;left:10px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}
-                        .legend span{display:inline-block;width:12px;height:12px;margin-right:4px;border-radius:2px;}
-                        .axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}
-                        </style>
-                        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-                        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-                        </head><body>
-                        <div id="c"></div>
-                        <div class="legend"><span class="axis-x"></span> """ + t("viewer_legend_axes") + """</div>
-                        <div id="info">""" + t("viewer_legend") + """</div>
-                        <script>
-                        const data = """ + mesh_json + """;
-                        const container = document.getElementById('c');
-                        const scene = new THREE.Scene();
-                        scene.background = new THREE.Color(0xf0f2f6);
-                        const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 5000);
-                        camera.position.set(15,12,15);
-                        camera.lookAt(0,3,0);
-                        const renderer = new THREE.WebGLRenderer({antialias:true});
-                        renderer.setPixelRatio(window.devicePixelRatio);
-                        renderer.setSize(container.clientWidth, container.clientHeight);
-                        renderer.shadowMap.enabled = true;
-                        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                        container.appendChild(renderer.domElement);
-                        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-                        controls.enableDamping = true;
-                        controls.dampingFactor = 0.08;
-                        controls.target.set(0,3,0);
-                        controls.screenSpacePanning = true;
-                        controls.update();
-                        const al = 8;
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff4444, 0.5, 0.3));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), al, 0x44ff44, 0.5, 0.3));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), al, 0x4444ff, 0.5, 0.3));
-                        const grid = new THREE.GridHelper(40, 40, 0x888888, 0xcccccc);
-                        grid.position.y = 0;
-                        scene.add(grid);
-                        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-                        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-                        dirLight.position.set(15, 30, 15);
-                        dirLight.castShadow = true;
-                        dirLight.shadow.mapSize.width = 2048;
-                        dirLight.shadow.mapSize.height = 2048;
-                        scene.add(dirLight);
-                        const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
-                        fillLight.position.set(-15, 10, -15);
-                        scene.add(fillLight);
-                        if (data.vertices && data.vertices.length > 0) {
-                            const geo = new THREE.BufferGeometry();
-                            const verts = new Float32Array(data.vertices.flat());
-                            geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-                            if (data.faces && data.faces.length > 0) {
-                                geo.setIndex(new THREE.BufferAttribute(new Uint32Array(data.faces.flat()), 1));
-                                geo.computeVertexNormals();
-                            }
-                            const mat = new THREE.MeshStandardMaterial({color: 0x1f77b4, roughness: 0.45, metalness: 0.1, flatShading: false, side: THREE.DoubleSide});
-                            const mesh = new THREE.Mesh(geo, mat);
-                            mesh.castShadow = true;
-                            mesh.receiveShadow = true;
-                            const box = new THREE.Box3().setFromObject(mesh);
-                            const size = box.getSize(new THREE.Vector3());
-                            const maxDim = Math.max(size.x, size.y, size.z);
-                            if (maxDim > 0 && maxDim < 1000) {
-                                const s = 10 / maxDim;
-                                mesh.scale.set(s, s, s);
-                            }
-                            scene.add(mesh);
-                        }
-                        function animate() {
-                            requestAnimationFrame(animate);
-                            controls.update();
-                            renderer.render(scene, camera);
-                        }
-                        animate();
-                        window.addEventListener('resize', () => {
-                            camera.aspect = container.clientWidth / container.clientHeight;
-                            camera.updateProjectionMatrix();
-                            renderer.setSize(container.clientWidth, container.clientHeight);
-                        });
-                        </script></body></html>
-                        """
-                        st.components.v1.html(viewer_html, height=580)
-
-                        # --- SEZIONE CONDIVISIONE (v8.0) ---
-                        render_share_section(viewer_file, t, lang=st.session_state.lang)
-                else:
-                    st.warning(t("viewer_warning_no_model"))
             except Exception as e:
                 st.error(t("viewer_error_generic", error=e))
     with col_side:
@@ -1060,7 +1095,7 @@ elif page == "Converti Formati":
                         if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
                             try:
                                 mesh_preview.merge_vertices()
-                                mesh_preview.remove_degenerate_faces()
+                                mesh_preview.update_faces(mesh_preview.nondegenerate_faces(height=1e-8))
                                 mesh_preview.remove_unreferenced_vertices()
                                 trimesh.repair.fix_normals(mesh_preview)
                             except Exception:
