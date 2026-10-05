@@ -718,16 +718,8 @@ elif page == "Viewer 3D":
         render_html_viewer_info(t)
         st.markdown("---")
 
-        # Pulsante Rimuovi file (se presente)
-        if st.session_state.get("viewer_file_key") is not None:
-            col_info, col_remove = st.columns([4, 1])
-            with col_remove:
-                if st.button("❌ Rimuovi file", key="remove_viewer_file", use_container_width=True):
-                    # Reset completo
-                    for k in list(st.session_state.keys()):
-                        if k.startswith("viewer_"):
-                            del st.session_state[k]
-                    st.rerun()
+        # Rileva se il file è stato rimosso (X cliccata) e resetta la cache viewer
+        _prev_had_file = st.session_state.get("_viewer_prev_had_file", False)
 
         viewer_file = st.file_uploader(
             t("viewer_upload"),
@@ -735,6 +727,18 @@ elif page == "Viewer 3D":
             key="viewer_file_key",
             help=t("viewer_upload_hint")
         )
+
+        _now_has_file = viewer_file is not None
+
+        # Se prima c'era un file e adesso no → l'utente ha cliccato la X → reset completo
+        if _prev_had_file and not _now_has_file:
+            for k in list(st.session_state.keys()):
+                if k.startswith("viewer_ready_") or k == "viewer_file_key":
+                    del st.session_state[k]
+            st.session_state["_viewer_prev_had_file"] = False
+            st.rerun()
+
+        st.session_state["_viewer_prev_had_file"] = _now_has_file
 
         if viewer_file:
             _vkey = f"viewer_ready_{viewer_file.name}_{len(viewer_file.getvalue())}"
@@ -757,7 +761,8 @@ elif page == "Viewer 3D":
 
             if st.session_state.get(_vkey):
                 cached = st.session_state[_vkey]
-                st.success(t("viewer_success", vertices=cached["v"], faces=cached["f"]))
+                # Riepilogo elaborazione (resta visibile)
+                st.success(f"✅ Elaborazione completata — {cached['v']} vertici, {cached['f']} facce")
                 st.components.v1.html(cached["html"], height=580)
                 render_share_section(viewer_file, t, lang=st.session_state.lang)
             else:
@@ -765,19 +770,18 @@ elif page == "Viewer 3D":
                 st.info(
                     "📦 **Elaborazione del modello 3D in corso**\n\n"
                     "I modelli con molte facce (come i file STL professionali) possono richiedere fino a 60 secondi. "
-                    "La barra sotto mostra l'avanzamento reale. Non chiudere la pagina."
+                    "La barra sotto mostra l'avanzamento. Non chiudere la pagina."
                 )
 
                 progress_bar = st.progress(0, text="📖 Preparazione...")
 
                 try:
-                    # STEP 1 — lettura
+                    # STEP 1
                     progress_bar.progress(5, text="📖 Caricamento file...")
                     time.sleep(0.4)
-
                     mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
 
-                    # STEP 2 — analisi
+                    # STEP 2
                     progress_bar.progress(25, text="🔍 Analisi geometria...")
                     time.sleep(0.4)
 
@@ -785,8 +789,8 @@ elif page == "Viewer 3D":
                         progress_bar.progress(40, text=f"✅ Geometria rilevata: {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
                         time.sleep(0.4)
 
-                        # STEP 3 — pulizia
-                        progress_bar.progress(50, text="🧹 Pulizia mesh (rimozione facce degeneri)...")
+                        # STEP 3
+                        progress_bar.progress(50, text="🧹 Pulizia mesh...")
                         try:
                             mesh.merge_vertices()
                             mesh.remove_degenerate_faces()
@@ -800,12 +804,12 @@ elif page == "Viewer 3D":
                             progress_bar.empty()
                             st.error(t("viewer_error_processing"))
                         else:
-                            # STEP 4 — rotazione + centratura
-                            progress_bar.progress(60, text="🔄 Rotazione e centratura del modello...")
+                            # STEP 4
+                            progress_bar.progress(60, text="🔄 Rotazione e centratura...")
                             time.sleep(0.3)
 
-                            # STEP 5 — serializzazione JSON (fase più lunga)
-                            progress_bar.progress(75, text="📦 Preparazione dei dati per il viewer (fase più lunga, attendere)...")
+                            # STEP 5 — fase più lunga
+                            progress_bar.progress(75, text="📦 Preparazione dati viewer (fase più lunga, attendere)...")
                             viewer_html = build_viewer_html(mesh, t)
 
                             st.session_state[_vkey] = {
@@ -814,8 +818,8 @@ elif page == "Viewer 3D":
                                 "f": len(mesh.faces),
                             }
 
-                            # STEP 6 — render viewer
-                            progress_bar.progress(95, text="🎨 Rendering del viewer 3D...")
+                            # STEP 6
+                            progress_bar.progress(95, text="🎨 Rendering viewer 3D...")
                             time.sleep(0.4)
                             progress_bar.progress(100, text="✅ Pronto!")
                             time.sleep(0.5)
