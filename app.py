@@ -1,18 +1,9 @@
 import streamlit as st
-
-st.set_page_config(
-    page_title="ArtiFix - Universal CAD/CAM Repair",
-    page_icon="https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs/images/ArchiFix_cubo-logo.png",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 import ezdxf
 import trimesh
 import io
 import numpy as np
 import base64
-import gzip
 import os
 import json
 from datetime import datetime
@@ -22,10 +13,16 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import time
 
+# --- MODULO SPONSOR (Google Sheets) ---
 from sponsors import load_sponsors, render_sponsor_band, sponsor_band_placeholder
+
+# --- MODULO TRADUZIONI (IT/EN) ---
 from translations import TRANSLATIONS, get_text, detect_browser_language
+
+# --- UTILITY CONDIVISIONE VIEWER (v8.0) ---
 from share_utils import render_share_section
 
+# --- LIBRERIA COOKIE (OPZIONALE) ---
 try:
     from streamlit_cookies_controller import CookieController
     cookie_controller = CookieController()
@@ -33,47 +30,72 @@ try:
 except ImportError:
     COOKIE_LIB = False
 
+# --- LINK DIRETTI DELLE IMMAGINI (GitHub Raw) ---
 CUBO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs/images/ArchiFix_cubo-logo.png"
 LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs/images/Artifix_logo.png"
-DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
-YOUTUBE_URL = "https://www.youtube.com/@ArtiFix-Official?sub_confirmation=1"
 
+# --- LINK PAGAMENTO (PayPal) ---
+DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
+
+# --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
     "?subject=Richiesta%20Sponsorizzazione%20ArtiFix"
-    "&body=Buongiorno%20Team%20ArtiFix%2C%0D%0A%0D%0A"
-    "Sono%20interessato%2Fa%20alla%20sponsorizzazione%20di%20ArtiFix.%0D%0A%0D%0A"
-    "Nome%20Azienda%3A%20%0D%0ASito%20Web%3A%20%0D%0AEmail%3A%20%0D%0A"
-    "Telefono%3A%20%0D%0ALogo%20(URL)%3A%20%0D%0AMessaggio%3A%0D%0A"
+    "&body=FORM%20PRECOMPILATO%20(se%20vuoi%20aderire%20alla%20sponsorizzazione%20"
+    "valuta%20una%20donazione%20per%20il%20progetto%20ArtiFix%20e%20comunque%20"
+    "inizia%20ad%20utilizzare%20i%20servizi%20CAD%20gratuiti!)%0D%0A%0D%0A"
+    "Buongiorno%20Team%20ArtiFix%2C%0D%0A%0D%0A"
+    "Sono%20interessato%2Fa%20alla%20sponsorizzazione%20di%20ArtiFix%20"
+    "(puoi%20cliccare%20sul%20pulsante%20%22Dona%20con%20PayPal%22%20presente%20"
+    "nel%20sito%20per%20richiedere%20la%20sponsorizzazione%2C%20entro%20pochi%20"
+    "minuti%20sar%C3%A0%20attiva%20sul%20sito)%0D%0A%0D%0A"
+    "Ecco%20i%20miei%20dati%3A%0D%0A%0D%0A"
+    "%F0%9F%8F%A2%20Nome%20Azienda%3A%20%0D%0A"
+    "%F0%9F%8C%90%20Sito%20Web%3A%20%0D%0A"
+    "%F0%9F%93%A7%20Email%3A%20%0D%0A"
+    "%F0%9F%93%9E%20Telefono%3A%20%0D%0A"
+    "%F0%9F%96%BC%EF%B8%8F%20Logo%20%E2%89%88%20300%20x%20100px%20(URL%20GitHub%20Raw%20o%20allegato)%3A%20%0D%0A"
+    "%F0%9F%92%AC%20Messaggio%3A%0D%0A%0D%0A"
+    "Grazie%2C%0D%0A%5BNominativo%5D"
 )
 
-if 'lang' not in st.session_state:
-    _url_lang = None
-    try:
-        _qp = st.query_params.get("lang", None)
-        if isinstance(_qp, list):
-            _qp = _qp[0] if _qp else None
-        if _qp in ["it", "en"]:
-            _url_lang = _qp
-    except Exception:
-        pass
-    if _url_lang:
-        st.session_state.lang = _url_lang
-    else:
-        try:
-            st.session_state.lang = detect_browser_language()
-        except Exception:
-            st.session_state.lang = "it"
+# --- CONFIGURAZIONE PAGINA ---
+if CUBO_URL:
+    st.set_page_config(
+        page_title="ArtiFix - Universal CAD/CAM Repair",
+        page_icon=CUBO_URL,
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+else:
+    st.set_page_config(
+        page_title="ArtiFix - Universal CAD/CAM Repair",
+        page_icon="🔧",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
 
+# --- STATO LINGUA ---
+if 'lang' not in st.session_state:
+    try:
+        st.session_state.lang = detect_browser_language()
+    except Exception:
+        st.session_state.lang = "it"
+
+# --- FUNZIONE HELPER PER TRADUZIONE ---
 def t(key, **kwargs):
     return get_text(key, st.session_state.lang, **kwargs)
 
+# --- SEO META TAG ---
 st.markdown("""
-<title>ArtiFix - Convertitore CAD/CAM Universale</title>
-<meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM in 3D PDF, STL, OBJ, GLTF." />
+<title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
+<meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF) in 3D PDF, STL, OBJ, GLTF e altri formati. Convertitore online gratuito e veloce per ingegneri e progettisti." />
 <meta name="robots" content="index, follow" />
+<meta property="og:title" content="ArtiFix - Convertitore CAD/CAM Universale" />
+<meta property="og:url" content="https://artifix.streamlit.app" />
 """, unsafe_allow_html=True)
 
+# --- CSS MINIMALE E PULITO ---
 st.markdown("""
 <style>
     .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
@@ -87,22 +109,89 @@ st.markdown("""
     .metric-label { font-size: 0.85rem; color: #555; }
     .file-info-card { background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border-left: 3px solid #1f77b4; margin: 0.5rem 0; }
     footer {visibility: hidden;}
-    .footer-artifix { position: fixed; bottom: 0; left: 0; right: 0; background: #f8f9fa; padding: 12px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; z-index: 999; }
+    .footer-artifix {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: #f8f9fa; padding: 12px; text-align: center;
+        font-size: 12px; color: #666; border-top: 1px solid #ddd; z-index: 999;
+    }
     .main .block-container { padding-bottom: 80px !important; }
     .lang-selector { padding: 8px 0; margin-bottom: 15px; }
-    a.guide-button { color: #ffffff !important; text-decoration: none !important; background: #1f77b4 !important; display: inline-block !important; padding: 10px 24px !important; border-radius: 8px !important; font-weight: 700 !important; font-size: 14px !important; border: none !important; }
-    a.guide-button:hover { background: #155a8a !important; }
-    .html-viewer-intro { background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%); border-left: 4px solid #1f77b4; border-radius: 10px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; }
-    .html-viewer-intro h3 { color: #1f77b4; margin-top: 0; margin-bottom: 0.8rem; font-size: 1.2rem; }
-    .html-viewer-intro p { color: #333; line-height: 1.6; margin-bottom: 0.5rem; }
-    .html-viewer-benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 1rem 0 1.5rem 0; }
-    .html-viewer-benefit { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 14px; font-size: 0.9rem; color: #333; }
-    .html-viewer-benefit .benefit-icon { font-size: 1.3rem; display: block; margin-bottom: 6px; }
-    .html-viewer-benefit .benefit-title { font-weight: 700; color: #1f77b4; display: block; margin-bottom: 4px; }
-    .html-viewer-benefit .benefit-desc { color: #555; line-height: 1.4; font-size: 0.85rem; }
+
+    /* ===== FIX TESTO BIANCO PULSANTE GUIDA ===== */
+    a.guide-button, a.guide-button:link, a.guide-button:visited,
+    a.guide-button:hover, a.guide-button:active, a.guide-button:focus {
+        color: #ffffff !important;
+        text-decoration: none !important;
+        background: #1f77b4 !important;
+        display: inline-block !important;
+        padding: 10px 24px !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        border: none !important;
+    }
+    a.guide-button:hover {
+        background: #155a8a !important;
+    }
+
+    /* ===== HTML 3D VIEWER INFO SECTION ===== */
+    .html-viewer-intro {
+        background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
+        border-left: 4px solid #1f77b4;
+        border-radius: 10px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .html-viewer-intro h3 {
+        color: #1f77b4;
+        margin-top: 0;
+        margin-bottom: 0.8rem;
+        font-size: 1.2rem;
+    }
+    .html-viewer-intro p {
+        color: #333;
+        line-height: 1.6;
+        margin-bottom: 0.5rem;
+    }
+    .html-viewer-benefits {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin: 1rem 0 1.5rem 0;
+    }
+    .html-viewer-benefit {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 0.9rem;
+        color: #333;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .html-viewer-benefit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(31, 119, 180, 0.15);
+    }
+    .html-viewer-benefit .benefit-icon {
+        font-size: 1.3rem;
+        display: block;
+        margin-bottom: 6px;
+    }
+    .html-viewer-benefit .benefit-title {
+        font-weight: 700;
+        color: #1f77b4;
+        display: block;
+        margin-bottom: 4px;
+    }
+    .html-viewer-benefit .benefit-desc {
+        color: #555;
+        line-height: 1.4;
+        font-size: 0.85rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
+# --- TENTATIVO IMPORT LIBRERIE ---
 try:
     import ifcopenshell
     IFC_AVAILABLE = True
@@ -145,6 +234,7 @@ try:
 except (ImportError, OSError):
     SVG_AVAILABLE = False
 
+# --- STATO PAGINE E COOKIE ---
 if 'page_attuale' not in st.session_state:
     st.session_state.page_attuale = "Dashboard"
 
@@ -154,6 +244,7 @@ if 'cookie_consent' not in st.session_state:
     else:
         st.session_state.cookie_consent = None
 
+# --- DEFINIZIONE VARIABILI ---
 SUPPORTED_FORMATS = {
     "CAD 2D": {"extensions": [".dxf"], "icon": "📐", "description": "File CAD (DXF)"},
     "CAD 3D & Mesh": {"extensions": [".stl", ".obj", ".ply", ".glb", ".gltf", ".fbx", ".3mf", ".dae", ".wrl", ".off", ".u3d"], "icon": "🧊", "description": "Mesh 3D (STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, U3D)"},
@@ -182,10 +273,18 @@ CONVERSION_MATRIX = {
 }
 
 FORMAT_NAMES = {
-    'stl': 'STL (.stl)', 'obj': 'OBJ (.obj)', 'ply': 'PLY (.ply)',
-    'glb': 'GLB (.glb)', 'gltf': 'GLTF (.gltf)', 'fbx': 'FBX (.fbx)',
-    '3mf': '3MF (.3mf)', 'dae': 'DAE (.dae)', 'wrl': 'WRL (.wrl)',
-    'off': 'OFF (.off)', 'u3d': 'U3D (.u3d)', 'dxf': 'DXF (.dxf)',
+    'stl': 'STL (.stl)',
+    'obj': 'OBJ (.obj)',
+    'ply': 'PLY (.ply)',
+    'glb': 'GLB (.glb)',
+    'gltf': 'GLTF (.gltf)',
+    'fbx': 'FBX (.fbx)',
+    '3mf': '3MF (.3mf)',
+    'dae': 'DAE (.dae)',
+    'wrl': 'WRL (.wrl)',
+    'off': 'OFF (.off)',
+    'u3d': 'U3D (.u3d)',
+    'dxf': 'DXF (.dxf)',
     'pdf': '3D PDF (.pdf)'
 }
 
@@ -200,8 +299,11 @@ def detect_file_type(file_extension):
 def load_3d_file(file_bytes, file_extension):
     try:
         file_extension = file_extension.lower().replace('.', '')
-        format_map = {'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'fbx':'fbx', '3mf':'3mf', 'dae':'dae', 'wrl':'wrl', 'off':'off', 'u3d':'u3d'}
+        format_map = {
+            'stl':'stl', 'obj':'obj', 'ply':'ply', 'glb':'glb', 'gltf':'gltf', 'fbx':'fbx', '3mf':'3mf', 'dae':'dae', 'wrl':'wrl', 'off':'off', 'u3d':'u3d'
+        }
         file_type = format_map.get(file_extension, file_extension)
+
         if file_extension in ['obj', 'dae']:
             for method in [file_type, None]:
                 try:
@@ -227,32 +329,49 @@ def load_3d_file(file_bytes, file_extension):
 def convert_mesh(mesh, target_format):
     try:
         target_format = target_format.lower().replace('.', '')
+
         if target_format == 'pdf':
             import matplotlib
             matplotlib.use('Agg')
             import matplotlib.pyplot as plt
             from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
+
             tri_arrays = mesh.vertices[mesh.faces]
             poly3d = Poly3DCollection(tri_arrays, alpha=0.1, edgecolor='k', facecolor='#1f77b4')
             ax.add_collection3d(poly3d)
+
             scale = mesh.vertices.flatten()
             ax.auto_scale_xyz(scale, scale, scale)
+
             plt.savefig("converted_3d.pdf", format='pdf', bbox_inches='tight')
             plt.close()
+
             with open("converted_3d.pdf", "rb") as f:
                 return f.read()
-        elif target_format == 'stl': return trimesh.exchange.stl.export_stl(mesh)
-        elif target_format == 'obj': return trimesh.exchange.obj.export_obj(mesh)
-        elif target_format == 'ply': return trimesh.exchange.ply.export_ply(mesh)
-        elif target_format == 'glb': return trimesh.exchange.gltf.export_glb(mesh)
-        elif target_format == 'gltf': return trimesh.exchange.gltf.export_gltf(mesh)
-        elif target_format == 'fbx': return trimesh.exchange.fbx.export_fbx(mesh)
-        elif target_format == '3mf': return trimesh.exchange.threeMF.export_3mf(mesh)
-        elif target_format == 'dae': return trimesh.exchange.dae.export_dae(mesh)
-        elif target_format == 'wrl': return trimesh.exchange.vrml.export_vrml(mesh)
-        elif target_format == 'off': return trimesh.exchange.off.export_off(mesh)
+
+        elif target_format == 'stl':
+            return trimesh.exchange.stl.export_stl(mesh)
+        elif target_format == 'obj':
+            return trimesh.exchange.obj.export_obj(mesh)
+        elif target_format == 'ply':
+            return trimesh.exchange.ply.export_ply(mesh)
+        elif target_format == 'glb':
+            return trimesh.exchange.gltf.export_glb(mesh)
+        elif target_format == 'gltf':
+            return trimesh.exchange.gltf.export_gltf(mesh)
+        elif target_format == 'fbx':
+            return trimesh.exchange.fbx.export_fbx(mesh)
+        elif target_format == '3mf':
+            return trimesh.exchange.threeMF.export_3mf(mesh)
+        elif target_format == 'dae':
+            return trimesh.exchange.dae.export_dae(mesh)
+        elif target_format == 'wrl':
+            return trimesh.exchange.vrml.export_vrml(mesh)
+        elif target_format == 'off':
+            return trimesh.exchange.off.export_off(mesh)
         elif target_format == 'dxf':
             if mesh.vertices is not None and len(mesh.vertices) > 0:
                 vertices_2d = mesh.vertices[:, :2]
@@ -274,6 +393,7 @@ def process_file(file_bytes, file_name):
     file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
     file_type, icon = detect_file_type(file_extension)
     result = {"success": False, "message": "", "type": file_type, "icon": icon, "info": {}}
+
     try:
         if file_extension == 'pdf':
             if PDF_AVAILABLE:
@@ -283,6 +403,7 @@ def process_file(file_bytes, file_name):
                 result["info"] = {"pages": len(pdf_reader.pages)}
             else:
                 result["message"] = "Libreria PDF non disponibile."
+
         elif file_extension == 'dxf':
             dxf_doc = ezdxf.read(io.BytesIO(file_bytes))
             entities = len(dxf_doc.entities)
@@ -290,6 +411,7 @@ def process_file(file_bytes, file_name):
             result["success"] = True
             result["message"] = f"📐 DXF: {entities} entità, {len(layers)} layer"
             result["info"] = {"entities": entities, "layers": list(layers)[:10]}
+
         elif file_extension in ['stl','obj','ply','glb','gltf','fbx','3mf','dae','wrl','off','u3d']:
             mesh = load_3d_file(file_bytes, file_extension)
             if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
@@ -298,6 +420,7 @@ def process_file(file_bytes, file_name):
                 result["info"] = {"vertices": len(mesh.vertices), "faces": len(mesh.faces), "mesh": mesh}
             else:
                 result["message"] = "❌ File 3D non valido o formato non supportato."
+
         elif file_extension == 'ifc' and IFC_AVAILABLE:
             with tempfile.NamedTemporaryFile(suffix='.ifc', delete=False) as tmp_ifc:
                 tmp_ifc.write(file_bytes)
@@ -313,6 +436,7 @@ def process_file(file_bytes, file_name):
                     os.unlink(tmp_ifc_path)
                 except:
                     pass
+
         elif file_extension in ['shp','geojson','kml','gpx'] and GEOPANDAS_AVAILABLE:
             if file_extension == 'shp':
                 with tempfile.NamedTemporaryFile(suffix='.shp', delete=False) as tmp:
@@ -323,10 +447,13 @@ def process_file(file_bytes, file_name):
             result["success"] = True
             result["message"] = f"🌍 Geodati: {len(gdf)} features"
             result["info"] = {"features": len(gdf)}
+
         else:
             result["message"] = f"❌ Formato {file_extension} non supportato."
+
     except Exception as e:
         result["message"] = f"❌ Errore: {str(e)}"
+
     return result
 
 def invia_email(nome, email_utente, messaggio):
@@ -335,12 +462,15 @@ def invia_email(nome, email_utente, messaggio):
     mittente = st.secrets["EMAIL_ADDRESS"]
     password = st.secrets["EMAIL_PASSWORD"]
     destinatario = st.secrets["RECIPIENT_EMAIL"]
+
     msg = MIMEMultipart()
     msg['From'] = mittente
     msg['To'] = destinatario
     msg['Subject'] = f"Nuovo messaggio da {nome}"
+
     corpo = f"Da: {nome} ({email_utente})\n\n{messaggio}"
     msg.attach(MIMEText(corpo, 'plain'))
+
     try:
         server = smtplib.SMTP_SSL(smtp_server, smtp_port)
         server.login(mittente, password)
@@ -351,7 +481,24 @@ def invia_email(nome, email_utente, messaggio):
         return str(e)
 
 
+# ============================================================
+# FUNZIONI HELPER PER FORMATI PROPRIETARI, 3D PDF E HTML VIEWER
+# ============================================================
+
 def render_html_viewer_info(t_func):
+    """
+    Mostra una sezione informativa sull'HTML 3D Viewer.
+
+    Usa le traduzioni IT/EN fornite dal dizionario `translations.py`.
+    Lo stile è coerente con il resto dell'app (bordi blu, sfondo chiaro, icone).
+
+    Parameters
+    ----------
+    t_func : callable
+        Funzione di traduzione `t(key)` che restituisce la stringa tradotta
+        nella lingua corrente.
+    """
+    # --- Intro ---
     st.markdown(f"""
     <div class="html-viewer-intro">
         <h3>{t_func('html_viewer_title')}</h3>
@@ -359,42 +506,87 @@ def render_html_viewer_info(t_func):
         <p>{t_func('html_viewer_modes')}</p>
     </div>
     """, unsafe_allow_html=True)
+
+    # --- Benefici (6 box) ---
     st.markdown(f"""
     <div class="html-viewer-benefits">
-        <div class="html-viewer-benefit"><span class="benefit-icon">⚡</span><span class="benefit-title">{t_func('html_viewer_benefit1_title')}</span><span class="benefit-desc">{t_func('html_viewer_benefit1_desc')}</span></div>
-        <div class="html-viewer-benefit"><span class="benefit-icon">🚫</span><span class="benefit-title">{t_func('html_viewer_benefit2_title')}</span><span class="benefit-desc">{t_func('html_viewer_benefit2_desc')}</span></div>
-        <div class="html-viewer-benefit"><span class="benefit-icon">📱</span><span class="benefit-title">{t_func('html_viewer_benefit3_title')}</span><span class="benefit-desc">{t_func('html_viewer_benefit3_desc')}</span></div>
-        <div class="html-viewer-benefit"><span class="benefit-icon">🔄</span><span class="benefit-title">{t_func('html_viewer_benefit4_title')}</span><span class="benefit-desc">{t_func('html_viewer_benefit4_desc')}</span></div>
-        <div class="html-viewer-benefit"><span class="benefit-icon">🔗</span><span class="benefit-title">{t_func('html_viewer_benefit5_title')}</span><span class="benefit-desc">{t_func('html_viewer_benefit5_desc')}</span></div>
-        <div class="html-viewer-benefit"><span class="benefit-icon">💾</span><span class="benefit-title">{t_func('html_viewer_benefit6_title')}</span><span class="benefit-desc">{t_func('html_viewer_benefit6_desc')}</span></div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">⚡</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit1_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit1_desc')}</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">🚫</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit2_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit2_desc')}</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">📱</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit3_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit3_desc')}</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">🔄</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit4_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit4_desc')}</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">🔗</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit5_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit5_desc')}</span>
+        </div>
+        <div class="html-viewer-benefit">
+            <span class="benefit-icon">💾</span>
+            <span class="benefit-title">{t_func('html_viewer_benefit6_title')}</span>
+            <span class="benefit-desc">{t_func('html_viewer_benefit6_desc')}</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
 
 def render_proprietary_formats_help():
+    """Mostra una tendina (expander) con le note sui formati proprietari.
+
+    Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
+    Sostituisce il precedente box grande sempre visibile.
+    """
     with st.expander(t("notes_expander_title"), expanded=False):
+        # Intro
         st.markdown(t("notes_expander_intro"))
+
         st.markdown("---")
+
+        # Due colonne: supportati vs non supportati
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(t("notes_expander_native"))
         with col2:
             st.markdown(t("notes_expander_not_supported"))
+
         st.markdown("---")
+
+        # Come procedere
         st.markdown(t("notes_expander_howto"))
         st.markdown(t("notes_expander_steps"))
+
+        # Tip
         st.info(t("notes_expander_tip"))
+
+        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO + CLASSE CSS)
         st.markdown(
             f"""
             <div style="text-align: center; margin-top: 12px;">
-                <a href="https://www.artifix.it/esportare-dwg-in-dae.html" target="_blank" rel="noopener" class="guide-button">
+                <a href="https://www.artifix.it/esportare-dwg-in-dae.html" target="_blank" rel="noopener"
+                   class="guide-button">
                     {t("notes_expander_guide_link")}
                 </a>
             </div>
-            """, unsafe_allow_html=True
+            """,
+            unsafe_allow_html=True
         )
 
 def is_3d_pdf(file_bytes):
+    """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
     try:
         if not PDF_AVAILABLE:
             return False
@@ -409,6 +601,7 @@ def is_3d_pdf(file_bytes):
 
 
 def extract_3d_from_pdf(file_bytes):
+    """Tenta di estrarre un modello 3D da un PDF con U3D o PRC."""
     try:
         if not FITZ_AVAILABLE:
             return None
@@ -430,7 +623,7 @@ def extract_3d_from_pdf(file_bytes):
     except Exception:
         return None
 
-
+# --- BARRA LATERALE ---
 with st.sidebar:
     if LOGO_URL:
         st.markdown(f'<div class="sidebar-logo"><img src="{LOGO_URL}" alt="ArtiFix Logo"></div>', unsafe_allow_html=True)
@@ -460,46 +653,72 @@ with st.sidebar:
         st.markdown(f"🔙 **{st.session_state.page_attuale}**")
     else:
         PAGE_KEYS = {
-            "Dashboard": "nav_dashboard", "Ripara File": "nav_repair",
-            "Viewer 3D": "nav_viewer", "Converti Formati": "nav_convert",
-            "Progetto ArtiFix": "nav_project", "Diventa Sponsor": "nav_sponsor",
+            "Dashboard": "nav_dashboard",
+            "Ripara File": "nav_repair",
+            "Viewer 3D": "nav_viewer",
+            "Converti Formati": "nav_convert",
+            "Progetto ArtiFix": "nav_project",
+            "Diventa Sponsor": "nav_sponsor",
         }
         PAGE_ORDER = ["Dashboard", "Ripara File", "Viewer 3D", "Converti Formati", "Progetto ArtiFix", "Diventa Sponsor"]
+
         current_index = 0
         for idx, p in enumerate(PAGE_ORDER):
             if p == st.session_state.page_attuale:
                 current_index = idx
                 break
+
         nav_key = f"navigation_{st.session_state.lang}"
+
         page = st.radio(
-            t("sidebar_navigation"), PAGE_ORDER,
+            t("sidebar_navigation"),
+            PAGE_ORDER,
             format_func=lambda x: t(PAGE_KEYS.get(x, x)),
-            index=current_index, key=nav_key,
+            index=current_index,
+            key=nav_key,
             label_visibility="collapsed"
         )
         st.session_state.page_attuale = page
 
     st.markdown("---")
+
     if st.button(t("nav_privacy"), key="privacy_link", use_container_width=True):
         st.session_state.page_attuale = "Privacy Policy"
         st.rerun()
+
     if st.button(t("nav_cookie"), key="cookie_link", use_container_width=True):
         st.session_state.page_attuale = "Cookie Policy"
         st.rerun()
 
     terms_url = "https://www.artifix.it/termini.html" if st.session_state.lang == "it" else "https://www.artifix.it/en/terms.html"
-    st.markdown(f'<a href="{terms_url}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px;">{t("nav_terms")}</a>', unsafe_allow_html=True)
-    st.markdown(f'<a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">{t("nav_donate")}</a>', unsafe_allow_html=True)
-    st.markdown(f'<a href="{SPONSOR_MAILTO}" style="display:block; text-align:center; background:#fff4e6; color:#c26a00; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px; border:1px solid #ffd9a8;">{t("nav_become_sponsor")}</a>', unsafe_allow_html=True)
     st.markdown(
         f"""
-        <a href="{YOUTUBE_URL}" target="_blank" rel="noopener" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:8px; background:#ff0000; color:#ffffff; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-            <span>{t("nav_youtube")}</span>
+        <a href="{terms_url}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px;">
+            {t("nav_terms")}
         </a>
-        """, unsafe_allow_html=True
+        """,
+        unsafe_allow_html=True
     )
 
+    st.markdown(
+        f"""
+        <a href="{DONATE_LINK}" target="_blank" style="display:block; text-align:center; background:#f0f2f6; color:#333; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:15px;">
+            {t("nav_donate")}
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        f"""
+        <a href="{SPONSOR_MAILTO}" style="display:block; text-align:center; background:#fff4e6; color:#c26a00; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px; border:1px solid #ffd9a8;">
+            {t("nav_become_sponsor")}
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
+
+# --- LOGICA PAGINE ---
 if st.session_state.page_attuale == "Privacy Policy":
     page = "Privacy Policy"
 elif st.session_state.page_attuale == "Cookie Policy":
@@ -507,6 +726,7 @@ elif st.session_state.page_attuale == "Cookie Policy":
 else:
     page = st.session_state.page_attuale
 
+# --- POPUP COOKIE E PRIVACY ---
 if st.session_state.cookie_consent is None:
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     with st.container(border=True):
@@ -529,6 +749,7 @@ if st.session_state.cookie_consent is None:
                 st.session_state.cookie_consent = "accepted"
                 st.rerun()
 
+# --- DASHBOARD ---
 if page == "Dashboard":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
@@ -549,6 +770,7 @@ if page == "Dashboard":
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
 
+# --- RIPARA FILE ---
 elif page == "Ripara File":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
@@ -559,19 +781,26 @@ elif page == "Ripara File":
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
 
+# --- VIEWER 3D ---
 elif page == "Viewer 3D":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
         st.header(t("viewer_header"))
+
+        # --- SEZIONE INFORMATIVA HTML 3D VIEWER ---
         render_html_viewer_info(t)
         st.markdown("---")
+
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         viewer_file = st.file_uploader(
             t("viewer_upload"),
             type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
             key=f"viewer_{st.session_state.lang}",
             help=t("viewer_upload_hint")
         )
+
         if viewer_file:
+            # ✅ Controllo 3D PDF
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
@@ -613,37 +842,29 @@ elif page == "Viewer 3D":
                     if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
                         st.error(t("viewer_error_processing"))
                     else:
+                        vertices = mesh.vertices.copy()
+                        rotated = np.empty_like(vertices)
+                        rotated[:, 0] = vertices[:, 0]
+                        rotated[:, 1] = vertices[:, 2]
+                        rotated[:, 2] = -vertices[:, 1]
+                        vertices = rotated
+
+                        min_x, min_y, min_z = vertices.min(axis=0)
+                        max_x, max_y, max_z = vertices.max(axis=0)
+                        center_x = (min_x + max_x) / 2
+                        center_z = (min_z + max_z) / 2
+
+                        vertices[:, 0] -= center_x
+                        vertices[:, 1] -= min_y
+                        vertices[:, 2] -= center_z
+
+                        faces = mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()
+                        mesh_data = {"vertices": vertices.tolist(), "faces": faces}
+                        mesh_json = json.dumps(mesh_data)
+
                         status_text.text(t("viewer_status_building"))
-                        progress_bar.progress(80)
-
-                        # --- Prepara mesh (rotazione + centratura) SENZA decimazione ---
-                        v = mesh.vertices.copy()
-                        r = np.empty_like(v)
-                        r[:, 0] = v[:, 0]
-                        r[:, 1] = v[:, 2]
-                        r[:, 2] = -v[:, 1]
-                        v = r
-                        min_x, min_y, min_z = v.min(axis=0)
-                        max_x, max_y, max_z = v.max(axis=0)
-                        v[:, 0] -= (min_x + max_x) / 2
-                        v[:, 1] -= min_y
-                        v[:, 2] -= (min_z + max_z) / 2
-                        faces_np = mesh.faces.astype(np.uint32)
-
-                        # --- Serializza in binario compresso (base64+gzip) per performance ---
-                        payload = {
-                            "v": v.astype(np.float32).tobytes(),
-                            "f": faces_np.tobytes(),
-                            "nv": int(v.shape[0]),
-                            "nf": int(faces_np.shape[0]),
-                        }
-                        raw = json.dumps({"v": base64.b64encode(payload["v"]).decode("ascii"),
-                                          "f": base64.b64encode(payload["f"]).decode("ascii"),
-                                          "nv": payload["nv"], "nf": payload["nf"]})
-                        compressed = base64.b64encode(gzip.compress(raw.encode("utf-8"))).decode("ascii")
-
                         progress_bar.progress(100)
-                        time.sleep(0.3)
+                        time.sleep(0.5)
 
                         viewer_html = """
                         <html><head><style>
@@ -654,7 +875,6 @@ elif page == "Viewer 3D":
                         .legend span{display:inline-block;width:12px;height:12px;margin-right:4px;border-radius:2px;}
                         .axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}
                         </style>
-                        <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
                         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
                         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
                         </head><body>
@@ -662,27 +882,7 @@ elif page == "Viewer 3D":
                         <div class="legend"><span class="axis-x"></span> """ + t("viewer_legend_axes") + """</div>
                         <div id="info">""" + t("viewer_legend") + """</div>
                         <script>
-                        const compressedB64 = \"""" + compressed + """\";
-                        function b64ToBytes(b64) {
-                            const bin = atob(b64);
-                            const len = bin.length;
-                            const bytes = new Uint8Array(len);
-                            for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
-                            return bytes;
-                        }
-                        const gz = b64ToBytes(compressedB64);
-                        const rawJson = pako.ungzip(gz, { to: 'string' });
-                        const data = JSON.parse(rawJson);
-                        function b64ToFloat32(b64) {
-                            const bytes = b64ToBytes(b64);
-                            return new Float32Array(bytes.buffer);
-                        }
-                        function b64ToUint32(b64) {
-                            const bytes = b64ToBytes(b64);
-                            return new Uint32Array(bytes.buffer);
-                        }
-                        const verts = b64ToFloat32(data.v);
-                        const idxs = b64ToUint32(data.f);
+                        const data = """ + mesh_json + """;
                         const container = document.getElementById('c');
                         const scene = new THREE.Scene();
                         scene.background = new THREE.Color(0xf0f2f6);
@@ -718,11 +918,14 @@ elif page == "Viewer 3D":
                         const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
                         fillLight.position.set(-15, 10, -15);
                         scene.add(fillLight);
-                        if (verts.length > 0 && idxs.length > 0) {
+                        if (data.vertices && data.vertices.length > 0) {
                             const geo = new THREE.BufferGeometry();
+                            const verts = new Float32Array(data.vertices.flat());
                             geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-                            geo.setIndex(new THREE.BufferAttribute(idxs, 1));
-                            geo.computeVertexNormals();
+                            if (data.faces && data.faces.length > 0) {
+                                geo.setIndex(new THREE.BufferAttribute(new Uint32Array(data.faces.flat()), 1));
+                                geo.computeVertexNormals();
+                            }
                             const mat = new THREE.MeshStandardMaterial({color: 0x1f77b4, roughness: 0.45, metalness: 0.1, flatShading: false, side: THREE.DoubleSide});
                             const mesh = new THREE.Mesh(geo, mat);
                             mesh.castShadow = true;
@@ -751,12 +954,12 @@ elif page == "Viewer 3D":
                         """
                         st.components.v1.html(viewer_html, height=580)
 
-                        # --- SEZIONE CONDIVISIONE (una sola volta per file, anti-loop) ---
+                        # --- SEZIONE CONDIVISIONE (v8.0) con anti-loop via session_state ---
                         _share_key = f"_share_done_{viewer_file.name}_{len(viewer_file.getvalue())}"
                         if not st.session_state.get(_share_key, False):
                             st.session_state[_share_key] = True
                             try:
-                                render_share_section(viewer_file, t, st.session_state.lang)
+                                render_share_section(viewer_file, t, lang=st.session_state.lang)
                             except Exception as _e_share:
                                 st.warning(f"Condivisione temporaneamente non disponibile: {_e_share}")
                 else:
@@ -767,12 +970,16 @@ elif page == "Viewer 3D":
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
 
+# --- CONVERTI FORMATI ---
 elif page == "Converti Formati":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
+
+        # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
+
         with st.expander(t("convert_expander_matrix")):
             st.markdown("""
             | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |
@@ -790,6 +997,8 @@ elif page == "Converti Formati":
             | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
             """)
             st.caption(t("convert_caption_matrix"))
+
+        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         uploaded_file = st.file_uploader(
             t("convert_upload"),
             type=[ext[1:] for ext in ALL_EXTENSIONS],
@@ -797,22 +1006,30 @@ elif page == "Converti Formati":
             help=t("convert_upload_hint")
         )
         st.caption(t("convert_upload_hint"))
+
         if uploaded_file:
             file_name = uploaded_file.name
             file_bytes = uploaded_file.getvalue()
             file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
             file_type, icon = detect_file_type(file_extension)
             st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">{t("convert_file_type", type=file_type, ext=file_extension)}</div></div></div></div>', unsafe_allow_html=True)
+
             MESH_FORMATS = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off"]
+            VECTOR_FORMATS = ["svg"]
+            DOC_FORMATS = ["pdf", "docx", "xlsx"]
+            BIM_FORMATS = ["ifc"]
             GEO_FORMATS = ["shp", "geojson", "kml", "gpx"]
+
             if file_extension in MESH_FORMATS or file_extension == "dxf":
                 target_formats = CONVERSION_MATRIX.get(file_extension, [])
                 target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
+
                 if not target_options:
                     st.warning(t("convert_warning_no_target"))
                 else:
                     target_selected = st.selectbox(t("convert_target_format"), target_options)
                     target_ext = target_selected.split(".")[1].replace(")", "").strip()
+
                     if st.button(t("convert_button_convert", format=target_selected.split(' ')[0]), type="primary", use_container_width=True):
                         progress_bar = st.progress(0)
                         status_text = st.empty()
@@ -820,6 +1037,7 @@ elif page == "Converti Formati":
                         progress_bar.progress(20)
                         time.sleep(0.5)
                         mesh = load_3d_file(file_bytes, file_extension)
+
                         if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                             status_text.text(t("convert_status_converting"))
                             progress_bar.progress(70)
@@ -828,6 +1046,7 @@ elif page == "Converti Formati":
                             status_text.text(t("convert_status_saving"))
                             progress_bar.progress(100)
                             time.sleep(0.5)
+
                             if result_bytes:
                                 st.success(t("convert_success", format=target_selected.split(' ')[0]))
                                 mime_types = {'stl': 'application/octet-stream', 'obj': 'text/plain', 'ply': 'application/octet-stream', 'glb': 'application/octet-stream', 'gltf': 'application/octet-stream', 'fbx': 'application/octet-stream', '3mf': 'application/octet-stream', 'dae': 'application/octet-stream', 'wrl': 'application/octet-stream', 'off': 'application/octet-stream', 'dxf': 'application/dxf', 'pdf': 'application/pdf'}
@@ -839,6 +1058,7 @@ elif page == "Converti Formati":
                                 st.error(t("convert_error", format=target_selected.split(' ')[0]))
                         else:
                             st.error(t("convert_error_load"))
+
                     st.markdown("---")
                     if st.button(t("convert_button_preview")):
                         st.info(t("convert_info_preview"))
@@ -851,6 +1071,7 @@ elif page == "Converti Formati":
                                 trimesh.repair.fix_normals(mesh_preview)
                             except Exception:
                                 pass
+
                             if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
                                 st.error(t("viewer_error_processing"))
                             else:
@@ -925,6 +1146,7 @@ elif page == "Converti Formati":
                                 st.components.v1.html(viewer_html, height=420)
                         else:
                             st.warning(t("convert_warning_no_preview"))
+
             elif file_extension == "svg":
                 st.info("🎨 **SVG rilevato** — questo è un formato vettoriale, non una mesh 3D.")
                 if SVG_AVAILABLE:
@@ -940,6 +1162,7 @@ elif page == "Converti Formati":
                             st.error(f"❌ Errore: {e}")
                 else:
                     st.warning("⚠️ Libreria `cairosvg` non installata.")
+
             elif file_extension == "pdf":
                 st.info("📄 **PDF rilevato** — questo è un formato documento.")
                 is_3d = is_3d_pdf(file_bytes)
@@ -958,6 +1181,7 @@ elif page == "Converti Formati":
                         st.metric("Pagine", len(pdf_reader.pages))
                     except Exception:
                         pass
+
             elif file_extension == "docx":
                 st.info("📝 **DOCX rilevato** — documento Word.")
                 if DOCX_AVAILABLE:
@@ -966,6 +1190,7 @@ elif page == "Converti Formati":
                         st.metric("Paragrafi", len(doc.paragraphs))
                     except Exception as e:
                         st.warning(f"Impossibile leggere: {e}")
+
             elif file_extension == "xlsx":
                 st.info("📊 **XLSX rilevato** — foglio di calcolo.")
                 if XLSX_AVAILABLE:
@@ -974,6 +1199,7 @@ elif page == "Converti Formati":
                         st.metric("Fogli", len(wb.sheetnames))
                     except Exception as e:
                         st.warning(f"Impossibile leggere: {e}")
+
             elif file_extension == "ifc":
                 st.info("🏗️ **IFC rilevato** — formato BIM.")
                 if IFC_AVAILABLE:
@@ -991,6 +1217,7 @@ elif page == "Converti Formati":
                                 pass
                     except Exception as e:
                         st.warning(f"Impossibile leggere: {e}")
+
             elif file_extension in GEO_FORMATS:
                 st.info(f"🌍 **{file_extension.upper()} rilevato** — formato geospaziale.")
                 if GEOPANDAS_AVAILABLE:
@@ -999,13 +1226,16 @@ elif page == "Converti Formati":
                         st.metric("Features", len(gdf))
                     except Exception as e:
                         st.warning(f"Impossibile leggere: {e}")
+
             else:
                 st.warning(f"⚠️ Formato **.{file_extension.upper()}** non supportato.")
                 st.info("💡 Formati supportati: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF, SVG, DOCX, XLSX, IFC, SHP, GeoJSON, KML, GPX**.")
+
     with col_side:
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
 
+# --- PROGETTO ARTIFIX ---
 elif page == "Progetto ArtiFix":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
@@ -1032,6 +1262,7 @@ elif page == "Progetto ArtiFix":
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
 
+# --- DIVENTA SPONSOR ---
 elif page == "Diventa Sponsor":
     col_main, col_side = st.columns([3, 1], gap="large")
     with col_main:
@@ -1073,6 +1304,7 @@ elif page == "Diventa Sponsor":
         render_sponsor_band(st.session_state.lang)
         sponsor_band_placeholder(st.session_state.lang)
 
+# --- PRIVACY POLICY ---
 elif page == "Privacy Policy":
     st.header(t("privacy_header"))
     st.markdown(t("privacy_subtitle"))
@@ -1087,6 +1319,7 @@ elif page == "Privacy Policy":
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
 
+# --- COOKIE POLICY ---
 elif page == "Cookie Policy":
     st.header(t("cookie_policy_header"))
     st.markdown(t("cookie_policy_subtitle"))
@@ -1101,5 +1334,6 @@ elif page == "Cookie Policy":
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
 
+# --- FOOTER GLOBALE ---
 st.markdown("---")
 st.markdown(f'<div class="footer-artifix">{t("footer")}</div>', unsafe_allow_html=True)
