@@ -12,6 +12,7 @@ import trimesh
 import io
 import numpy as np
 import base64
+import gzip
 import os
 import json
 from datetime import datetime
@@ -612,21 +613,11 @@ elif page == "Viewer 3D":
                     if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
                         st.error(t("viewer_error_processing"))
                     else:
-                        # --- Prepara la mesh per il viewer ---
                         status_text.text(t("viewer_status_building"))
                         progress_bar.progress(80)
 
-                        # Se la mesh è troppo grande, usa una versione ridotta SOLO per il viewer HTML.
-                        # La mesh originale (mesh) resta intatta per condivisione e conversioni.
-                        viewer_mesh = mesh
-                        try:
-                            if len(mesh.faces) > 50000:
-                                viewer_mesh = mesh.copy()
-                                viewer_mesh = viewer_mesh.simplify_quadric_decimation(face_count=30000)
-                        except Exception:
-                            viewer_mesh = mesh
-
-                        v = viewer_mesh.vertices.copy()
+                        # --- Prepara mesh (rotazione + centratura) SENZA decimazione ---
+                        v = mesh.vertices.copy()
                         r = np.empty_like(v)
                         r[:, 0] = v[:, 0]
                         r[:, 1] = v[:, 2]
@@ -634,14 +625,23 @@ elif page == "Viewer 3D":
                         v = r
                         min_x, min_y, min_z = v.min(axis=0)
                         max_x, max_y, max_z = v.max(axis=0)
-                        center_x = (min_x + max_x) / 2
-                        center_z = (min_z + max_z) / 2
-                        v[:, 0] -= center_x
+                        v[:, 0] -= (min_x + max_x) / 2
                         v[:, 1] -= min_y
-                        v[:, 2] -= center_z
-                        viewer_faces = viewer_mesh.faces.tolist()
-                        mesh_data = {"vertices": v.tolist(), "faces": viewer_faces}
-                        mesh_json = json.dumps(mesh_data)
+                        v[:, 2] -= (min_z + max_z) / 2
+                        faces_np = mesh.faces.astype(np.uint32)
+
+                        # --- Serializza in binario compresso (base64+gzip) per performance ---
+                        payload = {
+                            "v": v.astype(np.float32).tobytes(),
+                            "f": faces_np.tobytes(),
+                            "nv": int(v.shape[0]),
+                            "nf": int(faces_np.shape[0]),
+                        }
+                        raw = json.dumps({"v": base64.b64encode(payload["v"]).decode("ascii"),
+                                          "f": base64.b64encode(payload["f"]).decode("ascii"),
+                                          "nv": payload["nv"], "nf": payload["nf"]})
+                        compressed = base64.b64encode(gzip.compress(raw.encode("utf-8"))).decode("ascii")
+
                         progress_bar.progress(100)
                         time.sleep(0.3)
 
@@ -654,6 +654,7 @@ elif page == "Viewer 3D":
                         .legend span{display:inline-block;width:12px;height:12px;margin-right:4px;border-radius:2px;}
                         .axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}
                         </style>
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
                         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
                         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
                         </head><body>
@@ -661,7 +662,27 @@ elif page == "Viewer 3D":
                         <div class="legend"><span class="axis-x"></span> """ + t("viewer_legend_axes") + """</div>
                         <div id="info">""" + t("viewer_legend") + """</div>
                         <script>
-                        const data = """ + mesh_json + """;
+                        const compressedB64 = \"""" + compressed + """\";
+                        function b64ToBytes(b64) {
+                            const bin = atob(b64);
+                            const len = bin.length;
+                            const bytes = new Uint8Array(len);
+                            for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+                            return bytes;
+                        }
+                        const gz = b64ToBytes(compressedB64);
+                        const rawJson = pako.ungzip(gz, { to: 'string' });
+                        const data = JSON.parse(rawJson);
+                        function b64ToFloat32(b64) {
+                            const bytes = b64ToBytes(b64);
+                            return new Float32Array(bytes.buffer);
+                        }
+                        function b64ToUint32(b64) {
+                            const bytes = b64ToBytes(b64);
+                            return new Uint32Array(bytes.buffer);
+                        }
+                        const verts = b64ToFloat32(data.v);
+                        const idxs = b64ToUint32(data.f);
                         const container = document.getElementById('c');
                         const scene = new THREE.Scene();
                         scene.background = new THREE.Color(0xf0f2f6);
@@ -697,14 +718,11 @@ elif page == "Viewer 3D":
                         const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
                         fillLight.position.set(-15, 10, -15);
                         scene.add(fillLight);
-                        if (data.vertices && data.vertices.length > 0) {
+                        if (verts.length > 0 && idxs.length > 0) {
                             const geo = new THREE.BufferGeometry();
-                            const verts = new Float32Array(data.vertices.flat());
                             geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-                            if (data.faces && data.faces.length > 0) {
-                                geo.setIndex(new THREE.BufferAttribute(new Uint32Array(data.faces.flat()), 1));
-                                geo.computeVertexNormals();
-                            }
+                            geo.setIndex(new THREE.BufferAttribute(idxs, 1));
+                            geo.computeVertexNormals();
                             const mat = new THREE.MeshStandardMaterial({color: 0x1f77b4, roughness: 0.45, metalness: 0.1, flatShading: false, side: THREE.DoubleSide});
                             const mesh = new THREE.Mesh(geo, mat);
                             mesh.castShadow = true;
