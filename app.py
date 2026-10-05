@@ -763,6 +763,9 @@ elif page == "Viewer 3D":
                 cached = st.session_state[_vkey]
                 # Riepilogo elaborazione (resta visibile)
                 st.success(f"✅ Elaborazione completata — {cached['v']} vertici, {cached['f']} facce")
+                # ⏱️ Delay per evitare 'Bad message format / SessionInfo not initialized'
+                # su Streamlit Cloud quando il container è freddo.
+                time.sleep(0.5)
                 st.components.v1.html(cached["html"], height=580)
                 render_share_section(viewer_file, t, lang=st.session_state.lang)
             else:
@@ -824,6 +827,9 @@ elif page == "Viewer 3D":
                             progress_bar.progress(100, text="✅ Pronto!")
                             time.sleep(0.5)
                             progress_bar.empty()
+                            # ⏱️ Delay extra per evitare 'Bad message format / SessionInfo not initialized'
+                            # quando il container Streamlit Cloud è freddo.
+                            time.sleep(1.0)
                             st.rerun()
                     else:
                         progress_bar.empty()
