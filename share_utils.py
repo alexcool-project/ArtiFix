@@ -20,17 +20,6 @@ from pathlib import Path
 import streamlit as st
 
 
-def render_share_info_tooltip(t) -> None:
-    """Mostra la nota informativa (i) con spiegazione della condivisione."""
-    with st.expander(t("share_info_tooltip"), expanded=False):
-        st.markdown(f"### {t('share_info_title')}")
-        st.markdown(t("share_info_body"))
-        st.markdown("---")
-        st.markdown(t("share_info_features"))
-        st.markdown("---")
-        st.markdown(t("share_info_use_cases"))
-
-
 def _render_copy_button(url: str, label: str, t) -> None:
     """Renderizza un pulsante 'Copia link' con feedback visivo tradotto."""
     safe_url = html.escape(url, quote=True)
@@ -247,8 +236,16 @@ def render_share_section(uploaded_file, t, lang: str = "it") -> None:
     lang : lingua corrente ("it" o "en")
     """
     st.markdown("---")
-    st.markdown(f"### {t('share_button')}")
-    render_share_info_tooltip(t)
+    st.markdown(
+        f'<div style="background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);'
+        f'border-left: 4px solid #1f77b4; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1rem;">'
+        f'<div style="font-size: 1.05rem; font-weight: 700; color: #1f77b4; margin-bottom: 0.3rem;">'
+        f'{t("share_button")}</div>'
+        f'<div style="color: #333; font-size: 0.92rem; line-height: 1.5;">'
+        f'{t("share_message")}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
     col1, col2 = st.columns([3, 1])
     with col1:
