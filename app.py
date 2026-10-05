@@ -1,5 +1,8 @@
 import streamlit as st
 
+# ============================================================
+# CONFIGURAZIONE PAGINA — DEVE ESSERE IL PRIMO COMANDO STREAMLIT
+# ============================================================
 st.set_page_config(
     page_title="ArtiFix - Universal CAD/CAM Repair",
     page_icon="https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs/images/ArchiFix_cubo-logo.png",
@@ -7,6 +10,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ============================================================
+# IMPORT STANDARD
+# ============================================================
 import ezdxf
 import trimesh
 import io
@@ -22,7 +28,9 @@ from email.mime.multipart import MIMEMultipart
 import time
 import requests
 
-# --- MODULO SPONSOR (Google Sheets) ---
+# ============================================================
+# MODULI INTERNI
+# ============================================================
 try:
     from sponsors import load_sponsors, render_sponsor_band, sponsor_band_placeholder
     SPONSORS_AVAILABLE = True
@@ -30,12 +38,10 @@ except ImportError:
     SPONSORS_AVAILABLE = False
     def load_sponsors(): return []
     def render_sponsor_band(*a, **k): pass
-    def sponsor_band_placeholder(): pass
+    def sponsor_band_placeholder(*a, **k): pass
 
-# --- MODULO TRADUZIONI (IT/EN) ---
 from translations import TRANSLATIONS, get_text, detect_browser_language
 
-# --- UTILITY CONDIVISIONE VIEWER (v8.0) ---
 try:
     from share_utils import render_share_section
     SHARE_AVAILABLE = True
@@ -43,7 +49,9 @@ except ImportError:
     SHARE_AVAILABLE = False
     def render_share_section(*a, **k): pass
 
-# --- LIBRERIA COOKIE (OPZIONALE) ---
+# ============================================================
+# LIBRERIE OPZIONALI
+# ============================================================
 try:
     from streamlit_cookies_controller import CookieController
     cookie_controller = CookieController()
@@ -51,7 +59,6 @@ try:
 except ImportError:
     COOKIE_LIB = False
 
-# --- GOOGLE SHEETS (metriche dinamiche) ---
 try:
     import gspread
     from google.oauth2.service_account import Credentials
@@ -59,14 +66,55 @@ try:
 except ImportError:
     GSPREAD_AVAILABLE = False
 
-# --- LINK DIRETTI DELLE IMMAGINI (GitHub Raw) ---
+try:
+    from PyPDF2 import PdfReader
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+
+try:
+    import fitz
+    FITZ_AVAILABLE = True
+except ImportError:
+    FITZ_AVAILABLE = False
+
+try:
+    import geopandas as gpd
+    GEOPANDAS_AVAILABLE = True
+except (ImportError, OSError):
+    GEOPANDAS_AVAILABLE = False
+
+try:
+    import ifcopenshell
+    IFC_AVAILABLE = True
+except ImportError:
+    IFC_AVAILABLE = False
+
+try:
+    import docx
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
+
+try:
+    import openpyxl
+    XLSX_AVAILABLE = True
+except ImportError:
+    XLSX_AVAILABLE = False
+
+try:
+    import cairosvg
+    SVG_AVAILABLE = True
+except (ImportError, OSError):
+    SVG_AVAILABLE = False
+
+# ============================================================
+# COSTANTI
+# ============================================================
 CUBO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs/images/ArchiFix_cubo-logo.png"
 LOGO_URL = "https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs/images/Artifix_logo.png"
-
-# --- LINK PAGAMENTO (PayPal) ---
 DONATE_LINK = "https://www.paypal.com/ncp/payment/9C4ZLMBHBDXVS"
 
-# --- GOOGLE SHEETS CONFIG ---
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 SPONSORS_SHEET_ID = "16m8gY3YktT2ysYAkKqHGC28VX1qGghx6PL2typXK2b4"
 GITHUB_REPO = "alexcool-project/Artifix"
@@ -90,24 +138,32 @@ SPONSOR_MAILTO = (
     "Telefono%3A%20%0D%0ALogo%20(URL)%3A%20%0D%0AMessaggio%3A%0D%0A"
 )
 
-# --- STATO LINGUA ---
+# ============================================================
+# STATO SESSIONE
+# ============================================================
 if 'lang' not in st.session_state:
     try:
         st.session_state.lang = detect_browser_language()
     except Exception:
         st.session_state.lang = "it"
 
+
 def t(key, **kwargs):
     return get_text(key, st.session_state.lang, **kwargs)
 
-# --- SEO META TAG ---
+
+# ============================================================
+# SEO
+# ============================================================
 st.markdown("""
 <title>ArtiFix - Convertitore CAD/CAM Universale | Converti STL, OBJ, PLY in 3D PDF</title>
 <meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM (STL, OBJ, PLY, GLB, GLTF, FBX, DAE, DXF) in 3D PDF, STL, OBJ, GLTF e altri formati." />
 <meta name="robots" content="index, follow" />
 """, unsafe_allow_html=True)
 
-# --- CSS ---
+# ============================================================
+# CSS
+# ============================================================
 st.markdown("""
 <style>
     .main-header { font-size: 2.2rem; color: #1f77b4; font-weight: 700; text-align: center; margin-bottom: 1rem; }
@@ -148,32 +204,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- IMPORT LIBRERIE OPZIONALI ---
-try:
-    from PyPDF2 import PdfReader
-    PDF_AVAILABLE = True
-except ImportError:
-    PDF_AVAILABLE = False
-
-try:
-    import fitz
-    FITZ_AVAILABLE = True
-except ImportError:
-    FITZ_AVAILABLE = False
-
-try:
-    import geopandas as gpd
-    GEOPANDAS_AVAILABLE = True
-except (ImportError, OSError):
-    GEOPANDAS_AVAILABLE = False
-
-try:
-    import ifcopenshell
-    IFC_AVAILABLE = True
-except ImportError:
-    IFC_AVAILABLE = False
-
-# --- STATO PAGINE E COOKIE ---
+# ============================================================
+# STATO PAGINE E COOKIE
+# ============================================================
 if 'page_attuale' not in st.session_state:
     st.session_state.page_attuale = "Dashboard"
 
@@ -186,7 +219,9 @@ if 'cookie_consent' not in st.session_state:
     else:
         st.session_state.cookie_consent = None
 
-# --- FORMATI SUPPORTATI ---
+# ============================================================
+# FORMATI SUPPORTATI
+# ============================================================
 SUPPORTED_FORMATS = {
     "CAD 2D": {"extensions": [".dxf"], "icon": "📐", "description": "File CAD (DXF)"},
     "CAD 3D & Mesh": {"extensions": [".stl", ".obj", ".ply", ".glb", ".gltf", ".fbx", ".3mf", ".dae", ".wrl", ".off", ".u3d"], "icon": "🧊", "description": "Mesh 3D"},
@@ -222,7 +257,18 @@ FORMAT_NAMES = {
     'pdf': '3D PDF (.pdf)',
 }
 
-# --- FUNZIONI 3D ---
+# ============================================================
+# FUNZIONI 3D
+# ============================================================
+def detect_file_type(file_extension):
+    file_extension = file_extension.lower().replace('.', '')
+    for category, info in SUPPORTED_FORMATS.items():
+        for ext in info["extensions"]:
+            if ext.replace('.', '') == file_extension:
+                return category, info["icon"]
+    return "Sconosciuto", "❓"
+
+
 def load_3d_file(file_bytes, file_extension):
     try:
         ext = file_extension.lower().replace('.', '')
@@ -325,7 +371,9 @@ def process_file(file_bytes, file_name):
     return result
 
 
-# --- METRICHE DINAMICHE ---
+# ============================================================
+# METRICHE DINAMICHE
+# ============================================================
 def _format_value(raw_value):
     value_str = str(raw_value).strip()
     if not value_str:
@@ -443,7 +491,9 @@ def _render_formats_grid():
             )
 
 
-# --- UI HELPERS ---
+# ============================================================
+# UI HELPERS
+# ============================================================
 def render_html_viewer_info(t_func):
     st.markdown(f'<div class="html-viewer-intro"><h3>{t_func("html_viewer_title")}</h3>'
                 f'<p>{t_func("html_viewer_intro")}</p><p>{t_func("html_viewer_modes")}</p></div>',
@@ -463,6 +513,68 @@ def render_proprietary_formats_help():
         st.markdown(t("notes_expander_howto"))
         st.markdown(t("notes_expander_steps"))
         st.info(t("notes_expander_tip"))
+
+
+def is_3d_pdf(file_bytes):
+    try:
+        if not PDF_AVAILABLE:
+            return False
+        pdf_reader = PdfReader(io.BytesIO(file_bytes))
+        for page in pdf_reader.pages:
+            page_text = str(page)
+            if '/3D' in page_text or '/U3D' in page_text or '/PRC' in page_text:
+                return True
+        return False
+    except Exception:
+        return False
+
+
+def extract_3d_from_pdf(file_bytes):
+    try:
+        if not FITZ_AVAILABLE:
+            return None
+        import fitz
+        doc = fitz.open(stream=file_bytes, filetype="pdf")
+        for page in doc:
+            for xref in range(1, doc.xref_length()):
+                try:
+                    obj = doc.xref_object(xref)
+                    if '/U3D' in obj or '/PRC' in obj or '/Subtype /U3D' in obj:
+                        stream = doc.xref_stream(xref)
+                        if stream and len(stream) > 100:
+                            doc.close()
+                            return {'u3d_bytes': stream, 'method': 'PyMuPDF'}
+                except Exception:
+                    continue
+        doc.close()
+        return None
+    except Exception:
+        return None
+
+
+def invia_email(nome, email_utente, messaggio):
+    try:
+        smtp_server = st.secrets["SMTP_SERVER"]
+        smtp_port = st.secrets["SMTP_PORT"]
+        mittente = st.secrets["EMAIL_ADDRESS"]
+        password = st.secrets["EMAIL_PASSWORD"]
+        destinatario = st.secrets["RECIPIENT_EMAIL"]
+
+        msg = MIMEMultipart()
+        msg['From'] = mittente
+        msg['To'] = destinatario
+        msg['Subject'] = f"Nuovo messaggio da {nome}"
+
+        corpo = f"Da: {nome} ({email_utente})\n\n{messaggio}"
+        msg.attach(MIMEText(corpo, 'plain'))
+
+        server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        server.login(mittente, password)
+        server.sendmail(mittente, destinatario, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        return str(e)
 
 
 # ============================================================
@@ -523,7 +635,9 @@ with st.sidebar:
     st.markdown(f'<a href="{terms_url}" target="_blank" style="display:block;text-align:center;background:#f0f2f6;color:#333;padding:8px;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;margin-top:8px;">{t("nav_terms")}</a>', unsafe_allow_html=True)
     st.markdown(f'<a href="{DONATE_LINK}" target="_blank" style="display:block;text-align:center;background:#f0f2f6;color:#333;padding:8px;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;margin-top:15px;">{t("nav_donate")}</a>', unsafe_allow_html=True)
 
-# --- COOKIE BANNER ---
+# ============================================================
+# COOKIE BANNER
+# ============================================================
 if COOKIE_LIB and st.session_state.cookie_consent is None:
     st.markdown("---")
     col1, col2 = st.columns([3, 1])
@@ -693,7 +807,9 @@ elif st.session_state.page_attuale == "Cookie Policy":
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
 
-# --- FOOTER ---
+# ============================================================
+# FOOTER
+# ============================================================
 st.markdown(f'<div class="footer-artifix">© {datetime.now().year} ArtiFix - Universal CAD/CAM Repair | '
             f'<a href="https://www.artifix.it" target="_blank" style="color:#1f77b4;">www.artifix.it</a></div>',
             unsafe_allow_html=True)
