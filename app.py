@@ -1,4 +1,15 @@
 import streamlit as st
+
+# ============================================================
+# CONFIGURAZIONE PAGINA — DEVE ESSERE IL PRIMO COMANDO STREAMLIT
+# ============================================================
+st.set_page_config(
+    page_title="ArtiFix - Universal CAD/CAM Repair",
+    page_icon="https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs/images/ArchiFix_cubo-logo.png",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 import ezdxf
 import trimesh
 import io
@@ -59,22 +70,6 @@ SPONSOR_MAILTO = (
     "Grazie%2C%0D%0A%5BNominativo%5D"
 )
 
-# --- CONFIGURAZIONE PAGINA ---
-if CUBO_URL:
-    st.set_page_config(
-        page_title="ArtiFix - Universal CAD/CAM Repair",
-        page_icon=CUBO_URL,
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-else:
-    st.set_page_config(
-        page_title="ArtiFix - Universal CAD/CAM Repair",
-        page_icon="🔧",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-
 # --- STATO LINGUA ---
 if 'lang' not in st.session_state:
     try:
@@ -117,7 +112,6 @@ st.markdown("""
     .main .block-container { padding-bottom: 80px !important; }
     .lang-selector { padding: 8px 0; margin-bottom: 15px; }
 
-    /* ===== FIX TESTO BIANCO PULSANTE GUIDA ===== */
     a.guide-button, a.guide-button:link, a.guide-button:visited,
     a.guide-button:hover, a.guide-button:active, a.guide-button:focus {
         color: #ffffff !important;
@@ -134,7 +128,6 @@ st.markdown("""
         background: #155a8a !important;
     }
 
-    /* ===== HTML 3D VIEWER INFO SECTION ===== */
     .html-viewer-intro {
         background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
         border-left: 4px solid #1f77b4;
@@ -486,9 +479,6 @@ def invia_email(nome, email_utente, messaggio):
 # ============================================================
 
 def render_html_viewer_info(t_func):
-    """
-    Mostra una sezione informativa sull'HTML 3D Viewer.
-    """
     st.markdown(f"""
     <div class="html-viewer-intro">
         <h3>{t_func('html_viewer_title')}</h3>
@@ -534,7 +524,6 @@ def render_html_viewer_info(t_func):
 
 
 def render_proprietary_formats_help():
-    """Mostra una tendina (expander) con le note sui formati proprietari."""
     with st.expander(t("notes_expander_title"), expanded=False):
         st.markdown(t("notes_expander_intro"))
         st.markdown("---")
@@ -560,7 +549,6 @@ def render_proprietary_formats_help():
         )
 
 def is_3d_pdf(file_bytes):
-    """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
     try:
         if not PDF_AVAILABLE:
             return False
@@ -575,7 +563,6 @@ def is_3d_pdf(file_bytes):
 
 
 def extract_3d_from_pdf(file_bytes):
-    """Tenta di estrarre un modello 3D da un PDF con U3D o PRC."""
     try:
         if not FITZ_AVAILABLE:
             return None
@@ -683,282 +670,583 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
-# --- CONTROLLO COOKIE BANNER ---
-if COOKIE_LIB and st.session_state.cookie_consent is None:
-    with st.container():
-        st.markdown("---")
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.markdown(
-                f"""
-                <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px;">
-                    <strong>🍪 {t('cookie_banner_title')}</strong><br>
-                    <span style="font-size: 0.9rem;">{t('cookie_banner_text')}</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        with col2:
-            if st.button(t("cookie_accept"), key="accept_cookies"):
-                st.session_state.cookie_consent = "accepted"
-                cookie_controller.set('cookie_consent', 'accepted')
-                st.rerun()
-        st.markdown("---")
-
-# --- CONTENUTO PAGINE ---
-if st.session_state.page_attuale == "Dashboard":
-    st.markdown(f'<div class="main-header">{t("dashboard_title")}</div>', unsafe_allow_html=True)
-    
-    # Logo principale
-    if CUBO_URL:
-        st.markdown(f'<div class="logo-container"><img src="{CUBO_URL}" alt="ArtiFix Cubo Logo"></div>', unsafe_allow_html=True)
-    
-    st.markdown(f"### {t('dashboard_subtitle')}")
-    st.markdown(t("dashboard_description"))
-    
-    st.markdown("---")
-    
-    # Metriche
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-value">15+</div>
-            <div class="metric-label">{t('dashboard_metric_formats')}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-value">3D</div>
-            <div class="metric-label">{t('dashboard_metric_viewer')}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-value">100%</div>
-            <div class="metric-label">{t('dashboard_metric_free')}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # Sponsor band
-    sponsor_band_placeholder()
-
-elif st.session_state.page_attuale == "Ripara File":
-    st.markdown(f"## {t('repair_title')}")
-    st.info(t("repair_info"))
-    
-    uploaded_file = st.file_uploader(
-        t("repair_upload"),
-        type=[ext.replace('.', '') for ext in ALL_EXTENSIONS],
-        key="repair_uploader"
-    )
-    
-    if uploaded_file:
-        file_bytes = uploaded_file.read()
-        result = process_file(file_bytes, uploaded_file.name)
-        
-        st.markdown("---")
-        st.markdown(f"### {t('repair_result')}")
-        
-        if result["success"]:
-            st.success(result["message"])
-            st.markdown(f"""
-            <div class="file-info-card">
-                <strong>{result['icon']} {result['type']}</strong><br>
-                {t('repair_file_name')}: {uploaded_file.name}<br>
-                {t('repair_file_size')}: {len(file_bytes) / 1024:.1f} KB
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Se è un file 3D, mostra info aggiuntive
-            if "mesh" in result.get("info", {}):
-                mesh = result["info"]["mesh"]
-                st.markdown(f"""
-                - **Vertici**: {len(mesh.vertices)}
-                - **Facce**: {len(mesh.faces)}
-                - **Bounding Box**: {mesh.bounds.tolist() if hasattr(mesh, 'bounds') else 'N/A'}
-                """)
-        else:
-            st.error(result["message"])
-    
-    # Note formati proprietari
-    render_proprietary_formats_help()
-
-elif st.session_state.page_attuale == "Viewer 3D":
-    st.markdown(f"## {t('viewer_title')}")
-    
-    # Info HTML viewer
-    render_html_viewer_info(t)
-    
-    # Upload per viewer
-    viewer_file = st.file_uploader(
-        t("viewer_upload"),
-        type=['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off'],
-        key="viewer_uploader"
-    )
-    
-    if viewer_file:
-        file_bytes = viewer_file.read()
-        file_ext = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
-        
-        mesh = load_3d_file(file_bytes, file_ext)
-        if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-            st.success(f"✅ {t('viewer_loaded')}: {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
-            
-            # Statistiche
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric(t("viewer_vertices"), f"{len(mesh.vertices):,}")
-            with col2:
-                st.metric(t("viewer_faces"), f"{len(mesh.faces):,}")
-            with col3:
-                st.metric(t("viewer_watertight"), "✅" if mesh.is_watertight else "❌")
-            
-            # Sezione condivisione (con try/except per evitare loop)
-            try:
-                render_share_section(mesh, viewer_file.name, st.session_state.lang)
-            except Exception as e:
-                st.warning(f"Condivisione non disponibile: {e}")
-        else:
-            st.error(t("viewer_error"))
-    
-    # Guida ai formati
-    render_proprietary_formats_help()
-
-elif st.session_state.page_attuale == "Converti Formati":
-    st.markdown(f"## {t('convert_title')}")
-    st.markdown(t("convert_description"))
-    
-    convert_file = st.file_uploader(
-        t("convert_upload"),
-        type=['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf'],
-        key="convert_uploader"
-    )
-    
-    if convert_file:
-        file_bytes = convert_file.read()
-        file_ext = os.path.splitext(convert_file.name)[1].lower().replace('.', '')
-        
-        mesh = load_3d_file(file_bytes, file_ext)
-        if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-            st.success(f"✅ {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
-            
-            # Selezione formato di output
-            available_formats = CONVERSION_MATRIX.get(file_ext, [])
-            if available_formats:
-                target_format = st.selectbox(
-                    t("convert_target"),
-                    available_formats,
-                    format_func=lambda x: FORMAT_NAMES.get(x, x.upper())
-                )
-                
-                if st.button(t("convert_button"), type="primary"):
-                    with st.spinner(t("convert_converting")):
-                        output_bytes = convert_mesh(mesh, target_format)
-                        if output_bytes:
-                            st.success(t("convert_success"))
-                            st.download_button(
-                                label=f"📥 {t('convert_download')} {FORMAT_NAMES.get(target_format, target_format.upper())}",
-                                data=output_bytes,
-                                file_name=f"converted.{target_format}",
-                                mime="application/octet-stream"
-                            )
-                        else:
-                            st.error(t("convert_error"))
-            else:
-                st.warning(t("convert_no_formats"))
-        else:
-            st.error(t("convert_load_error"))
-    
-    render_proprietary_formats_help()
-
-elif st.session_state.page_attuale == "Progetto ArtiFix":
-    st.markdown(f"## {t('project_title')}")
-    st.markdown(t("project_description"))
-    
-    st.markdown("---")
-    st.markdown(f"### {t('project_roadmap')}")
-    st.markdown("""
-    - ✅ Convertitore base STL/OBJ/PLY
-    - ✅ Supporto GLB/GLTF/FBX
-    - ✅ Viewer 3D integrato
-    - ✅ Sistema sponsor
-    - ✅ Internazionalizzazione IT/EN
-    - 🔄 Supporto 3D PDF avanzato
-    - 📋 API pubblica
-    - 📋 App desktop
-    """)
-    
-    st.markdown("---")
-    st.markdown(f"### {t('project_support')}")
     st.markdown(
         f"""
-        <a href="{DONATE_LINK}" target="_blank" class="guide-button">
-            {t('nav_donate')}
+        <a href="{SPONSOR_MAILTO}" style="display:block; text-align:center; background:#fff4e6; color:#c26a00; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; margin-top:8px; border:1px solid #ffd9a8;">
+            {t("nav_become_sponsor")}
         </a>
         """,
         unsafe_allow_html=True
     )
 
-elif st.session_state.page_attuale == "Diventa Sponsor":
-    st.markdown(f"## {t('sponsor_title')}")
-    st.markdown(t("sponsor_description"))
-    
-    sponsors = load_sponsors()
-    if sponsors:
-        st.markdown(f"### {t('sponsor_current')}")
-        render_sponsor_band(sponsors)
-    else:
-        st.info(t("sponsor_no_sponsors"))
-    
-    st.markdown("---")
-    st.markdown(f"### {t('sponsor_howto')}")
-    st.markdown(t("sponsor_howto_text"))
-    
-    st.markdown(
-        f"""
-        <div style="text-align: center; margin: 2rem 0;">
-            <a href="{SPONSOR_MAILTO}" class="guide-button">
-                📧 {t('sponsor_contact')}
-            </a>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    st.markdown(
-        f"""
-        <div style="text-align: center;">
-            <a href="{DONATE_LINK}" target="_blank" style="background: #28a745; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block;">
-                💳 {t('sponsor_donate')}
-            </a>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-elif st.session_state.page_attuale == "Privacy Policy":
-    st.markdown(f"## {t('privacy_title')}")
-    st.markdown(t("privacy_content"))
-    if st.button(f"← {t('back_to_home')}", key="back_privacy"):
-        st.session_state.page_attuale = "Dashboard"
-        st.rerun()
-
+# --- LOGICA PAGINE ---
+if st.session_state.page_attuale == "Privacy Policy":
+    page = "Privacy Policy"
 elif st.session_state.page_attuale == "Cookie Policy":
-    st.markdown(f"## {t('cookie_title')}")
-    st.markdown(t("cookie_content"))
-    if st.button(f"← {t('back_to_home')}", key="back_cookie"):
+    page = "Cookie Policy"
+else:
+    page = st.session_state.page_attuale
+
+# --- POPUP COOKIE E PRIVACY ---
+if st.session_state.cookie_consent is None:
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown(f"""
+        <h3 style="color: #1f77b4; text-align: center; margin-bottom: 15px;">{t("cookie_title")}</h3>
+        <p style="font-size: 15px; line-height: 1.8;">{t("cookie_text")}</p>
+        """, unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="text-align: center; margin-bottom: 15px;">
+            <strong style="color: #333;">{t("cookie_check_privacy")}</strong>
+        </div>
+        """, unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button(t("cookie_accept_necessary"), key="decline_cookies", use_container_width=True):
+                st.session_state.cookie_consent = "declined"
+                st.rerun()
+        with col2:
+            if st.button(t("cookie_accept_all"), key="accept_cookies", type="primary", use_container_width=True):
+                st.session_state.cookie_consent = "accepted"
+                st.rerun()
+
+# --- DASHBOARD ---
+if page == "Dashboard":
+    col_main, col_side = st.columns([3, 1], gap="large")
+    with col_main:
+        st.markdown('<div class="logo-container"><img src="' + LOGO_URL + '" alt="Logo ArtiFix"></div>', unsafe_allow_html=True)
+        st.header(t("dash_header"))
+        cols = st.columns(4)
+        metrics = [("14,280", t("dash_metric_repaired")), ("38,910", t("dash_metric_conversions")), ("50+", t("dash_metric_formats")), ("🟢", t("dash_metric_online"))]
+        for col, (val, label) in zip(cols, metrics):
+            col.markdown(f'<div class="metric-card"><div class="metric-value">{val}</div><div class="metric-label">{label}</div></div>', unsafe_allow_html=True)
+        st.markdown("---")
+        st.subheader(t("dash_supported_formats"))
+        cols = st.columns(4)
+        for idx, (category, info) in enumerate(SUPPORTED_FORMATS.items()):
+            with cols[idx % 4]:
+                st.markdown(f'<div style="background:#f8f9fa;padding:0.7rem;border-radius:10px;border-left:3px solid #1f77b4;"><div style="font-weight:600;">{info["icon"]} {category}</div><div style="font-size:0.8rem;color:#666;">{info["description"]}</div></div>', unsafe_allow_html=True)
+        st.info(t("dash_info_select"))
+    with col_side:
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
+
+# --- RIPARA FILE ---
+elif page == "Ripara File":
+    col_main, col_side = st.columns([3, 1], gap="large")
+    with col_main:
+        from repair_page import render_repair_page
+        render_repair_page(load_3d_file, ALL_EXTENSIONS)
+        render_proprietary_formats_help()
+    with col_side:
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
+
+# --- VIEWER 3D ---
+elif page == "Viewer 3D":
+    col_main, col_side = st.columns([3, 1], gap="large")
+    with col_main:
+        st.header(t("viewer_header"))
+        render_html_viewer_info(t)
+        st.markdown("---")
+        viewer_file = st.file_uploader(
+            t("viewer_upload"),
+            type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
+            key=f"viewer_{st.session_state.lang}",
+            help=t("viewer_upload_hint")
+        )
+        if viewer_file:
+            file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
+            if file_ext_check == "pdf":
+                file_bytes_check = viewer_file.getvalue()
+                if not is_3d_pdf(file_bytes_check):
+                    st.error(t("pdf_no_3d_title"))
+                    st.markdown(t("pdf_no_3d_desc").format(filename=viewer_file.name))
+                    with st.expander(t("pdf_no_3d_howto_title"), expanded=True):
+                        st.markdown(t("pdf_no_3d_howto_steps"))
+                    st.info(t("pdf_no_3d_alternative"))
+                    st.stop()
+                else:
+                    st.success(t("pdf_3d_detected"))
+                    extracted = extract_3d_from_pdf(file_bytes_check)
+                    if extracted:
+                        st.info(f"✅ Modello 3D estratto con successo ({extracted['method']}). Elaborazione in corso...")
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            status_text.text(t("viewer_status_loading"))
+            progress_bar.progress(30)
+            time.sleep(0.5)
+            try:
+                mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
+                status_text.text(t("viewer_status_processing"))
+                progress_bar.progress(60)
+                time.sleep(0.5)
+                if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+                    st.success(t("viewer_success", vertices=len(mesh.vertices), faces=len(mesh.faces)))
+                    try:
+                        mesh.merge_vertices()
+                        mesh.remove_degenerate_faces()
+                        mesh.remove_unreferenced_vertices()
+                        trimesh.repair.fix_normals(mesh)
+                    except Exception:
+                        pass
+                    if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
+                        st.error(t("viewer_error_processing"))
+                    else:
+                        vertices = mesh.vertices.copy()
+                        rotated = np.empty_like(vertices)
+                        rotated[:, 0] = vertices[:, 0]
+                        rotated[:, 1] = vertices[:, 2]
+                        rotated[:, 2] = -vertices[:, 1]
+                        vertices = rotated
+                        min_x, min_y, min_z = vertices.min(axis=0)
+                        max_x, max_y, max_z = vertices.max(axis=0)
+                        center_x = (min_x + max_x) / 2
+                        center_z = (min_z + max_z) / 2
+                        vertices[:, 0] -= center_x
+                        vertices[:, 1] -= min_y
+                        vertices[:, 2] -= center_z
+                        faces = mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()
+                        mesh_data = {"vertices": vertices.tolist(), "faces": faces}
+                        mesh_json = json.dumps(mesh_data)
+                        status_text.text(t("viewer_status_building"))
+                        progress_bar.progress(100)
+                        time.sleep(0.5)
+                        viewer_html = """
+                        <html><head><style>
+                        body{margin:0;overflow:hidden;background:#f0f2f6;}
+                        #c{width:100%;height:550px;display:block;}
+                        #info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#555;font-family:Arial;font-size:12px;background:rgba(255,255,255,0.85);padding:6px 16px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+                        .legend{position:absolute;top:10px;left:10px;color:#333;font-family:Arial;font-size:11px;background:rgba(255,255,255,0.9);padding:8px 12px;border-radius:8px;border:1px solid #ddd;}
+                        .legend span{display:inline-block;width:12px;height:12px;margin-right:4px;border-radius:2px;}
+                        .axis-x{background:#ff4444;}.axis-y{background:#44ff44;}.axis-z{background:#4444ff;}
+                        </style>
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+                        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+                        </head><body>
+                        <div id="c"></div>
+                        <div class="legend"><span class="axis-x"></span> """ + t("viewer_legend_axes") + """</div>
+                        <div id="info">""" + t("viewer_legend") + """</div>
+                        <script>
+                        const data = """ + mesh_json + """;
+                        const container = document.getElementById('c');
+                        const scene = new THREE.Scene();
+                        scene.background = new THREE.Color(0xf0f2f6);
+                        const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 5000);
+                        camera.position.set(15,12,15);
+                        camera.lookAt(0,3,0);
+                        const renderer = new THREE.WebGLRenderer({antialias:true});
+                        renderer.setPixelRatio(window.devicePixelRatio);
+                        renderer.setSize(container.clientWidth, container.clientHeight);
+                        renderer.shadowMap.enabled = true;
+                        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                        container.appendChild(renderer.domElement);
+                        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                        controls.enableDamping = true;
+                        controls.dampingFactor = 0.08;
+                        controls.target.set(0,3,0);
+                        controls.screenSpacePanning = true;
+                        controls.update();
+                        const al = 8;
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff4444, 0.5, 0.3));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), al, 0x44ff44, 0.5, 0.3));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), al, 0x4444ff, 0.5, 0.3));
+                        const grid = new THREE.GridHelper(40, 40, 0x888888, 0xcccccc);
+                        grid.position.y = 0;
+                        scene.add(grid);
+                        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+                        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+                        dirLight.position.set(15, 30, 15);
+                        dirLight.castShadow = true;
+                        dirLight.shadow.mapSize.width = 2048;
+                        dirLight.shadow.mapSize.height = 2048;
+                        scene.add(dirLight);
+                        const fillLight = new THREE.DirectionalLight(0xffffff, 0.35);
+                        fillLight.position.set(-15, 10, -15);
+                        scene.add(fillLight);
+                        if (data.vertices && data.vertices.length > 0) {
+                            const geo = new THREE.BufferGeometry();
+                            const verts = new Float32Array(data.vertices.flat());
+                            geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+                            if (data.faces && data.faces.length > 0) {
+                                geo.setIndex(new THREE.BufferAttribute(new Uint32Array(data.faces.flat()), 1));
+                                geo.computeVertexNormals();
+                            }
+                            const mat = new THREE.MeshStandardMaterial({color: 0x1f77b4, roughness: 0.45, metalness: 0.1, flatShading: false, side: THREE.DoubleSide});
+                            const mesh = new THREE.Mesh(geo, mat);
+                            mesh.castShadow = true;
+                            mesh.receiveShadow = true;
+                            const box = new THREE.Box3().setFromObject(mesh);
+                            const size = box.getSize(new THREE.Vector3());
+                            const maxDim = Math.max(size.x, size.y, size.z);
+                            if (maxDim > 0 && maxDim < 1000) {
+                                const s = 10 / maxDim;
+                                mesh.scale.set(s, s, s);
+                            }
+                            scene.add(mesh);
+                        }
+                        function animate() {
+                            requestAnimationFrame(animate);
+                            controls.update();
+                            renderer.render(scene, camera);
+                        }
+                        animate();
+                        window.addEventListener('resize', () => {
+                            camera.aspect = container.clientWidth / container.clientHeight;
+                            camera.updateProjectionMatrix();
+                            renderer.setSize(container.clientWidth, container.clientHeight);
+                        });
+                        </script></body></html>
+                        """
+                        st.components.v1.html(viewer_html, height=580)
+                        render_share_section(viewer_file, t, lang=st.session_state.lang)
+                else:
+                    st.warning(t("viewer_warning_no_model"))
+            except Exception as e:
+                st.error(t("viewer_error_generic", error=e))
+    with col_side:
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
+
+# --- CONVERTI FORMATI ---
+elif page == "Converti Formati":
+    col_main, col_side = st.columns([3, 1], gap="large")
+    with col_main:
+        st.header(t("convert_header"))
+        st.markdown(t("convert_subtitle"))
+        render_proprietary_formats_help()
+        with st.expander(t("convert_expander_matrix")):
+            st.markdown("""
+            | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |
+            |--------|-----|-----|-----|-----|------|-----|------|-----|-----|-----|-----|-----|
+            | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+            | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+            | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+            | **GLB** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+            | **GLTF** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+            | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+            | **3MF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ |
+            | **DAE** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ |
+            | **WRL** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
+            | **OFF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+            | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+            """)
+            st.caption(t("convert_caption_matrix"))
+        uploaded_file = st.file_uploader(
+            t("convert_upload"),
+            type=[ext[1:] for ext in ALL_EXTENSIONS],
+            key=f"convert_{st.session_state.lang}",
+            help=t("convert_upload_hint")
+        )
+        st.caption(t("convert_upload_hint"))
+        if uploaded_file:
+            file_name = uploaded_file.name
+            file_bytes = uploaded_file.getvalue()
+            file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
+            file_type, icon = detect_file_type(file_extension)
+            st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">{t("convert_file_type", type=file_type, ext=file_extension)}</div></div></div></div>', unsafe_allow_html=True)
+            MESH_FORMATS = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off"]
+            GEO_FORMATS = ["shp", "geojson", "kml", "gpx"]
+            if file_extension in MESH_FORMATS or file_extension == "dxf":
+                target_formats = CONVERSION_MATRIX.get(file_extension, [])
+                target_options = [FORMAT_NAMES.get(f, f) for f in target_formats if f != file_extension]
+                if not target_options:
+                    st.warning(t("convert_warning_no_target"))
+                else:
+                    target_selected = st.selectbox(t("convert_target_format"), target_options)
+                    target_ext = target_selected.split(".")[1].replace(")", "").strip()
+                    if st.button(t("convert_button_convert", format=target_selected.split(' ')[0]), type="primary", use_container_width=True):
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        status_text.text(t("convert_status_loading"))
+                        progress_bar.progress(20)
+                        time.sleep(0.5)
+                        mesh = load_3d_file(file_bytes, file_extension)
+                        if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+                            status_text.text(t("convert_status_converting"))
+                            progress_bar.progress(70)
+                            time.sleep(0.5)
+                            result_bytes = convert_mesh(mesh, target_ext)
+                            status_text.text(t("convert_status_saving"))
+                            progress_bar.progress(100)
+                            time.sleep(0.5)
+                            if result_bytes:
+                                st.success(t("convert_success", format=target_selected.split(' ')[0]))
+                                mime_types = {'stl': 'application/octet-stream', 'obj': 'text/plain', 'ply': 'application/octet-stream', 'glb': 'application/octet-stream', 'gltf': 'application/octet-stream', 'fbx': 'application/octet-stream', '3mf': 'application/octet-stream', 'dae': 'application/octet-stream', 'wrl': 'application/octet-stream', 'off': 'application/octet-stream', 'dxf': 'application/dxf', 'pdf': 'application/pdf'}
+                                st.info(t("convert_info_ready"))
+                                original_name = os.path.splitext(file_name)[0]
+                                converted_filename = f"{original_name}.{target_ext}"
+                                st.download_button(label=t("convert_button_download", format=target_ext), data=result_bytes, file_name=converted_filename, mime=mime_types.get(target_ext, 'application/octet-stream'), use_container_width=True)
+                            else:
+                                st.error(t("convert_error", format=target_selected.split(' ')[0]))
+                        else:
+                            st.error(t("convert_error_load"))
+                    st.markdown("---")
+                    if st.button(t("convert_button_preview")):
+                        st.info(t("convert_info_preview"))
+                        mesh_preview = load_3d_file(file_bytes, file_extension)
+                        if mesh_preview and hasattr(mesh_preview, 'vertices') and len(mesh_preview.vertices) > 0:
+                            try:
+                                mesh_preview.merge_vertices()
+                                mesh_preview.remove_degenerate_faces()
+                                mesh_preview.remove_unreferenced_vertices()
+                                trimesh.repair.fix_normals(mesh_preview)
+                            except Exception:
+                                pass
+                            if mesh_preview is None or not hasattr(mesh_preview, 'faces') or len(mesh_preview.faces) == 0:
+                                st.error(t("viewer_error_processing"))
+                            else:
+                                vp = mesh_preview.vertices.copy()
+                                rp = np.empty_like(vp)
+                                rp[:, 0] = vp[:, 0]
+                                rp[:, 1] = vp[:, 2]
+                                rp[:, 2] = -vp[:, 1]
+                                vp = rp
+                                min_x, min_y, min_z = vp.min(axis=0)
+                                max_x, max_y, max_z = vp.max(axis=0)
+                                vp[:, 0] -= (min_x + max_x) / 2
+                                vp[:, 1] -= min_y
+                                vp[:, 2] -= (min_z + max_z) / 2
+                                mesh_data = {"vertices": vp.tolist(), "faces": mesh_preview.faces.tolist()}
+                                mesh_json = json.dumps(mesh_data)
+                                viewer_html = """
+                                <html><head><style>body{margin:0;overflow:hidden;background:#f0f2f6;}#c{width:100%;height:400px;}</style>
+                                <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+                                <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+                                </head><body>
+                                <div id="c"></div>
+                                <script>
+                                const data = """ + mesh_json + """;
+                                const container = document.getElementById('c');
+                                const scene = new THREE.Scene();
+                                scene.background = new THREE.Color(0xf0f2f6);
+                                const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 5000);
+                                camera.position.set(12,10,12);
+                                camera.lookAt(0,2,0);
+                                const renderer = new THREE.WebGLRenderer({antialias:true});
+                                renderer.setSize(container.clientWidth, container.clientHeight);
+                                container.appendChild(renderer.domElement);
+                                const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                                controls.enableDamping = true;
+                                controls.dampingFactor = 0.08;
+                                controls.target.set(0,2,0);
+                                controls.update();
+                                scene.add(new THREE.AmbientLight(0xffffff,0.6));
+                                const dl = new THREE.DirectionalLight(0xffffff,0.9);
+                                dl.position.set(10,20,10);
+                                dl.castShadow=true;
+                                scene.add(dl);
+                                const dl2 = new THREE.DirectionalLight(0xffffff,0.35);
+                                dl2.position.set(-10,0,-10);
+                                scene.add(dl2);
+                                if(data.vertices && data.vertices.length>0){
+                                    const geo = new THREE.BufferGeometry();
+                                    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(data.vertices.flat()), 3));
+                                    if(data.faces && data.faces.length>0){
+                                        geo.setIndex(new THREE.BufferAttribute(new Uint32Array(data.faces.flat()), 1));
+                                        geo.computeVertexNormals();
+                                    }
+                                    const mat = new THREE.MeshStandardMaterial({color:0x1f77b4, roughness:0.45, metalness:0.1, flatShading:false, side:THREE.DoubleSide});
+                                    const mesh = new THREE.Mesh(geo, mat);
+                                    mesh.castShadow = true;
+                                    mesh.receiveShadow = true;
+                                    const box = new THREE.Box3().setFromObject(mesh);
+                                    const size = box.getSize(new THREE.Vector3());
+                                    const maxDim = Math.max(size.x,size.y,size.z);
+                                    if(maxDim>0 && maxDim<1000){ const s=10/maxDim; mesh.scale.set(s,s,s); }
+                                    scene.add(mesh);
+                                }
+                                function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
+                                animate();
+                                window.addEventListener('resize', ()=>{
+                                    camera.aspect=container.clientWidth/container.clientHeight; camera.updateProjectionMatrix();
+                                    renderer.setSize(container.clientWidth, container.clientHeight);
+                                });
+                                </script></body></html>
+                                """
+                                st.components.v1.html(viewer_html, height=420)
+                        else:
+                            st.warning(t("convert_warning_no_preview"))
+            elif file_extension == "svg":
+                st.info("🎨 **SVG rilevato** — questo è un formato vettoriale, non una mesh 3D.")
+                if SVG_AVAILABLE:
+                    st.success("✅ Libreria `cairosvg` disponibile.")
+                    if st.button("🖼️ Converti SVG in PNG", type="primary", use_container_width=True):
+                        try:
+                            import cairosvg
+                            png_bytes = cairosvg.svg2png(bytestring=file_bytes)
+                            st.success("✅ SVG convertito in PNG!")
+                            st.download_button(label="📥 Scarica PNG", data=png_bytes, file_name=f"{os.path.splitext(file_name)[0]}.png", mime="image/png", use_container_width=True)
+                            st.image(png_bytes, caption="Anteprima", use_column_width=True)
+                        except Exception as e:
+                            st.error(f"❌ Errore: {e}")
+                else:
+                    st.warning("⚠️ Libreria `cairosvg` non installata.")
+            elif file_extension == "pdf":
+                st.info("📄 **PDF rilevato** — questo è un formato documento.")
+                is_3d = is_3d_pdf(file_bytes)
+                if is_3d:
+                    st.success("🎯 **3D PDF rilevato!** Questo PDF contiene un modello 3D.")
+                    if FITZ_AVAILABLE:
+                        st.info("💡 Libreria `PyMuPDF` disponibile. Estrazione 3D in sviluppo.")
+                else:
+                    st.warning("⚠️ **PDF standard (non 3D)**: non contiene un modello 3D incorporato.")
+                    with st.expander("📖 Come creare un 3D PDF", expanded=True):
+                        st.markdown(t("pdf_no_3d_howto_steps"))
+                    st.info(t("pdf_no_3d_alternative"))
+                if PDF_AVAILABLE:
+                    try:
+                        pdf_reader = PdfReader(io.BytesIO(file_bytes))
+                        st.metric("Pagine", len(pdf_reader.pages))
+                    except Exception:
+                        pass
+            elif file_extension == "docx":
+                st.info("📝 **DOCX rilevato** — documento Word.")
+                if DOCX_AVAILABLE:
+                    try:
+                        doc = docx.Document(io.BytesIO(file_bytes))
+                        st.metric("Paragrafi", len(doc.paragraphs))
+                    except Exception as e:
+                        st.warning(f"Impossibile leggere: {e}")
+            elif file_extension == "xlsx":
+                st.info("📊 **XLSX rilevato** — foglio di calcolo.")
+                if XLSX_AVAILABLE:
+                    try:
+                        wb = openpyxl.load_workbook(io.BytesIO(file_bytes))
+                        st.metric("Fogli", len(wb.sheetnames))
+                    except Exception as e:
+                        st.warning(f"Impossibile leggere: {e}")
+            elif file_extension == "ifc":
+                st.info("🏗️ **IFC rilevato** — formato BIM.")
+                if IFC_AVAILABLE:
+                    try:
+                        with tempfile.NamedTemporaryFile(suffix='.ifc', delete=False) as tmp_ifc:
+                            tmp_ifc.write(file_bytes)
+                            tmp_ifc_path = tmp_ifc.name
+                        try:
+                            ifc_file = ifcopenshell.open(tmp_ifc_path)
+                            st.metric("Progetti", len(ifc_file.by_type('IfcProject')))
+                        finally:
+                            try:
+                                os.unlink(tmp_ifc_path)
+                            except:
+                                pass
+                    except Exception as e:
+                        st.warning(f"Impossibile leggere: {e}")
+            elif file_extension in GEO_FORMATS:
+                st.info(f"🌍 **{file_extension.upper()} rilevato** — formato geospaziale.")
+                if GEOPANDAS_AVAILABLE:
+                    try:
+                        gdf = gpd.read_file(io.BytesIO(file_bytes))
+                        st.metric("Features", len(gdf))
+                    except Exception as e:
+                        st.warning(f"Impossibile leggere: {e}")
+            else:
+                st.warning(f"⚠️ Formato **.{file_extension.upper()}** non supportato.")
+                st.info("💡 Formati supportati: **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, DAE, WRL, OFF, DXF, PDF, SVG, DOCX, XLSX, IFC, SHP, GeoJSON, KML, GPX**.")
+    with col_side:
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
+
+# --- PROGETTO ARTIFIX ---
+elif page == "Progetto ArtiFix":
+    col_main, col_side = st.columns([3, 1], gap="large")
+    with col_main:
+        st.header(t("project_header"))
+        st.markdown(t("project_text"))
+        st.divider()
+        st.subheader(t("project_contact"))
+        st.write(t("project_contact_text"))
+        with st.form("contatti"):
+            nome_input = st.text_input(t("project_form_name"))
+            email_input = st.text_input(t("project_form_email"))
+            messaggio_input = st.text_area(t("project_form_message"))
+            inviato = st.form_submit_button(t("project_form_submit"))
+            if inviato:
+                if nome_input and email_input and messaggio_input:
+                    risultato = invia_email(nome_input, email_input, messaggio_input)
+                    if risultato == True:
+                        st.success(t("project_success"))
+                    else:
+                        st.error(t("project_error", error=risultato))
+                else:
+                    st.warning(t("project_warning"))
+    with col_side:
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
+
+# --- DIVENTA SPONSOR ---
+elif page == "Diventa Sponsor":
+    col_main, col_side = st.columns([3, 1], gap="large")
+    with col_main:
+        st.header(t("sponsor_header"))
+        st.markdown(t("sponsor_intro"))
+        st.divider()
+        st.subheader(t("sponsor_format_title"))
+        st.markdown(t("sponsor_format_text"))
+        st.divider()
+        st.subheader(t("sponsor_how_title"))
+        st.markdown(t("sponsor_how_text"))
+        st.markdown(f"""
+            <div style="text-align:center; margin: 20px 0;">
+                <a href="{DONATE_LINK}" target="_blank" style="display:inline-block; background:#0070ba; color:white; padding:14px 28px; border-radius:8px; text-decoration:none; font-weight:700; font-size:16px; box-shadow: 0 4px 12px rgba(0,112,186,0.3);">{t("sponsor_donate_button")}</a>
+            </div>
+        """, unsafe_allow_html=True)
+        st.divider()
+        st.subheader(t("sponsor_form_title"))
+        st.caption(t("sponsor_form_caption"))
+        with st.form("sponsor_form"):
+            nome_brand = st.text_input(t("sponsor_form_brand"))
+            email_ref = st.text_input(t("sponsor_form_email"))
+            sito = st.text_input(t("sponsor_form_site"))
+            logo_url = st.text_input(t("sponsor_form_logo"), placeholder="https://raw.githubusercontent.com/...")
+            messaggio = st.text_area(t("sponsor_form_message"))
+            invia = st.form_submit_button(t("sponsor_form_submit"), type="primary")
+            if invia:
+                if nome_brand and email_ref and sito and logo_url:
+                    corpo = f"\nNuova richiesta sponsor:\n\n- Brand: {nome_brand}\n- Email: {email_ref}\n- Sito: {sito}\n- Logo URL: {logo_url}\n- Messaggio: {messaggio}\n"
+                    esito = invia_email(nome_brand, email_ref, corpo)
+                    if esito is True:
+                        st.success(t("sponsor_form_success"))
+                    else:
+                        st.error(t("sponsor_form_error", error=esito))
+                else:
+                    st.warning(t("sponsor_form_warning"))
+        st.info(t("sponsor_form_info"))
+    with col_side:
+        render_sponsor_band(st.session_state.lang)
+        sponsor_band_placeholder(st.session_state.lang)
+
+# --- PRIVACY POLICY ---
+elif page == "Privacy Policy":
+    st.header(t("privacy_header"))
+    st.markdown(t("privacy_subtitle"))
+    st.caption(t("privacy_updated"))
+    if st.button(t("privacy_back"), key="torna_dashboard_privacy"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
+    st.markdown("---")
+    st.markdown(t("privacy_content"))
+    st.markdown("---")
+    if st.button(t("privacy_back"), key="torna_dashboard_privacy_basso"):
         st.session_state.page_attuale = "Dashboard"
         st.rerun()
 
-# --- FOOTER ---
-st.markdown(f"""
-<div class="footer-artifix">
-    © {datetime.now().year} ArtiFix - Universal CAD/CAM Repair | 
-    <a href="https://www.artifix.it" target="_blank" style="color: #1f77b4;">www.artifix.it</a>
-</div>
-""", unsafe_allow_html=True)
+# --- COOKIE POLICY ---
+elif page == "Cookie Policy":
+    st.header(t("cookie_policy_header"))
+    st.markdown(t("cookie_policy_subtitle"))
+    st.caption(t("cookie_policy_updated"))
+    if st.button(t("cookie_policy_back"), key="torna_dashboard_alto"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
+    st.markdown("---")
+    st.markdown(t("cookie_policy_content"))
+    st.markdown("---")
+    if st.button(t("cookie_policy_back"), key="torna_dashboard_basso"):
+        st.session_state.page_attuale = "Dashboard"
+        st.rerun()
+
+# --- FOOTER GLOBALE ---
+st.markdown("---")
+st.markdown(f'<div class="footer-artifix">{t("footer")}</div>', unsafe_allow_html=True)
