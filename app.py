@@ -991,7 +991,7 @@ elif page == "Viewer 3D":
                 st.components.v1.html(viewer_html, height=580)
 
                 # --- SEZIONE CONDIVISIONE (v8.0) ---
-                render_share_section(viewer_file, t, lang=st.session_state.lang)
+                # render_share_section(viewer_file, t, lang=st.session_state.lang)  # TEMP: disabilitato per test loop
 
             except Exception as e:
                 st.error(t("viewer_error_generic", error=e))
