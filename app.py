@@ -301,6 +301,33 @@ st.markdown("""
         display: block;
         margin-bottom: 4px;
     }
+        /* ===== BARRA DI ATTESA INDETERMINATA ===== */
+    .wait-progress {
+        position: relative;
+        height: 6px;
+        background: #e0eaf5;
+        border-radius: 6px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+    .wait-progress::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -40%;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(90deg,
+            rgba(31, 119, 180, 0) 0%,
+            rgba(31, 119, 180, 0.6) 50%,
+            rgba(31, 119, 180, 0) 100%);
+        animation: slide-progress 1.6s ease-in-out infinite;
+        border-radius: 6px;
+    }
+    @keyframes slide-progress {
+        0% { left: -40%; }
+        100% { left: 100%; }
+    }
     .dots::after {
         content: '';
         animation: dots 1.5s infinite;
