@@ -190,10 +190,6 @@ st.markdown("""
     }
 
     /* ===== ANIMAZIONI PER ATTESA ELEGANTE ===== */
-    @keyframes pulse-dot {
-        0%, 100% { opacity: 0.3; transform: scale(1); }
-        50% { opacity: 1; transform: scale(1.15); }
-    }
     @keyframes fade-slide {
         from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
@@ -237,7 +233,33 @@ st.markdown("""
     .wait-card .wait-estimated {
         color: #555;
         font-size: 0.85rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .wait-progress {
+        position: relative;
+        height: 6px;
+        background: #e0eaf5;
+        border-radius: 6px;
+        overflow: hidden;
+        margin: 0.5rem 0 1rem 0;
+    }
+    .wait-progress::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -40%;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(90deg,
+            rgba(31, 119, 180, 0) 0%,
+            rgba(31, 119, 180, 0.6) 50%,
+            rgba(31, 119, 180, 0) 100%);
+        animation: slide-progress 1.6s ease-in-out infinite;
+        border-radius: 6px;
+    }
+    @keyframes slide-progress {
+        0% { left: -40%; }
+        100% { left: 100%; }
     }
     .step-list {
         display: flex;
@@ -300,33 +322,6 @@ st.markdown("""
         color: #92400e;
         display: block;
         margin-bottom: 4px;
-    }
-        /* ===== BARRA DI ATTESA INDETERMINATA ===== */
-    .wait-progress {
-        position: relative;
-        height: 6px;
-        background: #e0eaf5;
-        border-radius: 6px;
-        overflow: hidden;
-        margin: 1rem 0;
-    }
-    .wait-progress::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -40%;
-        width: 40%;
-        height: 100%;
-        background: linear-gradient(90deg,
-            rgba(31, 119, 180, 0) 0%,
-            rgba(31, 119, 180, 0.6) 50%,
-            rgba(31, 119, 180, 0) 100%);
-        animation: slide-progress 1.6s ease-in-out infinite;
-        border-radius: 6px;
-    }
-    @keyframes slide-progress {
-        0% { left: -40%; }
-        100% { left: 100%; }
     }
     .dots::after {
         content: '';
@@ -744,9 +739,7 @@ def extract_3d_from_pdf(file_bytes):
 def render_waiting_card(t_func, current_step: int, total_steps: int = 5):
     """
     Renderizza una card elegante di attesa.
-
-    IMPORTANTE: l'HTML è su una sola riga e senza indentazione,
-    altrimenti Markdown di Streamlit lo mostra come code block.
+    IMPORTANTE: HTML su una sola riga, senza indentazione.
     """
     tips = [
         t_func('viewer_tip_1'),
@@ -789,6 +782,7 @@ def render_waiting_card(t_func, current_step: int, total_steps: int = 5):
         f'<div class="wait-subtitle">{t_func("viewer_wait_subtitle")}</div>'
         f'<div class="wait-warning">{t_func("viewer_wait_dont_close")}</div>'
         f'<div class="wait-estimated">{t_func("viewer_wait_estimated")}</div>'
+        f'<div class="wait-progress"></div>'
         f'<div class="step-list">{steps_html}</div>'
         f'<div class="wait-tip"><span class="tip-label">{t_func("viewer_tip_label")}</span>{tip_choice}</div>'
         '</div>'
@@ -988,9 +982,6 @@ elif page == "Viewer 3D":
                     if extracted:
                         st.info(f"✅ Modello 3D estratto con successo ({extracted['method']}). Elaborazione in corso...")
 
-            # ═══════════════════════════════════════════════════════
-            # STEP 1 — Apertura file
-            # ═══════════════════════════════════════════════════════
             wait_placeholder = st.empty()
             with wait_placeholder.container():
                 render_waiting_card(t, 1)
@@ -999,9 +990,6 @@ elif page == "Viewer 3D":
             try:
                 mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
 
-                # ═══════════════════════════════════════════════════════
-                # STEP 2 — Analisi geometria
-                # ═══════════════════════════════════════════════════════
                 wait_placeholder.empty()
                 with wait_placeholder.container():
                     render_waiting_card(t, 2)
@@ -1009,9 +997,6 @@ elif page == "Viewer 3D":
 
                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
 
-                    # ═══════════════════════════════════════════════════════
-                    # STEP 3 — Pulizia mesh
-                    # ═══════════════════════════════════════════════════════
                     wait_placeholder.empty()
                     with wait_placeholder.container():
                         render_waiting_card(t, 3)
@@ -1029,9 +1014,6 @@ elif page == "Viewer 3D":
                         wait_placeholder.empty()
                         st.error(t("viewer_error_processing"))
                     else:
-                        # ═══════════════════════════════════════════════════
-                        # STEP 4 — Preparazione scena 3D
-                        # ═══════════════════════════════════════════════════
                         wait_placeholder.empty()
                         with wait_placeholder.container():
                             render_waiting_card(t, 4)
@@ -1144,9 +1126,6 @@ elif page == "Viewer 3D":
                         </script></body></html>
                         """
 
-                        # ═══════════════════════════════════════════════════════
-                        # STEP 5 — Pronto
-                        # ═══════════════════════════════════════════════════════
                         wait_placeholder.empty()
                         with wait_placeholder.container():
                             render_waiting_card(t, 5)
@@ -1156,7 +1135,6 @@ elif page == "Viewer 3D":
                         st.success(t("viewer_success", vertices=len(mesh.vertices), faces=len(mesh.faces)))
                         st.components.v1.html(viewer_html, height=580)
 
-                        # --- SEZIONE CONDIVISIONE (v8.0) ---
                         render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
                     wait_placeholder.empty()
