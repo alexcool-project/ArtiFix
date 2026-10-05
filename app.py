@@ -188,6 +188,128 @@ st.markdown("""
         line-height: 1.4;
         font-size: 0.85rem;
     }
+
+    /* ===== ANIMAZIONI PER ATTESA ELEGANTE ===== */
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 0.3; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.15); }
+    }
+    @keyframes fade-slide {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes soft-glow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(31, 119, 180, 0.4); }
+        50% { box-shadow: 0 0 0 8px rgba(31, 119, 180, 0); }
+    }
+    .wait-card {
+        background: linear-gradient(135deg, #f0f8ff 0%, #e8f4fd 100%);
+        border: 1px solid #c8e1f5;
+        border-left: 4px solid #1f77b4;
+        border-radius: 12px;
+        padding: 1.4rem 1.6rem;
+        margin: 1rem 0;
+        animation: fade-slide 0.5s ease-out;
+    }
+    .wait-card h3 {
+        color: #1f77b4;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .wait-card .wait-subtitle {
+        color: #333;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 0.9rem;
+    }
+    .wait-card .wait-warning {
+        color: #b35c00;
+        background: #fff8e6;
+        border: 1px solid #ffd9a8;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.88rem;
+        margin-bottom: 0.7rem;
+    }
+    .wait-card .wait-estimated {
+        color: #555;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    .step-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 1rem 0;
+    }
+    .step-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #e8eef5;
+        transition: all 0.3s ease;
+    }
+    .step-item.active {
+        background: #e8f4fd;
+        border-color: #1f77b4;
+        animation: soft-glow 2s infinite;
+    }
+    .step-item.done {
+        background: #f0fdf4;
+        border-color: #22c55e;
+        opacity: 0.75;
+    }
+    .step-item.pending {
+        opacity: 0.4;
+    }
+    .step-item .step-icon {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        width: 24px;
+        text-align: center;
+    }
+    .step-item .step-label {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.92rem;
+        flex: 1;
+    }
+    .step-item .step-detail {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 2px;
+    }
+    .wait-tip {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-top: 1rem;
+        font-size: 0.88rem;
+        color: #78350f;
+        animation: fade-slide 0.6s ease-out;
+    }
+    .wait-tip .tip-label {
+        font-weight: 700;
+        color: #92400e;
+        display: block;
+        margin-bottom: 4px;
+    }
+    .dots::after {
+        content: '';
+        animation: dots 1.5s infinite;
+    }
+    @keyframes dots {
+        0%, 20% { content: '.'; }
+        40% { content: '..'; }
+        60%, 100% { content: '...'; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -591,6 +713,78 @@ def extract_3d_from_pdf(file_bytes):
     except Exception:
         return None
 
+
+def render_waiting_card(t_func, current_step: int, total_steps: int = 5):
+    """
+    Renderizza una card elegante di attesa con:
+    - Titolo e sottotitolo
+    - Avviso 'non chiudere la pagina'
+    - Tempo stimato
+    - Step indicator (1→5)
+    - Tip utile rotante
+
+    Parameters
+    ----------
+    t_func : callable
+        Funzione di traduzione.
+    current_step : int
+        Step attualmente in corso (1-based).
+    total_steps : int
+        Numero totale di step.
+    """
+    tips = [
+        t_func('viewer_tip_1'),
+        t_func('viewer_tip_2'),
+        t_func('viewer_tip_3'),
+        t_func('viewer_tip_4'),
+        t_func('viewer_tip_5'),
+    ]
+    tip_choice = tips[(current_step - 1) % len(tips)]
+
+    steps_html = ""
+    for i in range(1, total_steps + 1):
+        if i < current_step:
+            state = "done"
+            icon = "✅"
+        elif i == current_step:
+            state = "active"
+            icon = "⏳"
+        else:
+            state = "pending"
+            icon = "○"
+
+        label = t_func(f'viewer_step{i}_label')
+        detail = t_func(f'viewer_step{i}_detail') if state == "active" else ""
+
+        detail_html = f'<div class="step-detail">{detail}</div>' if detail else ""
+
+        steps_html += f"""
+        <div class="step-item {state}">
+            <span class="step-icon">{icon}</span>
+            <div style="flex:1;">
+                <div class="step-label">{label}</div>
+                {detail_html}
+            </div>
+        </div>
+        """
+
+    st.markdown(f"""
+    <div class="wait-card">
+        <h3>⏳ {t_func('viewer_wait_title')}<span class="dots"></span></h3>
+        <div class="wait-subtitle">{t_func('viewer_wait_subtitle')}</div>
+        <div class="wait-warning">{t_func('viewer_wait_dont_close')}</div>
+        <div class="wait-estimated">{t_func('viewer_wait_estimated')}</div>
+        <div class="step-list">
+            {steps_html}
+        </div>
+        <div class="wait-tip">
+            <span class="tip-label">{t_func('viewer_tip_label')}</span>
+            {tip_choice}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 # --- BARRA LATERALE ---
 with st.sidebar:
     if LOGO_URL:
@@ -782,20 +976,35 @@ elif page == "Viewer 3D":
                     if extracted:
                         st.info(f"✅ Modello 3D estratto con successo ({extracted['method']}). Elaborazione in corso...")
 
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            status_text.text(t("viewer_status_loading"))
-            progress_bar.progress(30)
-            time.sleep(0.5)
+            # ═══════════════════════════════════════════════════════
+            # STEP 1 — Apertura file
+            # ═══════════════════════════════════════════════════════
+            wait_placeholder = st.empty()
+            with wait_placeholder.container():
+                render_waiting_card(t, 1)
+            time.sleep(0.3)
 
             try:
                 mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
-                status_text.text(t("viewer_status_processing"))
-                progress_bar.progress(60)
-                time.sleep(0.5)
+
+                # ═══════════════════════════════════════════════════════
+                # STEP 2 — Analisi geometria
+                # ═══════════════════════════════════════════════════════
+                wait_placeholder.empty()
+                with wait_placeholder.container():
+                    render_waiting_card(t, 2)
+                time.sleep(0.3)
 
                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                    st.success(t("viewer_success", vertices=len(mesh.vertices), faces=len(mesh.faces)))
+
+                    # ═══════════════════════════════════════════════════════
+                    # STEP 3 — Pulizia mesh
+                    # ═══════════════════════════════════════════════════════
+                    wait_placeholder.empty()
+                    with wait_placeholder.container():
+                        render_waiting_card(t, 3)
+                    time.sleep(0.3)
+
                     try:
                         mesh.merge_vertices()
                         mesh.remove_degenerate_faces()
@@ -805,8 +1014,17 @@ elif page == "Viewer 3D":
                         pass
 
                     if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
+                        wait_placeholder.empty()
                         st.error(t("viewer_error_processing"))
                     else:
+                        # ═══════════════════════════════════════════════════
+                        # STEP 4 — Preparazione scena 3D
+                        # ═══════════════════════════════════════════════════
+                        wait_placeholder.empty()
+                        with wait_placeholder.container():
+                            render_waiting_card(t, 4)
+                        time.sleep(0.5)
+
                         vertices = mesh.vertices.copy()
                         rotated = np.empty_like(vertices)
                         rotated[:, 0] = vertices[:, 0]
@@ -826,10 +1044,6 @@ elif page == "Viewer 3D":
                         faces = mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()
                         mesh_data = {"vertices": vertices.tolist(), "faces": faces}
                         mesh_json = json.dumps(mesh_data)
-
-                        status_text.text(t("viewer_status_building"))
-                        progress_bar.progress(100)
-                        time.sleep(0.5)
 
                         viewer_html = """
                         <html><head><style>
@@ -917,13 +1131,26 @@ elif page == "Viewer 3D":
                         });
                         </script></body></html>
                         """
+
+                        # ═══════════════════════════════════════════════════════
+                        # STEP 5 — Pronto
+                        # ═══════════════════════════════════════════════════════
+                        wait_placeholder.empty()
+                        with wait_placeholder.container():
+                            render_waiting_card(t, 5)
+                        time.sleep(0.4)
+                        wait_placeholder.empty()
+
+                        st.success(t("viewer_success", vertices=len(mesh.vertices), faces=len(mesh.faces)))
                         st.components.v1.html(viewer_html, height=580)
 
                         # --- SEZIONE CONDIVISIONE (v8.0) ---
                         render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
+                    wait_placeholder.empty()
                     st.warning(t("viewer_warning_no_model"))
             except Exception as e:
+                wait_placeholder.empty()
                 st.error(t("viewer_error_generic", error=e))
     with col_side:
         render_sponsor_band(st.session_state.lang)
