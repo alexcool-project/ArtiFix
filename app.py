@@ -146,59 +146,6 @@ st.markdown("""
     .html-viewer-benefit .benefit-icon { font-size: 1.3rem; display: block; margin-bottom: 6px; }
     .html-viewer-benefit .benefit-title { font-weight: 700; color: #1f77b4; display: block; margin-bottom: 4px; }
     .html-viewer-benefit .benefit-desc { color: #555; line-height: 1.4; font-size: 0.85rem; }
-
-    @keyframes fade-slide {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .wait-card {
-        background: linear-gradient(135deg, #f0f8ff 0%, #e8f4fd 100%);
-        border: 1px solid #c8e1f5;
-        border-left: 4px solid #1f77b4;
-        border-radius: 12px;
-        padding: 1.4rem 1.6rem;
-        margin: 1rem 0;
-        animation: fade-slide 0.5s ease-out;
-    }
-    .wait-card h3 { color: #1f77b4; margin: 0 0 0.5rem 0; font-size: 1.25rem; display: flex; align-items: center; gap: 10px; }
-    .wait-card .wait-subtitle { color: #333; font-size: 0.95rem; line-height: 1.5; margin-bottom: 0.9rem; }
-    .wait-card .wait-warning { color: #b35c00; background: #fff8e6; border: 1px solid #ffd9a8; border-radius: 8px; padding: 8px 12px; font-size: 0.88rem; margin-bottom: 0.7rem; }
-    .wait-card .wait-estimated { color: #555; font-size: 0.85rem; margin-bottom: 0.5rem; }
-    .wait-progress {
-        position: relative;
-        height: 6px;
-        background: #e0eaf5;
-        border-radius: 6px;
-        overflow: hidden;
-        margin: 0.5rem 0 1rem 0;
-    }
-    .wait-progress::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -40%;
-        width: 40%;
-        height: 100%;
-        background: linear-gradient(90deg,
-            rgba(31, 119, 180, 0) 0%,
-            rgba(31, 119, 180, 0.6) 50%,
-            rgba(31, 119, 180, 0) 100%);
-        animation: slide-progress 1.6s ease-in-out infinite;
-        border-radius: 6px;
-    }
-    @keyframes slide-progress {
-        0% { left: -40%; }
-        100% { left: 100%; }
-    }
-    .dots::after {
-        content: '';
-        animation: dots 1.5s infinite;
-    }
-    @keyframes dots {
-        0%, 20% { content: '.'; }
-        40% { content: '..'; }
-        60%, 100% { content: '...'; }
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -643,20 +590,6 @@ def build_viewer_html(mesh, t_func):
     """
 
 
-def render_waiting_card(t_func):
-    """Card elegante di attesa con barra animata indeterminata."""
-    html = (
-        '<div class="wait-card">'
-        f'<h3>⏳ {t_func("viewer_wait_title")}<span class="dots"></span></h3>'
-        f'<div class="wait-subtitle">{t_func("viewer_wait_subtitle")}</div>'
-        f'<div class="wait-warning">{t_func("viewer_wait_dont_close")}</div>'
-        f'<div class="wait-estimated">{t_func("viewer_wait_estimated")}</div>'
-        '<div class="wait-progress"></div>'
-        '</div>'
-    )
-    st.markdown(html, unsafe_allow_html=True)
-
-
 # --- BARRA LATERALE ---
 with st.sidebar:
     if LOGO_URL:
@@ -817,14 +750,26 @@ elif page == "Viewer 3D":
                 st.components.v1.html(cached["html"], height=580)
                 render_share_section(viewer_file, t, lang=st.session_state.lang)
             else:
-                wait_placeholder = st.empty()
-                with wait_placeholder.container():
-                    render_waiting_card(t)
+                # ============================================================
+                # AVVISO PREVENTIVO + BARRA DI PROGRESSO REALE
+                # ============================================================
+                st.info(
+                    "📦 **Elaborazione del modello 3D**\n\n"
+                    "I modelli con molte facce (come i file STL professionali) possono richiedere fino a 60 secondi. "
+                    "L'avanzamento è mostrato qui sotto — non chiudere la pagina."
+                )
+
+                progress_bar = st.progress(0, text="📖 Caricamento del file...")
+                time.sleep(0.3)
 
                 try:
+                    progress_bar.progress(20, text="📖 File caricato, lettura in corso...")
                     mesh = load_3d_file(viewer_file.getvalue(), os.path.splitext(viewer_file.name)[1].lower())
 
                     if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
+                        progress_bar.progress(40, text=f"🔧 Geometria analizzata: {len(mesh.vertices)} vertici, {len(mesh.faces)} facce")
+                        time.sleep(0.2)
+
                         try:
                             mesh.merge_vertices()
                             mesh.remove_degenerate_faces()
@@ -834,22 +779,30 @@ elif page == "Viewer 3D":
                             pass
 
                         if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
-                            wait_placeholder.empty()
+                            progress_bar.empty()
                             st.error(t("viewer_error_processing"))
                         else:
+                            progress_bar.progress(60, text="🧹 Pulizia mesh completata...")
+                            time.sleep(0.2)
+
+                            progress_bar.progress(80, text="🎨 Preparazione della scena 3D...")
                             viewer_html = build_viewer_html(mesh, t)
+
                             st.session_state[_vkey] = {
                                 "html": viewer_html,
                                 "v": len(mesh.vertices),
                                 "f": len(mesh.faces),
                             }
-                            wait_placeholder.empty()
+
+                            progress_bar.progress(100, text="✅ Pronto! Caricamento del viewer...")
+                            time.sleep(0.5)
+                            progress_bar.empty()
                             st.rerun()
                     else:
-                        wait_placeholder.empty()
+                        progress_bar.empty()
                         st.warning(t("viewer_warning_no_model"))
                 except Exception as e:
-                    wait_placeholder.empty()
+                    progress_bar.empty()
                     st.error(t("viewer_error_generic", error=e))
 
     with col_side:
