@@ -1,4 +1,12 @@
 import streamlit as st
+
+st.set_page_config(
+    page_title="ArtiFix - Universal CAD/CAM Repair",
+    page_icon="https://raw.githubusercontent.com/alexcool-project/Artifix/main/docs/images/ArchiFix_cubo-logo.png",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 import ezdxf
 import trimesh
 import io
@@ -73,7 +81,6 @@ FALLBACK_METRICS = {
     "sponsor_attivi": {"value": "3", "unit": "", "icon": "🤝"},
 }
 
-# --- LINK MAILTO SPONSOR CON TEMPLATE PRECOMPILATO ---
 SPONSOR_MAILTO = (
     "mailto:info@artifix.it"
     "?subject=Richiesta%20Sponsorizzazione%20ArtiFix"
@@ -82,22 +89,6 @@ SPONSOR_MAILTO = (
     "Nome%20Azienda%3A%20%0D%0ASito%20Web%3A%20%0D%0AEmail%3A%20%0D%0A"
     "Telefono%3A%20%0D%0ALogo%20(URL)%3A%20%0D%0AMessaggio%3A%0D%0A"
 )
-
-# --- CONFIGURAZIONE PAGINA ---
-if CUBO_URL:
-    st.set_page_config(
-        page_title="ArtiFix - Universal CAD/CAM Repair",
-        page_icon=CUBO_URL,
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-else:
-    st.set_page_config(
-        page_title="ArtiFix - Universal CAD/CAM Repair",
-        page_icon="🔧",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
 
 # --- STATO LINGUA ---
 if 'lang' not in st.session_state:
