@@ -716,21 +716,10 @@ def extract_3d_from_pdf(file_bytes):
 
 def render_waiting_card(t_func, current_step: int, total_steps: int = 5):
     """
-    Renderizza una card elegante di attesa con:
-    - Titolo e sottotitolo
-    - Avviso 'non chiudere la pagina'
-    - Tempo stimato
-    - Step indicator (1→5)
-    - Tip utile rotante
+    Renderizza una card elegante di attesa.
 
-    Parameters
-    ----------
-    t_func : callable
-        Funzione di traduzione.
-    current_step : int
-        Step attualmente in corso (1-based).
-    total_steps : int
-        Numero totale di step.
+    IMPORTANTE: l'HTML è su una sola riga e senza indentazione,
+    altrimenti Markdown di Streamlit lo mostra come code block.
     """
     tips = [
         t_func('viewer_tip_1'),
@@ -755,34 +744,30 @@ def render_waiting_card(t_func, current_step: int, total_steps: int = 5):
 
         label = t_func(f'viewer_step{i}_label')
         detail = t_func(f'viewer_step{i}_detail') if state == "active" else ""
-
         detail_html = f'<div class="step-detail">{detail}</div>' if detail else ""
 
-        steps_html += f"""
-        <div class="step-item {state}">
-            <span class="step-icon">{icon}</span>
-            <div style="flex:1;">
-                <div class="step-label">{label}</div>
-                {detail_html}
-            </div>
-        </div>
-        """
+        steps_html += (
+            f'<div class="step-item {state}">'
+            f'<span class="step-icon">{icon}</span>'
+            f'<div style="flex:1;">'
+            f'<div class="step-label">{label}</div>'
+            f'{detail_html}'
+            f'</div>'
+            f'</div>'
+        )
 
-    st.markdown(f"""
-    <div class="wait-card">
-        <h3>⏳ {t_func('viewer_wait_title')}<span class="dots"></span></h3>
-        <div class="wait-subtitle">{t_func('viewer_wait_subtitle')}</div>
-        <div class="wait-warning">{t_func('viewer_wait_dont_close')}</div>
-        <div class="wait-estimated">{t_func('viewer_wait_estimated')}</div>
-        <div class="step-list">
-            {steps_html}
-        </div>
-        <div class="wait-tip">
-            <span class="tip-label">{t_func('viewer_tip_label')}</span>
-            {tip_choice}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    html = (
+        '<div class="wait-card">'
+        f'<h3>⏳ {t_func("viewer_wait_title")}<span class="dots"></span></h3>'
+        f'<div class="wait-subtitle">{t_func("viewer_wait_subtitle")}</div>'
+        f'<div class="wait-warning">{t_func("viewer_wait_dont_close")}</div>'
+        f'<div class="wait-estimated">{t_func("viewer_wait_estimated")}</div>'
+        f'<div class="step-list">{steps_html}</div>'
+        f'<div class="wait-tip"><span class="tip-label">{t_func("viewer_tip_label")}</span>{tip_choice}</div>'
+        '</div>'
+    )
+
+    st.markdown(html, unsafe_allow_html=True)
 
 
 # --- BARRA LATERALE ---
