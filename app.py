@@ -486,19 +486,6 @@ def invia_email(nome, email_utente, messaggio):
 # ============================================================
 
 def render_html_viewer_info(t_func):
-    """
-    Mostra una sezione informativa sull'HTML 3D Viewer.
-
-    Usa le traduzioni IT/EN fornite dal dizionario `translations.py`.
-    Lo stile è coerente con il resto dell'app (bordi blu, sfondo chiaro, icone).
-
-    Parameters
-    ----------
-    t_func : callable
-        Funzione di traduzione `t(key)` che restituisce la stringa tradotta
-        nella lingua corrente.
-    """
-    # --- Intro ---
     st.markdown(f"""
     <div class="html-viewer-intro">
         <h3>{t_func('html_viewer_title')}</h3>
@@ -507,7 +494,6 @@ def render_html_viewer_info(t_func):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Benefici (6 box) ---
     st.markdown(f"""
     <div class="html-viewer-benefits">
         <div class="html-viewer-benefit">
@@ -545,34 +531,18 @@ def render_html_viewer_info(t_func):
 
 
 def render_proprietary_formats_help():
-    """Mostra una tendina (expander) con le note sui formati proprietari.
-
-    Elegante, compatta, chiusa di default. L'utente la apre solo se necessario.
-    Sostituisce il precedente box grande sempre visibile.
-    """
     with st.expander(t("notes_expander_title"), expanded=False):
-        # Intro
         st.markdown(t("notes_expander_intro"))
-
         st.markdown("---")
-
-        # Due colonne: supportati vs non supportati
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(t("notes_expander_native"))
         with col2:
             st.markdown(t("notes_expander_not_supported"))
-
         st.markdown("---")
-
-        # Come procedere
         st.markdown(t("notes_expander_howto"))
         st.markdown(t("notes_expander_steps"))
-
-        # Tip
         st.info(t("notes_expander_tip"))
-
-        # Link alla guida (PULSANTE CON TESTO BIANCO FORZATO + CLASSE CSS)
         st.markdown(
             f"""
             <div style="text-align: center; margin-top: 12px;">
@@ -586,7 +556,6 @@ def render_proprietary_formats_help():
         )
 
 def is_3d_pdf(file_bytes):
-    """Verifica se un PDF contiene un modello 3D incorporato (U3D o PRC)."""
     try:
         if not PDF_AVAILABLE:
             return False
@@ -601,7 +570,6 @@ def is_3d_pdf(file_bytes):
 
 
 def extract_3d_from_pdf(file_bytes):
-    """Tenta di estrarre un modello 3D da un PDF con U3D o PRC."""
     try:
         if not FITZ_AVAILABLE:
             return None
@@ -787,11 +755,9 @@ elif page == "Viewer 3D":
     with col_main:
         st.header(t("viewer_header"))
 
-        # --- SEZIONE INFORMATIVA HTML 3D VIEWER ---
         render_html_viewer_info(t)
         st.markdown("---")
 
-        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         viewer_file = st.file_uploader(
             t("viewer_upload"),
             type=["stl","obj","ply","glb","gltf","fbx","3mf","dae","wrl","off","u3d","pdf"],
@@ -800,7 +766,6 @@ elif page == "Viewer 3D":
         )
 
         if viewer_file:
-            # ✅ Controllo 3D PDF
             file_ext_check = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
             if file_ext_check == "pdf":
                 file_bytes_check = viewer_file.getvalue()
@@ -954,14 +919,8 @@ elif page == "Viewer 3D":
                         """
                         st.components.v1.html(viewer_html, height=580)
 
-                        # --- SEZIONE CONDIVISIONE (v8.0) con anti-loop via session_state ---
-                        _share_key = f"_share_done_{viewer_file.name}_{len(viewer_file.getvalue())}"
-                        if not st.session_state.get(_share_key, False):
-                            st.session_state[_share_key] = True
-                            try:
-                                render_share_section(viewer_file, t, lang=st.session_state.lang)
-                            except Exception as _e_share:
-                                st.warning(f"Condivisione temporaneamente non disponibile: {_e_share}")
+                        # --- SEZIONE CONDIVISIONE (v8.0) ---
+                        render_share_section(viewer_file, t, lang=st.session_state.lang)
                 else:
                     st.warning(t("viewer_warning_no_model"))
             except Exception as e:
@@ -977,7 +936,6 @@ elif page == "Converti Formati":
         st.header(t("convert_header"))
         st.markdown(t("convert_subtitle"))
 
-        # --- TENDINA UNICA: Note formati proprietari ---
         render_proprietary_formats_help()
 
         with st.expander(t("convert_expander_matrix")):
@@ -998,7 +956,6 @@ elif page == "Converti Formati":
             """)
             st.caption(t("convert_caption_matrix"))
 
-        # ⚡ KEY DINAMICA: l'uploader si resetta al cambio lingua
         uploaded_file = st.file_uploader(
             t("convert_upload"),
             type=[ext[1:] for ext in ALL_EXTENSIONS],
