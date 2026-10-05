@@ -31,3 +31,4 @@ _(nessun evento registrato)_
 - **[2026-10-03 18:28:33]** `requirements.txt` — Rollback da `requirements_v7.4.txt`
 - **[2026-10-04 02:36:13]** `app.py` — Rollback da `app_v7.4.py`
 - **[2026-10-04 15:25:51]** `requirements.txt` — Rollback da `requirements_v7.4.txt`
+- **[2026-10-05 14:09:56]** `requirements.txt` — Rollback da `requirements_v7.4.txt`
