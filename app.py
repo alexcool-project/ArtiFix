@@ -612,25 +612,38 @@ elif page == "Viewer 3D":
                     if mesh is None or not hasattr(mesh, 'faces') or len(mesh.faces) == 0:
                         st.error(t("viewer_error_processing"))
                     else:
-                        vertices = mesh.vertices.copy()
-                        rotated = np.empty_like(vertices)
-                        rotated[:, 0] = vertices[:, 0]
-                        rotated[:, 1] = vertices[:, 2]
-                        rotated[:, 2] = -vertices[:, 1]
-                        vertices = rotated
-                        min_x, min_y, min_z = vertices.min(axis=0)
-                        max_x, max_y, max_z = vertices.max(axis=0)
+                        # --- Prepara la mesh per il viewer ---
+                        status_text.text(t("viewer_status_building"))
+                        progress_bar.progress(80)
+
+                        # Se la mesh è troppo grande, usa una versione ridotta SOLO per il viewer HTML.
+                        # La mesh originale (mesh) resta intatta per condivisione e conversioni.
+                        viewer_mesh = mesh
+                        try:
+                            if len(mesh.faces) > 50000:
+                                viewer_mesh = mesh.copy()
+                                viewer_mesh = viewer_mesh.simplify_quadric_decimation(face_count=30000)
+                        except Exception:
+                            viewer_mesh = mesh
+
+                        v = viewer_mesh.vertices.copy()
+                        r = np.empty_like(v)
+                        r[:, 0] = v[:, 0]
+                        r[:, 1] = v[:, 2]
+                        r[:, 2] = -v[:, 1]
+                        v = r
+                        min_x, min_y, min_z = v.min(axis=0)
+                        max_x, max_y, max_z = v.max(axis=0)
                         center_x = (min_x + max_x) / 2
                         center_z = (min_z + max_z) / 2
-                        vertices[:, 0] -= center_x
-                        vertices[:, 1] -= min_y
-                        vertices[:, 2] -= center_z
-                        faces = mesh.faces.tolist() if hasattr(mesh, 'faces') else mesh.triangles.tolist()
-                        mesh_data = {"vertices": vertices.tolist(), "faces": faces}
+                        v[:, 0] -= center_x
+                        v[:, 1] -= min_y
+                        v[:, 2] -= center_z
+                        viewer_faces = viewer_mesh.faces.tolist()
+                        mesh_data = {"vertices": v.tolist(), "faces": viewer_faces}
                         mesh_json = json.dumps(mesh_data)
-                        status_text.text(t("viewer_status_building"))
                         progress_bar.progress(100)
-                        time.sleep(0.5)
+                        time.sleep(0.3)
 
                         viewer_html = """
                         <html><head><style>
