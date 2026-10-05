@@ -13,4 +13,4 @@ python-dotenv==1.0.1
 PyGithub==2.5.0
 qrcode[pil]==8.0
 matplotlib==3.9.2
-mesh2u3d @ git+https://github.com/alexcool-project/mesh2u3d.git@666be25
+mesh2u3d @ git+https://github.com/alexcool-project/mesh2u3d.git@v0.2.1
