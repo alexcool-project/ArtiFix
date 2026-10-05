@@ -14,3 +14,12 @@ PyGithub==2.5.0
 qrcode[pil]==8.0
 matplotlib==3.9.2
 mesh2u3d @ git+https://github.com/alexcool-project/mesh2u3d.git@v0.2.1
+
+# --- Google Sheets / gspread (sponsor) ---
+gspread==6.1.4
+google-auth==2.35.0
+google-auth-oauthlib==1.2.1
+google-api-python-client==2.149.0
+
+# --- Cookie controller (opzionale) ---
+streamlit-cookies-controller==0.0.4
