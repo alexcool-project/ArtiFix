@@ -556,7 +556,8 @@ def render_proprietary_formats_help():
 def is_3d_pdf(file_bytes):
     try:
         if not PDF_AVAILABLE:
-            return False        pdf_reader = PdfReader(io.BytesIO(file_bytes))
+            return False        
+        pdf_reader = PdfReader(io.BytesIO(file_bytes))
         for page in pdf_reader.pages:
             page_text = str(page)
             if '/3D' in page_text or '/U3D' in page_text or '/PRC' in page_text:
