@@ -284,7 +284,7 @@ def convert_mesh(mesh, target_format):
             try:
                 return trimesh.exchange.fbx.export_fbx(mesh), None
             except AttributeError as e:
-                return None, f"FBX export non supportato dalla libreria trimesh. Dettaglio: {e}"
+                return None, f"FBX export non supportato da trimesh. Dettaglio: {e}"
             except Exception as e:
                 return None, f"{type(e).__name__}: {str(e)}"
         elif target_format == '3mf':
@@ -293,10 +293,10 @@ def convert_mesh(mesh, target_format):
         elif target_format == 'dae':
             try:
                 import collada
-                import numpy as _np
+                from collada import Collada
                 import io as _io
 
-                mesh_collada = collada.Collada()
+                mesh_collada = Collada()
 
                 effect = collada.material.Effect(
                     "effect0", [], "phong",
@@ -305,15 +305,15 @@ def convert_mesh(mesh, target_format):
                     shininess=100
                 )
                 mesh_collada.effects.append(effect)
-
                 mat = collada.material.Material("material0", "material0", effect)
                 mesh_collada.materials.append(mat)
 
-                verts = mesh.vertices.astype(float).flatten().tolist()
-                faces = mesh.faces.astype(int).flatten().tolist()
+                # pycollada vuole lista di tuple, non array piatto
+                verts = [tuple(map(float, v)) for v in mesh.vertices]
+                tris = [tuple(map(int, f)) for f in mesh.faces]
 
                 vert_src = collada.source.FloatSource(
-                    "verts-array", _np.array(verts), ('X', 'Y', 'Z')
+                    "verts-array", np.array(verts, dtype=float).flatten(), ('X', 'Y', 'Z')
                 )
 
                 geom = collada.geometry.Geometry(
@@ -324,7 +324,7 @@ def convert_mesh(mesh, target_format):
                 input_list.addInput(0, 'VERTEX', "#verts-array")
 
                 triset = geom.createTriangleSet(
-                    _np.array(faces), input_list, "materialref"
+                    np.array(tris, dtype=int).flatten(), input_list, "materialref"
                 )
                 geom.primitives.append(triset)
                 mesh_collada.geometries.append(geom)
