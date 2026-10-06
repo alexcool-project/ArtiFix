@@ -48,7 +48,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             'uploaded_file_id': None
         }
 
-    # --- Uploader a piena larghezza ---
     uploaded_file = st.file_uploader(
         t("repair_upload"),
         type=[ext[1:] for ext in ALL_EXTENSIONS],
