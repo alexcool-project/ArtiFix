@@ -191,23 +191,23 @@ for info in SUPPORTED_FORMATS.values():
     ALL_EXTENSIONS.extend(info["extensions"])
 
 CONVERSION_MATRIX = {
-    'stl': ['obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
-    'obj': ['stl', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
-    'ply': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
-    'glb': ['stl', 'obj', 'ply', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
-    'gltf': ['stl', 'obj', 'ply', 'glb', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
-    'fbx': ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
-    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'wrl', 'off', 'dxf', 'pdf'],
+    'stl': ['obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'obj': ['stl', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'ply': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'glb': ['stl', 'obj', 'ply', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'gltf': ['stl', 'obj', 'ply', 'glb', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'fbx': ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
     'dae': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
-    'wrl': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'off', 'dxf', 'pdf'],
-    'off': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'dxf', 'pdf'],
-    'dxf': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'pdf'],
+    'wrl': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'off', 'dxf', 'pdf'],
+    'off': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'dxf', 'pdf'],
+    'dxf': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'pdf'],
 }
 
 FORMAT_NAMES = {
     'stl': 'STL (.stl)', 'obj': 'OBJ (.obj)', 'ply': 'PLY (.ply)',
     'glb': 'GLB (.glb)', 'gltf': 'GLTF (.gltf)', 'fbx': 'FBX (.fbx)',
-    '3mf': '3MF (.3mf)', 'wrl': 'WRL (.wrl)',
+    '3mf': '3MF (.3mf)', 'dae': 'DAE (.dae)', 'wrl': 'WRL (.wrl)',
     'off': 'OFF (.off)', 'u3d': 'U3D (.u3d)', 'dxf': 'DXF (.dxf)',
     'pdf': '3D PDF (.pdf)'
 }
@@ -246,6 +246,103 @@ def load_3d_file(file_bytes, file_extension):
             return None
     except Exception:
         return None
+
+
+def _export_dae_native(mesh):
+    """
+    Esporta una mesh in formato DAE (Collada 1.4.1) scrivendo XML direttamente.
+    Non usa pycollada per evitare i bug noti con mesh grandi.
+    Compatibile con Blender, FreeCAD, SketchUp, Unity, Unreal, ecc.
+    """
+    import uuid as _uuid
+
+    verts = mesh.vertices.astype(float)
+    faces = mesh.faces.astype(int)
+
+    geom_id = "geom-" + _uuid.uuid4().hex[:8]
+    mat_id = "mat-" + _uuid.uuid4().hex[:8]
+    eff_id = "eff-" + _uuid.uuid4().hex[:8]
+
+    verts_str = " ".join(f"{v:.6f}" for v in verts.flatten())
+    faces_str = " ".join(str(i) for i in faces.flatten())
+
+    n_verts = len(verts)
+    n_faces = len(faces)
+
+    xml = (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">\n'
+        '  <asset>\n'
+        '    <contributor>\n'
+        '      <authoring_tool>ArtiFix</authoring_tool>\n'
+        '    </contributor>\n'
+        '    <created>2026-10-06T00:00:00Z</created>\n'
+        '    <modified>2026-10-06T00:00:00Z</modified>\n'
+        '    <unit name="meter" meter="1"/>\n'
+        '    <up_axis>Y_UP</up_axis>\n'
+        '  </asset>\n'
+        '  <library_effects>\n'
+        '    <effect id="' + eff_id + '">\n'
+        '      <profile_COMMON>\n'
+        '        <technique sid="common">\n'
+        '          <phong>\n'
+        '            <emission><color>0 0 0 1</color></emission>\n'
+        '            <ambient><color>0 0 0 1</color></ambient>\n'
+        '            <diffuse><color>0.12 0.47 0.71 1</color></diffuse>\n'
+        '            <specular><color>1 1 1 1</color></specular>\n'
+        '            <shininess><float>50</float></shininess>\n'
+        '          </phong>\n'
+        '        </technique>\n'
+        '      </profile_COMMON>\n'
+        '    </effect>\n'
+        '  </library_effects>\n'
+        '  <library_materials>\n'
+        '    <material id="' + mat_id + '" name="' + mat_id + '">\n'
+        '      <instance_effect url="#' + eff_id + '"/>\n'
+        '    </material>\n'
+        '  </library_materials>\n'
+        '  <library_geometries>\n'
+        '    <geometry id="' + geom_id + '" name="' + geom_id + '">\n'
+        '      <mesh>\n'
+        '        <source id="' + geom_id + '-positions">\n'
+        '          <float_array id="' + geom_id + '-positions-array" count="' + str(n_verts * 3) + '">' + verts_str + '</float_array>\n'
+        '          <technique_common>\n'
+        '            <accessor source="#' + geom_id + '-positions-array" count="' + str(n_verts) + '" stride="3">\n'
+        '              <param name="X" type="float"/>\n'
+        '              <param name="Y" type="float"/>\n'
+        '              <param name="Z" type="float"/>\n'
+        '            </accessor>\n'
+        '          </technique_common>\n'
+        '        </source>\n'
+        '        <vertices id="' + geom_id + '-vertices">\n'
+        '          <input semantic="POSITION" source="#' + geom_id + '-positions"/>\n'
+        '        </vertices>\n'
+        '        <triangles count="' + str(n_faces) + '" material="mat0">\n'
+        '          <input semantic="VERTEX" source="#' + geom_id + '-vertices" offset="0"/>\n'
+        '          <p>' + faces_str + '</p>\n'
+        '        </triangles>\n'
+        '      </mesh>\n'
+        '    </geometry>\n'
+        '  </library_geometries>\n'
+        '  <library_visual_scenes>\n'
+        '    <visual_scene id="scene0" name="scene0">\n'
+        '      <node id="node0" name="node0">\n'
+        '        <instance_geometry url="#' + geom_id + '">\n'
+        '          <bind_material>\n'
+        '            <technique_common>\n'
+        '              <instance_material symbol="mat0" target="#' + mat_id + '"/>\n'
+        '            </technique_common>\n'
+        '          </bind_material>\n'
+        '        </instance_geometry>\n'
+        '      </node>\n'
+        '    </visual_scene>\n'
+        '  </library_visual_scenes>\n'
+        '  <scene>\n'
+        '    <instance_visual_scene url="#scene0"/>\n'
+        '  </scene>\n'
+        '</COLLADA>\n'
+    )
+    return xml.encode('utf-8')
 
 
 def convert_mesh(mesh, target_format):
@@ -289,6 +386,13 @@ def convert_mesh(mesh, target_format):
                 return None, f"{type(e).__name__}: {str(e)}"
         elif target_format == '3mf':
             return trimesh.exchange.threeMF.export_3mf(mesh), None
+
+        elif target_format == 'dae':
+            try:
+                data = _export_dae_native(mesh)
+                return data, None
+            except Exception as e:
+                return None, f"{type(e).__name__}: {str(e)}"
 
         elif target_format == 'wrl':
             try:
@@ -774,19 +878,19 @@ elif page == "Converti Formati":
 
     with st.expander(t("convert_expander_matrix")):
         st.markdown("""
-        | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | WRL | OFF | DXF | PDF |
-        |--------|-----|-----|-----|-----|------|-----|------|-----|-----|-----|-----|
-        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **GLB** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **GLTF** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **3MF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ |
-        | **DAE** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **WRL** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
-        | **OFF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
-        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+        | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |
+        |--------|-----|-----|-----|-----|------|-----|------|-----|-----|-----|-----|-----|
+        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **GLB** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **GLTF** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **3MF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **DAE** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ |
+        | **WRL** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
+        | **OFF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
         """)
         st.caption(t("convert_caption_matrix"))
 
@@ -833,7 +937,7 @@ elif page == "Converti Formati":
                             time.sleep(0.5)
                             if result_bytes:
                                 st.success(t("convert_success", format=target_selected.split(' ')[0]))
-                                mime_types = {'stl': 'application/octet-stream', 'obj': 'text/plain', 'ply': 'application/octet-stream', 'glb': 'application/octet-stream', 'gltf': 'application/octet-stream', 'fbx': 'application/octet-stream', '3mf': 'application/octet-stream', 'wrl': 'application/octet-stream', 'off': 'application/octet-stream', 'dxf': 'application/dxf', 'pdf': 'application/pdf'}
+                                mime_types = {'stl': 'application/octet-stream', 'obj': 'text/plain', 'ply': 'application/octet-stream', 'glb': 'application/octet-stream', 'gltf': 'application/octet-stream', 'fbx': 'application/octet-stream', '3mf': 'application/octet-stream', 'dae': 'model/vnd.collada+xml', 'wrl': 'model/vrml', 'off': 'application/octet-stream', 'dxf': 'application/dxf', 'pdf': 'application/pdf'}
                                 st.info(t("convert_info_ready"))
                                 original_name = os.path.splitext(file_name)[0]
                                 converted_filename = f"{original_name}.{target_ext}"
