@@ -79,6 +79,9 @@ if 'lang' not in st.session_state:
 def t(key, **kwargs):
     return get_text(key, st.session_state.lang, **kwargs)
 
+def _is_en():
+    return st.session_state.lang == "en"
+
 st.markdown("""
 <title>ArtiFix - Convertitore CAD/CAM Universale</title>
 <meta name="description" content="ArtiFix è la piattaforma professionale per convertire file CAD/CAM in 3D PDF, STL, OBJ, GLTF." />
@@ -191,9 +194,9 @@ for info in SUPPORTED_FORMATS.values():
     ALL_EXTENSIONS.extend(info["extensions"])
 
 # === LIMITI DI SICUREZZA (Streamlit Cloud ha ~1 GB RAM) ===
-MAX_FILE_SIZE_MB = 50                    # Limite generale per qualsiasi conversione
-MAX_FILE_SIZE_MB_HEAVY = 10              # Limite per DAE e 3D PDF
-MAX_VERTS_FOR_HEAVY_EXPORT = 50000       # Limite vertici per DAE/PDF
+MAX_FILE_SIZE_MB = 50
+MAX_FILE_SIZE_MB_HEAVY = 10
+MAX_VERTS_FOR_HEAVY_EXPORT = 50000
 
 CONVERSION_MATRIX = {
     'stl': ['obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
@@ -254,7 +257,6 @@ def load_3d_file(file_bytes, file_extension):
 
 
 def _export_dae_native(mesh):
-    """Esporta una mesh in DAE (Collada 1.4.1) con XML nativo."""
     import uuid as _uuid
 
     verts = mesh.vertices.astype(float)
@@ -347,12 +349,17 @@ def _export_dae_native(mesh):
 
 
 def convert_mesh(mesh, target_format):
-    """Converte una mesh nel formato target. Ritorna (bytes, error_message)."""
     try:
         target_format = target_format.lower().replace('.', '')
 
         if target_format == 'pdf':
             if len(mesh.vertices) > MAX_VERTS_FOR_HEAVY_EXPORT:
+                if _is_en():
+                    return None, (
+                        f"50,000 vertices limit exceeded (file: {len(mesh.vertices):,} vertices). "
+                        f"If you need to convert large files to 3D PDF, "
+                        f"consider a direct export from design software like FreeCAD."
+                    )
                 return None, (
                     f"Limite di 50.000 vertici superato (file: {len(mesh.vertices):,} vertici). "
                     f"Se ti serve convertire in 3D PDF file di grandi dimensioni, "
@@ -396,6 +403,12 @@ def convert_mesh(mesh, target_format):
 
         elif target_format == 'dae':
             if len(mesh.vertices) > MAX_VERTS_FOR_HEAVY_EXPORT:
+                if _is_en():
+                    return None, (
+                        f"50,000 vertices limit exceeded (file: {len(mesh.vertices):,} vertices). "
+                        f"If you need to convert large files to DAE, "
+                        f"consider a direct export from design software like FreeCAD."
+                    )
                 return None, (
                     f"Limite di 50.000 vertici superato (file: {len(mesh.vertices):,} vertici). "
                     f"Se ti serve convertire in DAE file di grandi dimensioni, "
@@ -927,18 +940,27 @@ elif page == "Converti Formati":
             file_type, icon = detect_file_type(file_extension)
             st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">{t("convert_file_type", type=file_type, ext=file_extension)} — {file_size_mb:.1f} MB</div></div></div></div>', unsafe_allow_html=True)
 
-            # === BLOCCO 1: file > 50 MB (qualsiasi conversione) ===
+            # === BLOCCO 1: file > 50 MB ===
             if file_size_mb > MAX_FILE_SIZE_MB:
-                st.error(
-                    f"❌ **File troppo grande** ({file_size_mb:.1f} MB). "
-                    f"Il limite massimo per la conversione online è **{MAX_FILE_SIZE_MB} MB**. "
-                    f"Per file più grandi, usa un software desktop come **FreeCAD** o **Blender**."
-                )
+                if _is_en():
+                    st.error(
+                        f"❌ **File too large** ({file_size_mb:.1f} MB). "
+                        f"The maximum size for online conversion is **{MAX_FILE_SIZE_MB} MB**. "
+                        f"For larger files, use desktop software like **FreeCAD** or **Blender**."
+                    )
+                else:
+                    st.error(
+                        f"❌ **File troppo grande** ({file_size_mb:.1f} MB). "
+                        f"Il limite massimo per la conversione online è **{MAX_FILE_SIZE_MB} MB**. "
+                        f"Per file più grandi, usa un software desktop come **FreeCAD** o **Blender**."
+                    )
                 st.stop()
 
             MESH_FORMATS = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off"]
 
-            # === BLOCCO 2: avviso per DAE/PDF (vertici o dimensione) ===
+            # === BLOCCO 2: avviso per DAE/PDF ===
+            _heavy_blocked = False
+            _heavy_reasons = []
             if file_extension in MESH_FORMATS or file_extension == "dxf":
                 try:
                     _mesh_check = load_3d_file(file_bytes, file_extension)
@@ -946,23 +968,38 @@ elif page == "Converti Formati":
                 except Exception:
                     _n_verts = 0
 
-                _heavy_blocked = False
-                _heavy_reasons = []
                 if _n_verts > MAX_VERTS_FOR_HEAVY_EXPORT:
                     _heavy_blocked = True
-                    _heavy_reasons.append(f"**{_n_verts:,}** vertici (limite {MAX_VERTS_FOR_HEAVY_EXPORT:,})")
+                    if _is_en():
+                        _heavy_reasons.append(f"**{_n_verts:,}** vertices (limit {MAX_VERTS_FOR_HEAVY_EXPORT:,})")
+                    else:
+                        _heavy_reasons.append(f"**{_n_verts:,}** vertici (limite {MAX_VERTS_FOR_HEAVY_EXPORT:,})")
                 if file_size_mb > MAX_FILE_SIZE_MB_HEAVY:
                     _heavy_blocked = True
-                    _heavy_reasons.append(f"**{file_size_mb:.1f} MB** (limite {MAX_FILE_SIZE_MB_HEAVY} MB)")
+                    if _is_en():
+                        _heavy_reasons.append(f"**{file_size_mb:.1f} MB** (limit {MAX_FILE_SIZE_MB_HEAVY} MB)")
+                    else:
+                        _heavy_reasons.append(f"**{file_size_mb:.1f} MB** (limite {MAX_FILE_SIZE_MB_HEAVY} MB)")
 
                 if _heavy_blocked:
-                    st.warning(
-                        f"⚠️ **Conversione DAE e 3D PDF non disponibile** per questo file: "
-                        + " e ".join(_heavy_reasons) + ". "
-                        f"Le conversioni verso **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, WRL, OFF, DXF** restano disponibili. "
-                        f"Per convertire in **DAE** o **3D PDF** file di grandi dimensioni, "
-                        f"valuta un'esportazione diretta da software di progettazione come **FreeCAD**."
-                    )
+                    if _is_en():
+                        _reasons_str = " and ".join(_heavy_reasons)
+                        st.warning(
+                            f"⚠️ **DAE and 3D PDF conversion not available** for this file: "
+                            + _reasons_str + ". "
+                            f"Conversions to **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, WRL, OFF, DXF** remain available. "
+                            f"To convert large files to **DAE** or **3D PDF**, "
+                            f"consider a direct export from design software like **FreeCAD**."
+                        )
+                    else:
+                        _reasons_str = " e ".join(_heavy_reasons)
+                        st.warning(
+                            f"⚠️ **Conversione DAE e 3D PDF non disponibile** per questo file: "
+                            + _reasons_str + ". "
+                            f"Le conversioni verso **STL, OBJ, PLY, GLB, GLTF, FBX, 3MF, WRL, OFF, DXF** restano disponibili. "
+                            f"Per convertire in **DAE** o **3D PDF** file di grandi dimensioni, "
+                            f"valuta un'esportazione diretta da software di progettazione come **FreeCAD**."
+                        )
 
             GEO_FORMATS = ["shp", "geojson", "kml", "gpx"]
             if file_extension in MESH_FORMATS or file_extension == "dxf":
@@ -974,15 +1011,18 @@ elif page == "Converti Formati":
                     target_selected = st.selectbox(t("convert_target_format"), target_options)
                     target_ext = target_selected.split(".")[1].replace(")", "").strip()
 
-                    # === BLOCCO 3: il pulsante si disabilita se target è DAE/PDF e il file è pesante ===
                     _is_heavy_target = target_ext in ("dae", "pdf")
                     if _is_heavy_target and _heavy_blocked:
+                        if _is_en():
+                            _btn_help = "File too large for DAE/3D PDF. Use FreeCAD or Blender."
+                        else:
+                            _btn_help = "File troppo grande per DAE/3D PDF. Usa FreeCAD o Blender."
                         st.button(
                             t("convert_button_convert", format=target_selected.split(' ')[0]),
                             type="primary",
                             use_container_width=True,
                             disabled=True,
-                            help="File troppo grande per DAE/3D PDF. Usa FreeCAD o Blender."
+                            help=_btn_help
                         )
                     else:
                         if st.button(t("convert_button_convert", format=target_selected.split(' ')[0]), type="primary", use_container_width=True):
@@ -1008,7 +1048,10 @@ elif page == "Converti Formati":
                                     converted_filename = f"{original_name}.{target_ext}"
                                     st.download_button(label=t("convert_button_download", format=target_ext), data=result_bytes, file_name=converted_filename, mime=mime_types.get(target_ext, 'application/octet-stream'), use_container_width=True)
                                 else:
-                                    st.error(f"❌ Conversione in **{target_ext.upper()}** fallita.")
+                                    if _is_en():
+                                        st.error(f"❌ Conversion to **{target_ext.upper()}** failed.")
+                                    else:
+                                        st.error(f"❌ Conversione in **{target_ext.upper()}** fallita.")
                                     if error_msg:
                                         st.code(error_msg, language="text")
                             else:
