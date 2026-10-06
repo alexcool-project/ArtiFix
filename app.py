@@ -111,17 +111,9 @@ st.markdown("""
     .html-viewer-benefit .benefit-icon { font-size: 1.3rem; display: block; margin-bottom: 6px; }
     .html-viewer-benefit .benefit-title { font-weight: 700; color: #1f77b4; display: block; margin-bottom: 4px; }
     .html-viewer-benefit .benefit-desc { color: #555; line-height: 1.4; font-size: 0.85rem; }
-    /* ===== UPLOADER: lista estensioni nascosta + 'Limit 5GB per file' sotto il titolo ===== */
-    [data-testid="stFileUploader"] section small {
-        display: none !important;
-    }
-    [data-testid="stFileUploaderDropzoneInstructions"] small {
-        display: none !important;
-    }
-    /* Aggiunge 'Limit 5GB per file' subito sotto il titolo 'Drag and drop file here' */
-    [data-testid="stFileUploader"] section {
-        position: relative;
-    }
+    [data-testid="stFileUploader"] section small { display: none !important; }
+    [data-testid="stFileUploaderDropzoneInstructions"] small { display: none !important; }
+    [data-testid="stFileUploader"] section { position: relative; }
     [data-testid="stFileUploader"] section::after {
         content: "Limit 5GB per file";
         position: absolute;
@@ -255,9 +247,12 @@ def load_3d_file(file_bytes, file_extension):
     except Exception:
         return None
 
+
 def convert_mesh(mesh, target_format):
+    """Converte una mesh nel formato target. Ritorna (bytes, error_message)."""
     try:
         target_format = target_format.lower().replace('.', '')
+
         if target_format == 'pdf':
             import matplotlib
             matplotlib.use('Agg')
@@ -273,17 +268,48 @@ def convert_mesh(mesh, target_format):
             plt.savefig("converted_3d.pdf", format='pdf', bbox_inches='tight')
             plt.close()
             with open("converted_3d.pdf", "rb") as f:
-                return f.read()
-        elif target_format == 'stl': return trimesh.exchange.stl.export_stl(mesh)
-        elif target_format == 'obj': return trimesh.exchange.obj.export_obj(mesh)
-        elif target_format == 'ply': return trimesh.exchange.ply.export_ply(mesh)
-        elif target_format == 'glb': return trimesh.exchange.gltf.export_glb(mesh)
-        elif target_format == 'gltf': return trimesh.exchange.gltf.export_gltf(mesh)
-        elif target_format == 'fbx': return trimesh.exchange.fbx.export_fbx(mesh)
-        elif target_format == '3mf': return trimesh.exchange.threeMF.export_3mf(mesh)
-        elif target_format == 'dae': return trimesh.exchange.dae.export_dae(mesh)
-        elif target_format == 'wrl': return trimesh.exchange.vrml.export_vrml(mesh)
-        elif target_format == 'off': return trimesh.exchange.off.export_off(mesh)
+                return f.read(), None
+
+        elif target_format == 'stl':
+            return trimesh.exchange.stl.export_stl(mesh), None
+        elif target_format == 'obj':
+            return trimesh.exchange.obj.export_obj(mesh), None
+        elif target_format == 'ply':
+            return trimesh.exchange.ply.export_ply(mesh), None
+        elif target_format == 'glb':
+            return trimesh.exchange.gltf.export_glb(mesh), None
+        elif target_format == 'gltf':
+            return trimesh.exchange.gltf.export_gltf(mesh), None
+        elif target_format == 'fbx':
+            return trimesh.exchange.fbx.export_fbx(mesh), None
+        elif target_format == '3mf':
+            return trimesh.exchange.threeMF.export_3mf(mesh), None
+
+        elif target_format == 'dae':
+            try:
+                import collada
+            except ImportError as e:
+                return None, f"Libreria 'pycollada' non installata. Dettaglio: {e}"
+            try:
+                data = trimesh.exchange.dae.export_dae(mesh)
+                return data, None
+            except Exception as e:
+                return None, f"{type(e).__name__}: {str(e)}"
+
+        elif target_format == 'wrl':
+            try:
+                data = trimesh.exchange.vrml.export_vrml(mesh)
+                return data, None
+            except Exception as e:
+                return None, f"{type(e).__name__}: {str(e)}"
+
+        elif target_format == 'off':
+            try:
+                data = trimesh.exchange.off.export_off(mesh)
+                return data, None
+            except Exception as e:
+                return None, f"{type(e).__name__}: {str(e)}"
+
         elif target_format == 'dxf':
             if mesh.vertices is not None and len(mesh.vertices) > 0:
                 vertices_2d = mesh.vertices[:, :2]
@@ -294,12 +320,13 @@ def convert_mesh(mesh, target_format):
                         v1 = vertices_2d[face[i]]
                         v2 = vertices_2d[face[(i + 1) % len(face)]]
                         msp.add_line(v1, v2)
-                return dxf_doc.write()
-            return None
+                return dxf_doc.write(), None
+            return None, "Mesh senza vertici"
         else:
-            return None
-    except Exception:
-        return None
+            return None, f"Formato '{target_format}' non gestito"
+    except Exception as e:
+        return None, f"{type(e).__name__}: {str(e)}"
+
 
 def process_file(file_bytes, file_name):
     file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
@@ -806,7 +833,7 @@ elif page == "Converti Formati":
                             status_text.text(t("convert_status_converting"))
                             progress_bar.progress(70)
                             time.sleep(0.5)
-                            result_bytes = convert_mesh(mesh, target_ext)
+                            result_bytes, error_msg = convert_mesh(mesh, target_ext)
                             status_text.text(t("convert_status_saving"))
                             progress_bar.progress(100)
                             time.sleep(0.5)
@@ -818,7 +845,10 @@ elif page == "Converti Formati":
                                 converted_filename = f"{original_name}.{target_ext}"
                                 st.download_button(label=t("convert_button_download", format=target_ext), data=result_bytes, file_name=converted_filename, mime=mime_types.get(target_ext, 'application/octet-stream'), use_container_width=True)
                             else:
-                                st.error(t("convert_error", format=target_selected.split(' ')[0]))
+                                st.error(f"❌ Conversione in **{target_ext.upper()}** fallita.")
+                                if error_msg:
+                                    st.code(error_msg, language="text")
+                                    st.info("📸 **Copia e incolla questo errore nella chat** così possiamo risolverlo.")
                         else:
                             st.error(t("convert_error_load"))
             elif file_extension == "svg":
