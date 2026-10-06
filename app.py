@@ -191,23 +191,23 @@ for info in SUPPORTED_FORMATS.values():
     ALL_EXTENSIONS.extend(info["extensions"])
 
 CONVERSION_MATRIX = {
-    'stl': ['obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'obj': ['stl', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'ply': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'glb': ['stl', 'obj', 'ply', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'gltf': ['stl', 'obj', 'ply', 'glb', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    'fbx': ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
-    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
+    'stl': ['obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
+    'obj': ['stl', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
+    'ply': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
+    'glb': ['stl', 'obj', 'ply', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
+    'gltf': ['stl', 'obj', 'ply', 'glb', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
+    'fbx': ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
+    '3mf': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', 'wrl', 'off', 'dxf', 'pdf'],
     'dae': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'dxf', 'pdf'],
-    'wrl': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'off', 'dxf', 'pdf'],
-    'off': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'dxf', 'pdf'],
-    'dxf': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'pdf'],
+    'wrl': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'off', 'dxf', 'pdf'],
+    'off': ['stl', 'obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'dxf', 'pdf'],
+    'dxf': ['stl', 'obj', 'glb', 'gltf', 'fbx', '3mf', 'wrl', 'off', 'pdf'],
 }
 
 FORMAT_NAMES = {
     'stl': 'STL (.stl)', 'obj': 'OBJ (.obj)', 'ply': 'PLY (.ply)',
     'glb': 'GLB (.glb)', 'gltf': 'GLTF (.gltf)', 'fbx': 'FBX (.fbx)',
-    '3mf': '3MF (.3mf)', 'dae': 'DAE (.dae)', 'wrl': 'WRL (.wrl)',
+    '3mf': '3MF (.3mf)', 'wrl': 'WRL (.wrl)',
     'off': 'OFF (.off)', 'u3d': 'U3D (.u3d)', 'dxf': 'DXF (.dxf)',
     'pdf': '3D PDF (.pdf)'
 }
@@ -291,59 +291,7 @@ def convert_mesh(mesh, target_format):
             return trimesh.exchange.threeMF.export_3mf(mesh), None
 
         elif target_format == 'dae':
-            try:
-                import collada
-                from collada import Collada
-                import io as _io
-
-                mesh_collada = Collada()
-
-                effect = collada.material.Effect(
-                    "effect0", [], "phong",
-                    diffuse=(0.12, 0.47, 0.71),
-                    specular=(1, 1, 1),
-                    shininess=100
-                )
-                mesh_collada.effects.append(effect)
-                mat = collada.material.Material("material0", "material0", effect)
-                mesh_collada.materials.append(mat)
-
-                # pycollada vuole lista di tuple, non array piatto
-                verts = [tuple(map(float, v)) for v in mesh.vertices]
-                tris = [tuple(map(int, f)) for f in mesh.faces]
-
-                vert_src = collada.source.FloatSource(
-                    "verts-array", np.array(verts, dtype=float).flatten(), ('X', 'Y', 'Z')
-                )
-
-                geom = collada.geometry.Geometry(
-                    mesh_collada, "geometry0", "geometry0", [vert_src]
-                )
-
-                input_list = collada.source.InputList()
-                input_list.addInput(0, 'VERTEX', "#verts-array")
-
-                triset = geom.createTriangleSet(
-                    np.array(tris, dtype=int).flatten(), input_list, "materialref"
-                )
-                geom.primitives.append(triset)
-                mesh_collada.geometries.append(geom)
-
-                matnode = collada.scene.MaterialNode("materialref", mat, inputs=[])
-                geomnode = collada.scene.GeometryNode(geom, [matnode])
-                node = collada.scene.Node("node0", children=[geomnode])
-
-                myscene = collada.scene.Scene("scene0", [node])
-                mesh_collada.scenes.append(myscene)
-                mesh_collada.scene = myscene
-
-                buffer = _io.BytesIO()
-                mesh_collada.write(buffer)
-                return buffer.getvalue(), None
-            except ImportError as e:
-                return None, f"Libreria 'pycollada' non installata. Dettaglio: {e}"
-            except Exception as e:
-                return None, f"{type(e).__name__}: {str(e)}"
+            return None, "DAE export non supportato. Usa un altro formato."
 
         elif target_format == 'wrl':
             try:
@@ -829,19 +777,19 @@ elif page == "Converti Formati":
 
     with st.expander(t("convert_expander_matrix")):
         st.markdown("""
-        | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | DAE | WRL | OFF | DXF | PDF |
-        |--------|-----|-----|-----|-----|------|-----|------|-----|-----|-----|-----|-----|
-        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **GLB** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **GLTF** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **3MF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ |
-        | **DAE** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ |
-        | **WRL** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
-        | **OFF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
-        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+        | Da → A | STL | OBJ | PLY | GLB | GLTF | FBX | 3MF | WRL | OFF | DXF | PDF |
+        |--------|-----|-----|-----|-----|------|-----|------|-----|-----|-----|-----|
+        | **STL** | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **OBJ** | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **PLY** | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **GLB** | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **GLTF** | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **FBX** | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **3MF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ |
+        | **DAE** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+        | **WRL** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
+        | **OFF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+        | **DXF** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
         """)
         st.caption(t("convert_caption_matrix"))
 
@@ -888,7 +836,7 @@ elif page == "Converti Formati":
                             time.sleep(0.5)
                             if result_bytes:
                                 st.success(t("convert_success", format=target_selected.split(' ')[0]))
-                                mime_types = {'stl': 'application/octet-stream', 'obj': 'text/plain', 'ply': 'application/octet-stream', 'glb': 'application/octet-stream', 'gltf': 'application/octet-stream', 'fbx': 'application/octet-stream', '3mf': 'application/octet-stream', 'dae': 'application/octet-stream', 'wrl': 'application/octet-stream', 'off': 'application/octet-stream', 'dxf': 'application/dxf', 'pdf': 'application/pdf'}
+                                mime_types = {'stl': 'application/octet-stream', 'obj': 'text/plain', 'ply': 'application/octet-stream', 'glb': 'application/octet-stream', 'gltf': 'application/octet-stream', 'fbx': 'application/octet-stream', '3mf': 'application/octet-stream', 'wrl': 'application/octet-stream', 'off': 'application/octet-stream', 'dxf': 'application/dxf', 'pdf': 'application/pdf'}
                                 st.info(t("convert_info_ready"))
                                 original_name = os.path.splitext(file_name)[0]
                                 converted_filename = f"{original_name}.{target_ext}"
