@@ -281,18 +281,67 @@ def convert_mesh(mesh, target_format):
         elif target_format == 'gltf':
             return trimesh.exchange.gltf.export_gltf(mesh), None
         elif target_format == 'fbx':
-            return trimesh.exchange.fbx.export_fbx(mesh), None
+            try:
+                return trimesh.exchange.fbx.export_fbx(mesh), None
+            except AttributeError as e:
+                return None, f"FBX export non supportato dalla libreria trimesh. Dettaglio: {e}"
+            except Exception as e:
+                return None, f"{type(e).__name__}: {str(e)}"
         elif target_format == '3mf':
             return trimesh.exchange.threeMF.export_3mf(mesh), None
 
         elif target_format == 'dae':
             try:
                 import collada
+                import numpy as _np
+                import io as _io
+
+                mesh_collada = collada.Collada()
+
+                effect = collada.material.Effect(
+                    "effect0", [], "phong",
+                    diffuse=(0.12, 0.47, 0.71),
+                    specular=(1, 1, 1),
+                    shininess=100
+                )
+                mesh_collada.effects.append(effect)
+
+                mat = collada.material.Material("material0", "material0", effect)
+                mesh_collada.materials.append(mat)
+
+                verts = mesh.vertices.astype(float).flatten().tolist()
+                faces = mesh.faces.astype(int).flatten().tolist()
+
+                vert_src = collada.source.FloatSource(
+                    "verts-array", _np.array(verts), ('X', 'Y', 'Z')
+                )
+
+                geom = collada.geometry.Geometry(
+                    mesh_collada, "geometry0", "geometry0", [vert_src]
+                )
+
+                input_list = collada.source.InputList()
+                input_list.addInput(0, 'VERTEX', "#verts-array")
+
+                triset = geom.createTriangleSet(
+                    _np.array(faces), input_list, "materialref"
+                )
+                geom.primitives.append(triset)
+                mesh_collada.geometries.append(geom)
+
+                matnode = collada.scene.MaterialNode("materialref", mat, inputs=[])
+                geomnode = collada.scene.GeometryNode(geom, [matnode])
+                node = collada.scene.Node("node0", children=[geomnode])
+
+                myscene = collada.scene.Scene("scene0", [node])
+                mesh_collada.scenes.append(myscene)
+                mesh_collada.scene = myscene
+
+                buffer = _io.BytesIO()
+                mesh_collada.write(buffer)
+                return buffer.getvalue(), None
             except ImportError as e:
                 return None, f"Libreria 'pycollada' non installata. Dettaglio: {e}"
-            try:
-                data = trimesh.exchange.dae.export_dae(mesh)
-                return data, None
             except Exception as e:
                 return None, f"{type(e).__name__}: {str(e)}"
 
