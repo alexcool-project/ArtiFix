@@ -190,6 +190,8 @@ ALL_EXTENSIONS = []
 for info in SUPPORTED_FORMATS.values():
     ALL_EXTENSIONS.extend(info["extensions"])
 
+MAX_VERTS_FOR_HEAVY_EXPORT = 50000
+
 CONVERSION_MATRIX = {
     'stl': ['obj', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
     'obj': ['stl', 'ply', 'glb', 'gltf', 'fbx', '3mf', 'dae', 'wrl', 'off', 'dxf', 'pdf'],
@@ -351,6 +353,12 @@ def convert_mesh(mesh, target_format):
         target_format = target_format.lower().replace('.', '')
 
         if target_format == 'pdf':
+            if len(mesh.vertices) > MAX_VERTS_FOR_HEAVY_EXPORT:
+                return None, (
+                    f"Limite di 50.000 vertici superato (file: {len(mesh.vertices):,} vertici). "
+                    f"Se ti serve convertire in 3D PDF file di grandi dimensioni, "
+                    f"valuta un'esportazione diretta da software di progettazione come FreeCAD."
+                )
             import matplotlib
             matplotlib.use('Agg')
             import matplotlib.pyplot as plt
@@ -388,6 +396,12 @@ def convert_mesh(mesh, target_format):
             return trimesh.exchange.threeMF.export_3mf(mesh), None
 
         elif target_format == 'dae':
+            if len(mesh.vertices) > MAX_VERTS_FOR_HEAVY_EXPORT:
+                return None, (
+                    f"Limite di 50.000 vertici superato (file: {len(mesh.vertices):,} vertici). "
+                    f"Se ti serve convertire in DAE file di grandi dimensioni, "
+                    f"valuta un'esportazione diretta da software di progettazione come FreeCAD."
+                )
             try:
                 data = _export_dae_native(mesh)
                 return data, None
@@ -418,7 +432,6 @@ def convert_mesh(mesh, target_format):
                         v1 = vertices_2d[face[i]]
                         v2 = vertices_2d[face[(i + 1) % len(face)]]
                         msp.add_line(v1, v2)
-                # ezdxf: write() richiede uno stream, non ritorna bytes
                 stream = io.StringIO()
                 dxf_doc.write(stream)
                 return stream.getvalue().encode('utf-8'), None
@@ -556,7 +569,7 @@ def render_proprietary_formats_help():
 def is_3d_pdf(file_bytes):
     try:
         if not PDF_AVAILABLE:
-            return False        
+            return False
         pdf_reader = PdfReader(io.BytesIO(file_bytes))
         for page in pdf_reader.pages:
             page_text = str(page)
@@ -913,7 +926,23 @@ elif page == "Converti Formati":
             file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
             file_type, icon = detect_file_type(file_extension)
             st.markdown(f'<div class="file-info-card"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:1.5rem;">{icon}</span><div><div style="font-weight:600;">{file_name}</div><div style="font-size:0.8rem;color:#666;">{t("convert_file_type", type=file_type, ext=file_extension)}</div></div></div></div>', unsafe_allow_html=True)
+
             MESH_FORMATS = ["stl", "obj", "ply", "glb", "gltf", "fbx", "3mf", "dae", "wrl", "off"]
+
+            # ⚠️ AVVISO PREVENTIVO: file troppo grande per DAE/PDF
+            if file_extension in MESH_FORMATS:
+                try:
+                    _mesh_check = load_3d_file(file_bytes, file_extension)
+                    if _mesh_check is not None and hasattr(_mesh_check, 'vertices') and len(_mesh_check.vertices) > MAX_VERTS_FOR_HEAVY_EXPORT:
+                        st.warning(
+                            f"⚠️ **Limite di 50.000 vertici superato** (file: **{len(_mesh_check.vertices):,}** vertici). "
+                            f"Il file è troppo grande per le conversioni in **DAE** e **3D PDF**. "
+                            f"Se ti serve convertire in DAE file di grandi dimensioni, "
+                            f"valuta un'esportazione diretta da software di progettazione come **FreeCAD**."
+                        )
+                except Exception:
+                    pass
+
             GEO_FORMATS = ["shp", "geojson", "kml", "gpx"]
             if file_extension in MESH_FORMATS or file_extension == "dxf":
                 target_formats = CONVERSION_MATRIX.get(file_extension, [])
