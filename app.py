@@ -251,7 +251,7 @@ def load_3d_file(file_bytes, file_extension):
 def _export_dae_native(mesh):
     """
     Esporta una mesh in formato DAE (Collada 1.4.1) scrivendo XML direttamente.
-    Non usa pycollada per evitare i bug noti con mesh grandi.
+    Non usa pycollada per evitare i suoi bug noti con mesh grandi.
     Compatibile con Blender, FreeCAD, SketchUp, Unity, Unreal, ecc.
     """
     import uuid as _uuid
@@ -418,7 +418,10 @@ def convert_mesh(mesh, target_format):
                         v1 = vertices_2d[face[i]]
                         v2 = vertices_2d[face[(i + 1) % len(face)]]
                         msp.add_line(v1, v2)
-                return dxf_doc.write(), None
+                # ezdxf: write() richiede uno stream, non ritorna bytes
+                stream = io.StringIO()
+                dxf_doc.write(stream)
+                return stream.getvalue().encode('utf-8'), None
             return None, "Mesh senza vertici"
         else:
             return None, f"Formato '{target_format}' non gestito"
@@ -553,8 +556,7 @@ def render_proprietary_formats_help():
 def is_3d_pdf(file_bytes):
     try:
         if not PDF_AVAILABLE:
-            return False
-        pdf_reader = PdfReader(io.BytesIO(file_bytes))
+            return False        pdf_reader = PdfReader(io.BytesIO(file_bytes))
         for page in pdf_reader.pages:
             page_text = str(page)
             if '/3D' in page_text or '/U3D' in page_text or '/PRC' in page_text:
