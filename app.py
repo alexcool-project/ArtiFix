@@ -111,6 +111,20 @@ st.markdown("""
     .html-viewer-benefit .benefit-icon { font-size: 1.3rem; display: block; margin-bottom: 6px; }
     .html-viewer-benefit .benefit-title { font-weight: 700; color: #1f77b4; display: block; margin-bottom: 4px; }
     .html-viewer-benefit .benefit-desc { color: #555; line-height: 1.4; font-size: 0.85rem; }
+    /* ===== UPLOADER: nasconde la lista estensioni, lascia solo 'Limit 5GB per file' ===== */
+    [data-testid="stFileUploader"] section small {
+        display: none !important;
+    }
+    [data-testid="stFileUploader"] section::after {
+        content: "Limit 5GB per file";
+        display: block;
+        font-size: 0.82rem;
+        color: #666;
+        margin-top: 2px;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"] small {
+        display: none !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
