@@ -1,0 +1,25 @@
+name: Warmup ArtiFix
+
+on:
+  schedule:
+    # Ogni 10 minuti (minimo consentito da GitHub Actions)
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping ArtiFix (keep container warm)
+        run: |
+          echo "Ping #1..."
+          curl -sS -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" \
+            --max-time 30 \
+            https://artifix.streamlit.app/ || true
+
+          sleep 5
+
+          echo "Ping #2..."
+          curl -sS -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" \
+            --max-time 30 \
+            https://artifix.streamlit.app/_stcore/health || true
