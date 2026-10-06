@@ -48,6 +48,7 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             'uploaded_file_id': None
         }
 
+    # --- Uploader a piena larghezza ---
     uploaded_file = st.file_uploader(
         t("repair_upload"),
         type=[ext[1:] for ext in ALL_EXTENSIONS],
@@ -88,7 +89,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
     if file_ext_check in NON_MESH_FORMATS:
         tipo = t(NON_MESH_FORMATS[file_ext_check])
 
-        # ✅ MESSAGGIO SPECIFICO PER PDF
         if file_ext_check == '.pdf':
             st.error(t("pdf_no_3d_title"))
             st.markdown(t("pdf_no_3d_desc").format(filename=file_name_check))
@@ -96,7 +96,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
                 st.markdown(t("pdf_no_3d_howto_steps"))
             st.info(t("pdf_no_3d_alternative"))
         else:
-            # Messaggio generico per altri formati non-mesh
             st.error(
                 f"{t('repair_error_non_mesh_title')}\n\n"
                 f"{t('repair_error_non_mesh_desc', ext=file_ext_check, tipo=tipo)}\n\n"
@@ -111,7 +110,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         file_extension = os.path.splitext(file_name)[1].lower().replace('.', '')
         file_size_mb = len(file_bytes) / (1024 * 1024)
 
-        # --- COMPONENTI UI ---
         progress_bar = st.progress(0, text="0%")
 
         time_info_placeholder = st.empty()
@@ -319,15 +317,11 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
             st.success(t("repair_diagnosis_ok_success"))
     else:
         st.success(t("repair_success"))
-    # ============================================================
-    # FINE MESSAGGIO DI STATO
-    # ============================================================
 
     # --- VISUALIZZAZIONE DEL REPORT ---
     st.subheader(t("report_header"))
     st.markdown(t("report_subtitle"))
 
-    # Tabella comparativa Prima/Dopo
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(f"#### {t('report_before')}")
@@ -349,7 +343,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         st.metric(t("report_duplicates"), f'{report_data["after"]["duplicate_vertices"]:,}')
         st.metric(t("report_holes"), f'{report_data["after"]["holes"]:,}')
 
-    # Azioni Applicate
     st.markdown("---")
     st.markdown(f"#### {t('report_actions')}")
     action_rows = []
@@ -370,7 +363,6 @@ def render_repair_page(load_3d_file_func, ALL_EXTENSIONS):
         for row in action_rows:
             st.write(row)
 
-    # Pulsanti di Download
     st.markdown("---")
 
     col_download1, col_download2 = st.columns(2)
