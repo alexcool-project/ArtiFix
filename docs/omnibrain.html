@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniBrain — AI Locale per CAD/CAM | ArtiFix</title>
+    <meta name="description" content="OmniBrain è l'assistente AI locale per ingegneri e progettisti. Analisi DFM, stampa 3D, topologia, misure CAD. Privacy totale, nessun cloud. Per Windows 10/11." />
+    <meta name="keywords" content="OmniBrain, AI CAD locale, Ollama, analisi DFM, stampa 3D, viewer 3D, ArtiFix, intelligenza artificiale offline" />
+    <meta name="author" content="ArtiFix" />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="canonical" href="https://www.artifix.it/omnibrain.html" />
+    <link rel="alternate" hreflang="it" href="https://www.artifix.it/omnibrain.html" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.artifix.it/omnibrain.html" />
+    <meta property="og:title" content="OmniBrain — AI Locale per CAD/CAM" />
+    <meta property="og:description" content="Assistente AI locale per ingegneri. Analisi DFM, stampa 3D, topologia. Privacy totale." />
+    <meta property="og:image" content="images/omnibrain-screenshot.png" />
+
+    <link rel="icon" type="image/png" href="images/ArchiFix_cubo-logo.png" />
+    <link rel="apple-touch-icon" href="images/ArchiFix_cubo-logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "OmniBrain",
+      "applicationCategory": "EngineeringApplication",
+      "operatingSystem": "Windows 10, Windows 11",
+      "softwareVersion": "0.1.0",
+      "description": "Assistente AI locale per ingegneri CAD/CAM. Analisi DFM, stampa 3D, topologia, misure, viewer 3D avanzato.",
+      "offers": [
+        { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "EUR" },
+        { "@type": "Offer", "name": "PRO", "price": "49", "priceCurrency": "EUR" }
+      ],
+      "publisher": { "@type": "Organization", "name": "ArtiFix", "url": "https://www.artifix.it" }
+    }
+    </script>
+</head>
+<body>
+
+<!-- HEADER (riutilizza quello di index.html) -->
+<header class="site-header">
+    <div class="container header-inner">
+        <a href="/" class="logo-link" aria-label="ArtiFix — Home">
+            <img src="images/Artifix_logo.png" alt="ArtiFix Logo" class="logo">
+        </a>
+        <nav class="main-nav" aria-label="Menu principale">
+            <a href="index.html#funzionalita">Funzionalità</a>
+            <a href="index.html#conversioni">Conversioni</a>
+            <a href="index.html#html-viewer">HTML Viewer</a>
+            <a href="index.html#formati">Formati</a>
+            <a href="omnibrain.html" style="color:#7c3aed;font-weight:700;">🧠 OmniBrain</a>
+            <a href="index.html#sponsor">Sponsor</a>
+            <a href="apri.html" class="btn-nav-cta">Apri ArtiFix →</a>
+        </nav>
+        <button class="menu-toggle" aria-label="Apri menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+
+<!-- HERO OMNIBRAIN -->
+<section class="hero hero-omnibrain">
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <div class="omnibrain-badge">🧠 AI Locale per CAD/CAM</div>
+            <h1>OmniBrain — L'AI che <span class="highlight-purple">capisce i tuoi modelli 3D</span></h1>
+            <p class="hero-subtitle">
+                Assistente AI <strong>completamente locale</strong> per ingegneri, progettisti e stampatori 3D.
+                Analisi DFM, suggerimenti di stampa, topologia, misure precise — <strong>senza cloud, senza abbonamenti</strong>.
+                I tuoi file non lasciano mai il tuo PC.
+            </p>
+            <div class="hero-cta">
+                <a href="download/OmniBrain_0.1.0_x64-setup.exe" class="btn btn-omnibrain btn-large" download>
+                    ⬇️ Scarica OmniBrain (Free)
+                </a>
+                <a href="#features" class="btn btn-secondary btn-large">
+                    Scopri le funzionalità
+                </a>
+            </div>
+            <ul class="hero-features">
+                <li>✅ Windows 10/11</li>
+                <li>✅ Ollama integrato</li>
+                <li>✅ 100% offline</li>
+            </ul>
+        </div>
+        <div class="hero-image">
+            <img src="images/omnibrain-screenshot.png" alt="OmniBrain — Screenshot interfaccia" loading="eager" class="omnibrain-screenshot">
+        </div>
+    </div>
+</section>
+
+<!-- COS'È OMNIBRAIN -->
+<section class="section section-omnibrain-intro">
+    <div class="container">
+        <div class="section-header">
+            <h2>Cos'è <span class="highlight-purple">OmniBrain</span>?</h2>
+            <p class="section-subtitle">
+                Un'app desktop che unisce un <strong>viewer 3D professionale</strong> a un'<strong>AI conversazionale locale</strong>.
+                Carica un modello STL/OBJ/PLY e chiedi all'AI di analizzarlo come farebbe un ingegnere.
+            </p>
+        </div>
+
+        <div class="omnibrain-intro-grid">
+            <div class="intro-card">
+                <div class="intro-icon">🔒</div>
+                <h3>Privacy Totale</h3>
+                <p>Nessun dato inviato al cloud. L'AI gira sul tuo PC via Ollama. I tuoi progetti restano tuoi.</p>
+            </div>
+            <div class="intro-card">
+                <div class="intro-icon">⚡</div>
+                <h3>Auto-Detect Hardware</h3>
+                <p>Rileva RAM, CPU e GPU (NVIDIA) e ti suggerisce il modello AI ottimale per il tuo PC.</p>
+            </div>
+            <div class="intro-card">
+                <div class="intro-icon">💬</div>
+                <h3>AI Contestuale</h3>
+                <p>L'AI "vede" il modello caricato: vertici, facce, bounding box. Risposte tecniche reali.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURE GRID -->
+<section id="features" class="section section-omnibrain-features">
+    <div class="container">
+        <div class="section-header">
+            <h2>Funzionalità <span class="highlight-purple">professionali</span></h2>
+            <p class="section-subtitle">Strumenti pensati per ingegneri, progettisti meccanici e appassionati di stampa 3D.</p>
+        </div>
+
+        <div class="features-grid">
+            <article class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3>AI Locale (Ollama)</h3>
+                <p>Supporto per llama3.2:1b/3b, llama3.1:8b/70b, qwen2.5:14b. Scegli il modello in base al tuo hardware.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🖥️</div>
+                <h3>Viewer 3D Avanzato</h3>
+                <p>Three.js + OrbitControls. Rotazione fluida, zoom, pan. Supporto STL, OBJ, PLY, STEP, IGES, GLTF, IFC.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">📏</div>
+                <h3>Misurazioni Magnetiche</h3>
+                <p>Snap intelligente ai vertici. Distanze precise in mm. Gestisci lista misure con rimozione singola.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">✂️</div>
+                <h3>Sezione 3D</h3>
+                <p>Piano di taglio dinamico attivabile. Perfetto per ispezionare interni di parti complesse.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Controlli Visivi</h3>
+                <p>Opacità 0-100%, griglia, assi cartesiani. Materiali realistici con illuminazione a 3 punti.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🔧</div>
+                <h3>Analisi DFM</h3>
+                <p>Chiedi all'AI consigli su design for manufacturing, tolleranze, spessori minimi, supporti di stampa.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🖨️</div>
+                <h3>Stampa 3D</h3>
+                <p>Suggerimenti su orientamento, supporti, layer height, temperature. Basati sulla geometria reale.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">📐</div>
+                <h3>Topologia</h3>
+                <p>Analisi di vertici, facce, bounding box, volume. Tutto visibile nella chat con l'AI.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<!-- REQUISITI -->
+<section class="section section-omnibrain-requirements">
+    <div class="container">
+        <div class="section-header">
+            <h2>Requisiti <span class="highlight-purple">di sistema</span></h2>
+            <p class="section-subtitle">OmniBrain si adatta a qualsiasi PC: dal portatile base alla workstation enterprise.</p>
+        </div>
+
+        <div class="requirements-grid">
+            <div class="requirement-card">
+                <div class="requirement-header">
+                    <span class="requirement-badge">🟢 Base</span>
+                    <span class="requirement-ram">7+ GB RAM</span>
+                </div>
+                <p class="requirement-model">llama3.2:3b</p>
+                <p class="requirement-desc">Modello 3B veloce e leggero. Perfetto per laptop di fascia media.</p>
+            </div>
+            <div class="requirement-card">
+                <div class="requirement-header">
+                    <span class="requirement-badge">🟡 Medio</span>
+                    <span class="requirement-ram">14+ GB RAM</span>
+                </div>
+                <p class="requirement-model">llama3.1:8b</p>
+                <p class="requirement-desc">Modello 8B bilanciato. Ottimo per la maggior parte dei PC moderni.</p>
+            </div>
+            <div class="requirement-card">
+                <div class="requirement-header">
+                    <span class="requirement-badge">🟠 Buono</span>
+                    <span class="requirement-ram">14+ GB RAM<br>6+ GB VRAM</span>
+                </div>
+                <p class="requirement-model">llama3.1:8b (GPU)</p>
+                <p class="requirement-desc">Con GPU dedicata (NVIDIA). Risposte molto più rapide.</p>
+            </div>
+            <div class="requirement-card">
+                <div class="requirement-header">
+                    <span class="requirement-badge">🔴 Ottimo</span>
+                    <span class="requirement-ram">14+ GB RAM<br>10+ GB VRAM</span>
+                </div>
+                <p class="requirement-model">qwen2.5:14b</p>
+                <p class="requirement-desc">Modello 14B ottimale per italiano e ragionamento complesso.</p>
+            </div>
+            <div class="requirement-card requirement-card-wide">
+                <div class="requirement-header">
+                    <span class="requirement-badge">⚫ Enterprise</span>
+                    <span class="requirement-ram">30+ GB RAM<br>16+ GB VRAM</span>
+                </div>
+                <p class="requirement-model">llama3.1:70b</p>
+                <p class="requirement-desc">Massima qualità di risposta. Per workstation professionali.</p>
+            </div>
+        </div>
+
+        <div class="requirements-note">
+            <p><strong>📌 Requisiti minimi assoluti:</strong> Windows 10/11 (x64), 7 GB RAM, 2 GB disco libero. Ollama viene scaricato automaticamente al primo avvio se non presente.</p>
+        </div>
+    </div>
+</section>
+
+<!-- FREE vs PRO -->
+<section class="section section-omnibrain-pricing">
+    <div class="container">
+        <div class="section-header">
+            <h2>Scegli la tua <span class="highlight-purple">versione</span></h2>
+            <p class="section-subtitle">Inizia gratis. Passa a PRO quando vuoi, con un pagamento una tantum.</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- FREE -->
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3>Free</h3>
+                    <div class="pricing-price">
+                        <span class="price-amount">0€</span>
+                        <span class="price-period">per sempre</span>
+                    </div>
+                </div>
+                <ul class="pricing-features">
+                    <li>✅ Viewer 3D completo</li>
+                    <li>✅ AI locale via Ollama</li>
+                    <li>✅ Auto-detect hardware</li>
+                    <li>✅ Misurazioni magnetiche</li>
+                    <li>✅ Sezione 3D</li>
+                    <li>✅ Chat AI contestuale</li>
+                    <li>✅ Supporto STL, OBJ, PLY, GLTF</li>
+                </ul>
+                <a href="download/OmniBrain_0.1.0_x64-setup.exe" class="btn btn-secondary btn-large" download>
+                    ⬇️ Scarica Free
+                </a>
+            </div>
+
+            <!-- PRO -->
+            <div class="pricing-card pricing-card-pro">
+                <div class="pricing-badge">⭐ Consigliato</div>
+                <div class="pricing-header">
+                    <h3>PRO</h3>
+                    <div class="pricing-price">
+                        <span class="price-amount">49€</span>
+                        <span class="price-period">una tantum</span>
+                    </div>
+                </div>
+                <ul class="pricing-features">
+                    <li>✅ <strong>Tutto di Free</strong></li>
+                    <li>🎯 Export PDF tecnici</li>
+                    <li>🎯 Analisi batch multi-file</li>
+                    <li>🎯 Report DFM professionali</li>
+                    <li>🎯 Supporto STEP, IGES, IFC</li>
+                    <li>🎯 Priorità aggiornamenti</li>
+                    <li>🎯 Supporto email prioritario</li>
+                </ul>
+                <a href="mailto:info@artifix.it?subject=Acquisto%20OmniBrain%20PRO" class="btn btn-omnibrain btn-large">
+                    💳 Acquista PRO
+                </a>
+                <p class="pricing-note">Pagamento sicuro via PayPal. Licenza a vita, aggiornamenti inclusi.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section class="section section-faq">
+    <div class="container">
+        <div class="section-header">
+            <h2>Domande <span class="highlight-purple">frequenti</span></h2>
+        </div>
+        <div class="faq-list">
+            <details>
+                <summary>Devo avere una connessione internet per usare OmniBrain?</summary>
+                <p>No, dopo il primo avvio (che scarica il modello AI) OmniBrain funziona <strong>completamente offline</strong>. L'AI gira sul tuo PC, nessun dato viene inviato al cloud.</p>
+            </details>
+            <details>
+                <summary>Serve Ollama? Devo installarlo separatamente?</summary>
+                <p>OmniBrain <strong>scarica e installa Ollama automaticamente</strong> al primo avvio se non è presente. Poi scarica il modello AI ottimale per il tuo hardware.</p>
+            </details>
+            <details>
+                <summary>Quali formati 3D supporta?</summary>
+                <p>Nella versione Free: <strong>STL, OBJ, PLY, GLTF, GLB</strong>. Nella versione PRO: anche <strong>STEP, IGES, IFC</strong> (BIM).</p>
+            </details>
+            <details>
+                <summary>Quanto costa la versione PRO?</summary>
+                <p><strong>49€ una tantum</strong>, senza abbonamenti. Licenza a vita, aggiornamenti inclusi. Pagamento sicuro via PayPal.</p>
+            </details>
+            <details>
+                <summary>Funziona su Mac o Linux?</summary>
+                <p>Per ora OmniBrain è disponibile <strong>solo per Windows 10/11</strong>. Versioni Mac/Linux sono in valutazione — scrivici a <a href="mailto:info@artifix.it">info@artifix.it</a> se sei interessato.</p>
+            </details>
+            <details>
+                <summary>I miei modelli 3D sono al sicuro?</summary>
+                <p>Sì. <strong>Nessun file viene mai inviato al cloud</strong>. L'AI gira in locale (Ollama), il viewer 3D è offline. Privacy totale, anche per progetti riservati.</p>
+            </details>
+        </div>
+    </div>
+</section>
+
+<!-- CTA FINALE -->
+<section class="section section-omnibrain-cta">
+    <div class="container">
+        <div class="cta-box">
+            <h2>Pronto a portare l'AI nel tuo flusso CAD?</h2>
+            <p>Scarica OmniBrain Free e inizia subito. Nessuna registrazione, nessuna carta di credito.</p>
+            <div class="cta-buttons">
+                <a href="download/OmniBrain_0.1.0_x64-setup.exe" class="btn btn-omnibrain btn-large" download>
+                    ⬇️ Scarica OmniBrain Free
+                </a>
+                <a href="mailto:info@artifix.it?subject=Informazioni%20OmniBrain%20PRO" class="btn btn-secondary btn-large">
+                    💬 Info su PRO
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER (riutilizza quello di index.html) -->
+<footer class="site-footer">
+    <div class="container footer-inner">
+        <div class="footer-col">
+            <img src="images/Artifix_logo.png" alt="ArtiFix" class="footer-logo">
+            <p class="footer-tagline">Convert. Fix. Deliver.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Navigazione</h4>
+            <ul>
+                <li><a href="index.html#funzionalita">Funzionalità</a></li>
+                <li><a href="index.html#html-viewer">HTML 3D Viewer</a></li>
+                <li><a href="omnibrain.html">OmniBrain</a></li>
+                <li><a href="index.html#formati">Formati supportati</a></li>
+                <li><a href="index.html#sponsor">Sponsor</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Legale</h4>
+            <ul>
+                <li><a href="privacy.html">Privacy Policy</a></li>
+                <li><a href="cookie.html">Cookie Policy</a></li>
+                <li><a href="termini.html">Termini di Servizio</a></li>
+                <li><a href="mailto:info@artifix.it">info@artifix.it</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container">
+            <p>© 2026 ArtiFix — Tutti i diritti riservati. Progetto indipendente italiano.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>
