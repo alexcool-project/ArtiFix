@@ -1,1549 +1,386 @@
-/* ============================================
-   ARTIFIX LANDING — STYLES.CSS
-   ============================================ */
-
-/* === RESET & VARIABILI === */
-*,
-*::before,
-*::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-:root {
-    --primary: #1f77b4;
-    --primary-dark: #1565a0;
-    --primary-light: #4a9fd4;
-    --accent: #00a8e8;
-    --text: #1a1a1a;
-    --text-muted: #555;
-    --text-light: #888;
-    --bg: #ffffff;
-    --bg-alt: #f8f9fa;
-    --bg-dark: #0d1b2a;
-    --border: #e5e7eb;
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.12);
-    --radius: 12px;
-    --radius-sm: 8px;
-    --radius-lg: 20px;
-    --font: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --container: 1200px;
-    --transition: 0.25s ease;
-}
-
-html {
-    scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%;
-}
-
-body {
-    font-family: var(--font);
-    color: var(--text);
-    background: var(--bg);
-    line-height: 1.6;
-    font-size: 16px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
-
-a {
-    color: var(--primary);
-    text-decoration: none;
-    transition: color var(--transition);
-}
-
-a:hover {
-    color: var(--primary-dark);
-}
-
-/* === CONTAINER === */
-.container {
-    max-width: var(--container);
-    margin: 0 auto;
-    padding: 0 24px;
-}
-
-/* === HEADER === */
-.site-header {
-    position: sticky;
-    top: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
-    z-index: 1000;
-    transition: box-shadow var(--transition);
-}
-
-.site-header.scrolled {
-    box-shadow: var(--shadow-md);
-}
-
-.header-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    gap: 24px;
-}
-
-.logo-link {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.logo {
-    height: 44px;
-    width: auto;
-}
-
-.main-nav {
-    display: flex;
-    align-items: center;
-    gap: 28px;
-}
-
-.main-nav a {
-    color: var(--text);
-    font-weight: 500;
-    font-size: 0.95rem;
-    position: relative;
-}
-
-.main-nav a:not(.btn-nav-cta):hover {
-    color: var(--primary);
-}
-
-.main-nav a:not(.btn-nav-cta)::after {
-    content: '';
-    position: absolute;
-    bottom: -6px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--primary);
-    transition: width var(--transition);
-}
-
-.main-nav a:not(.btn-nav-cta):hover::after {
-    width: 100%;
-}
-
-.btn-nav-cta {
-    background: var(--primary);
-    color: #fff !important;
-    padding: 10px 20px;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all var(--transition);
-}
-
-.btn-nav-cta:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(31, 119, 180, 0.3);
-}
-
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-}
-
-.menu-toggle span {
-    width: 24px;
-    height: 2.5px;
-    background: var(--text);
-    border-radius: 2px;
-    transition: all var(--transition);
-}
-
-/* === HERO === */
-.hero {
-    padding: 80px 0 60px;
-    background: linear-gradient(135deg, #f8fbff 0%, #eef4fb 100%);
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-inner {
-    display: grid;
-    grid-template-columns: 1.3fr 1fr;
-    gap: 60px;
-    align-items: center;
-}
-
-.hero-text h1 {
-    font-size: 2.8rem;
-    font-weight: 800;
-    line-height: 1.15;
-    margin-bottom: 20px;
-    color: var(--bg-dark);
-    letter-spacing: -0.02em;
-}
-
-.highlight {
-    color: var(--primary);
-    position: relative;
-    white-space: nowrap;
-}
-
-.hero-subtitle {
-    font-size: 1.15rem;
-    color: var(--text-muted);
-    margin-bottom: 32px;
-    max-width: 560px;
-    line-height: 1.7;
-}
-
-.hero-cta {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 28px;
-}
-
-.hero-features {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 8px;
-}
-
-.hero-features li {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-.hero-image {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.hero-image img {
-    max-width: 320px;
-    animation: float 4s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
-}
-
-/* === BUTTONS === */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 24px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    border-radius: var(--radius-sm);
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: all var(--transition);
-    text-align: center;
-    font-family: inherit;
-    white-space: nowrap;
-}
-
-.btn-large {
-    padding: 16px 32px;
-    font-size: 1.05rem;
-}
-
-.btn-primary {
-    background: var(--primary);
-    color: #fff;
-}
-
-.btn-primary:hover {
-    background: var(--primary-dark);
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(31, 119, 180, 0.35);
-}
-
-.btn-secondary {
-    background: #fff;
-    color: var(--primary);
-    border-color: var(--primary);
-}
-
-.btn-secondary:hover {
-    background: var(--primary);
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(31, 119, 180, 0.25);
-}
-
-/* === SECTIONS === */
-.section {
-    padding: 80px 0;
-}
-
-.section-header {
-    text-align: center;
-    max-width: 720px;
-    margin: 0 auto 56px;
-}
-
-.section-header h2 {
-    font-size: 2.2rem;
-    font-weight: 800;
-    line-height: 1.25;
-    color: var(--bg-dark);
-    margin-bottom: 16px;
-    letter-spacing: -0.01em;
-}
-
-.section-subtitle {
-    font-size: 1.1rem;
-    color: var(--text-muted);
-    line-height: 1.6;
-}
-
-/* === FEATURES === */
-.section-features {
-    background: var(--bg);
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-}
-
-.feature-card {
-    background: #fff;
-    padding: 32px 24px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    text-align: center;
-    transition: all var(--transition);
-}
-
-.feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--primary-light);
-}
-
-.feature-icon {
-    font-size: 2.5rem;
-    margin-bottom: 16px;
-    line-height: 1;
-}
-
-.feature-card h3 {
-    font-size: 1.2rem;
-    margin-bottom: 12px;
-    color: var(--bg-dark);
-    font-weight: 700;
-}
-
-.feature-card p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-/* === FORMATS === */
-.section-formats {
-    background: var(--bg-alt);
-}
-
-.formats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-bottom: 48px;
-}
-
-.format-category {
-    background: #fff;
-    padding: 24px;
-    border-radius: var(--radius);
-    border-left: 4px solid var(--primary);
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition);
-}
-
-.format-category:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateX(4px);
-}
-
-.format-category h3 {
-    font-size: 1.05rem;
-    color: var(--bg-dark);
-    margin-bottom: 8px;
-    font-weight: 700;
-}
-
-.format-category p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    font-family: 'SF Mono', Monaco, Consolas, monospace;
-    letter-spacing: 0.5px;
-}
-
-.formats-cta {
-    text-align: center;
-}
-
-/* === WHY === */
-.section-why {
-    background: var(--bg);
-}
-
-.why-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-}
-
-.why-card {
-    background: linear-gradient(135deg, #fff 0%, #f8fbff 100%);
-    padding: 32px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    transition: all var(--transition);
-}
-
-.why-card:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-light);
-}
-
-.why-icon {
-    font-size: 2rem;
-    margin-bottom: 14px;
-    line-height: 1;
-}
-
-.why-card h3 {
-    font-size: 1.15rem;
-    margin-bottom: 10px;
-    color: var(--bg-dark);
-    font-weight: 700;
-}
-
-.why-card p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.65;
-}
-
-/* === SPONSOR === */
-.section-sponsor {
-    background: linear-gradient(135deg, #f0f6ff 0%, #e8f1fb 100%);
-}
-
-.sponsor-banner-large {
-    max-width: 500px;
-    margin: 0 auto 32px;
-    text-align: center;
-    padding: 28px;
-    background: #fff;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    transition: all var(--transition);
-}
-
-.sponsor-banner-large:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-}
-
-.sponsor-banner-large img {
-    margin: 0 auto;
-    max-height: 120px;
-    object-fit: contain;
-}
-
-.sponsor-caption {
-    margin-top: 12px;
-    font-size: 0.8rem;
-    color: var(--text-light);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.sponsor-cta {
-    text-align: center;
-    max-width: 640px;
-    margin: 0 auto;
-}
-
-.sponsor-cta h3 {
-    font-size: 1.5rem;
-    margin-bottom: 12px;
-    color: var(--bg-dark);
-    font-weight: 700;
-}
-
-.sponsor-cta p {
-    color: var(--text-muted);
-    margin-bottom: 24px;
-    font-size: 1rem;
-    line-height: 1.65;
-}
-
-/* === FAQ === */
-.section-faq {
-    background: var(--bg-alt);
-}
-
-.faq-list {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.faq-list details {
-    background: #fff;
-    border-radius: var(--radius-sm);
-    padding: 4px 20px;
-    margin-bottom: 12px;
-    border: 1px solid var(--border);
-    transition: all var(--transition);
-}
-
-.faq-list details[open] {
-    box-shadow: var(--shadow-sm);
-    border-color: var(--primary-light);
-}
-
-.faq-list summary {
-    padding: 18px 0;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    list-style: none;
-    position: relative;
-    color: var(--bg-dark);
-    transition: color var(--transition);
-}
-
-.faq-list summary::-webkit-details-marker {
-    display: none;
-}
-
-.faq-list summary::after {
-    content: '+';
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.5rem;
-    color: var(--primary);
-    font-weight: 300;
-    transition: transform var(--transition);
-}
-
-.faq-list details[open] summary::after {
-    content: '−';
-}
-
-.faq-list summary:hover {
-    color: var(--primary);
-}
-
-.faq-list details p {
-    padding: 0 0 20px;
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.7;
-    border-top: 1px solid var(--border);
-    padding-top: 16px;
-}
-
-.faq-list details p a {
-    color: var(--primary);
-    font-weight: 600;
-}
-
-/* === CONTACTS === */
-.section-contacts {
-    background: var(--bg);
-}
-
-.contacts-inner {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-.contact-card {
-    background: #fff;
-    padding: 32px 24px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    text-align: center;
-    transition: all var(--transition);
-}
-
-.contact-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-light);
-}
-
-.contact-icon {
-    font-size: 2.2rem;
-    margin-bottom: 12px;
-    line-height: 1;
-}
-
-.contact-card h3 {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
-    color: var(--bg-dark);
-    font-weight: 700;
-}
-
-.contact-card p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-.contact-card p a {
-    font-weight: 600;
-    color: var(--primary);
-}
-
-.contact-note {
-    margin-top: 10px;
-    font-size: 0.85rem !important;
-    color: var(--text-light) !important;
-}
-
-/* === FOOTER === */
-.site-footer {
-    background: var(--bg-dark);
-    color: #e8eef7;
-    padding: 60px 0 0;
-}
-
-.footer-inner {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
-    gap: 40px;
-    padding-bottom: 40px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footer-logo {
-    height: 48px;
-    margin-bottom: 12px;
-    filter: brightness(0) invert(1);
-}
-
-.footer-tagline {
-    font-size: 0.85rem;
-    color: #8ba3bf;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-}
-
-.footer-col h4 {
-    font-size: 1rem;
-    margin-bottom: 16px;
-    color: #fff;
-    font-weight: 700;
-}
-
-.footer-col ul {
-    list-style: none;
-}
-
-.footer-col li {
-    margin-bottom: 10px;
-}
-
-.footer-col a {
-    color: #b8c9dc;
-    font-size: 0.9rem;
-    transition: color var(--transition);
-}
-
-.footer-col a:hover {
-    color: var(--accent);
-}
-
-.footer-bottom {
-    padding: 24px 0;
-    text-align: center;
-}
-
-.footer-bottom p {
-    font-size: 0.85rem;
-    color: #8ba3bf;
-}
-
-/* === RESPONSIVE === */
-@media (max-width: 992px) {
-    .hero-inner {
-        grid-template-columns: 1fr;
-        gap: 40px;
-        text-align: center;
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniBrain — AI Locale per CAD/CAM | ArtiFix</title>
+    <meta name="description" content="OmniBrain è l'assistente AI locale per ingegneri e progettisti. Analisi DFM, stampa 3D, topologia, misure CAD. Privacy totale, nessun cloud. Per Windows 10/11." />
+    <meta name="keywords" content="OmniBrain, AI CAD locale, Ollama, analisi DFM, stampa 3D, viewer 3D, ArtiFix, intelligenza artificiale offline" />
+    <meta name="author" content="ArtiFix" />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="canonical" href="https://www.artifix.it/omnibrain.html" />
+    <link rel="alternate" hreflang="it" href="https://www.artifix.it/omnibrain.html" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.artifix.it/omnibrain.html" />
+    <meta property="og:title" content="OmniBrain — AI Locale per CAD/CAM" />
+    <meta property="og:description" content="Assistente AI locale per ingegneri. Analisi DFM, stampa 3D, topologia. Privacy totale." />
+    <meta property="og:image" content="images/omnibrain-screenshot.png" />
+
+    <link rel="icon" type="image/png" href="images/ArchiFix_cubo-logo.png" />
+    <link rel="apple-touch-icon" href="images/ArchiFix_cubo-logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "OmniBrain",
+      "applicationCategory": "EngineeringApplication",
+      "operatingSystem": "Windows 10, Windows 11",
+      "softwareVersion": "0.1.0",
+      "description": "Assistente AI locale per ingegneri CAD/CAM. Analisi DFM, stampa 3D, topologia, misure, viewer 3D avanzato.",
+      "offers": [
+        { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "EUR" },
+        { "@type": "Offer", "name": "PRO", "price": "49", "priceCurrency": "EUR" }
+      ],
+      "publisher": { "@type": "Organization", "name": "ArtiFix", "url": "https://www.artifix.it" }
     }
-
-    .hero-text h1 {
-        font-size: 2.2rem;
-    }
-
-    .hero-subtitle {
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .hero-cta,
-    .hero-features {
-        justify-content: center;
-    }
-
-    .hero-image {
-        order: -1;
-    }
-
-    .hero-image img {
-        max-width: 220px;
-    }
-
-    .features-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .formats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .contacts-inner {
-        grid-template-columns: 1fr;
-        max-width: 480px;
-    }
-
-    .footer-inner {
-        grid-template-columns: 1fr 1fr;
-        gap: 32px;
-    }
-}
-
-@media (max-width: 768px) {
-    .header-inner {
-        padding: 12px 16px;
-    }
-
-    .main-nav {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: #fff;
-        flex-direction: column;
-        padding: 20px;
-        gap: 16px;
-        border-bottom: 1px solid var(--border);
-        box-shadow: var(--shadow-md);
-    }
-
-    .main-nav.open {
-        display: flex;
-    }
-
-    .main-nav a {
-        width: 100%;
-        text-align: center;
-        padding: 8px 0;
-    }
-
-    .btn-nav-cta {
-        width: 100%;
-    }
-
-    .menu-toggle {
-        display: flex;
-    }
-
-    .section {
-        padding: 60px 0;
-    }
-
-    .section-header h2 {
-        font-size: 1.7rem;
-    }
-
-    .hero {
-        padding: 50px 0 40px;
-    }
-
-    .hero-text h1 {
-        font-size: 1.9rem;
-    }
-
-    .hero-subtitle {
-        font-size: 1rem;
-    }
-
-    .hero-cta {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .hero-cta .btn {
-        width: 100%;
-    }
-
-    .hero-features {
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .features-grid,
-    .formats-grid,
-    .why-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .footer-inner {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 32px;
-    }
-
-    .footer-logo {
-        margin: 0 auto 12px;
-    }
-
-    .container {
-        padding: 0 16px;
-    }
-
-    .btn-large {
-        padding: 14px 24px;
-        font-size: 0.95rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .hero-text h1 {
-        font-size: 1.7rem;
-    }
-
-    .section-header h2 {
-        font-size: 1.5rem;
-    }
-
-    .feature-card,
-    .why-card,
-    .contact-card {
-        padding: 24px 20px;
-    }
-}
-
-/* === SCROLL ANIMATIONS === */
-@media (prefers-reduced-motion: no-preference) {
-    .feature-card,
-    .why-card,
-    .format-category,
-    .contact-card {
-        animation: fadeInUp 0.6s ease both;
-    }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* === ACCESSIBILITÀ === */
-:focus-visible {
-    outline: 3px solid var(--primary);
-    outline-offset: 2px;
-    border-radius: 4px;
-}
-
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-/* ============================================
-   CONVERSIONI PIÙ RICHIESTE
-   ============================================ */
-.section-conversions {
-    background: var(--bg);
-}
-
-.conversions-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-bottom: 40px;
-}
-
-.conversion-card {
-    display: block;
-    background: #fff;
-    padding: 28px 24px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    text-decoration: none;
-    color: var(--text);
-    transition: all var(--transition);
-    position: relative;
-}
-
-.conversion-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--primary);
-}
-
-.conversion-icon {
-    font-size: 2rem;
-    margin-bottom: 12px;
-    line-height: 1;
-}
-
-.conversion-card h3 {
-    font-size: 1.2rem;
-    color: var(--bg-dark);
-    margin-bottom: 8px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.conversion-card p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    line-height: 1.55;
-    margin-bottom: 14px;
-}
-
-.conversion-link {
-    color: var(--primary);
-    font-weight: 600;
-    font-size: 0.85rem;
-    display: inline-block;
-}
-
-.conversions-cta {
-    text-align: center;
-    padding: 56px 20px 0;
-    margin-top: 32px;
-    border-top: 1px solid var(--border);
-}
-
-.conversions-cta p {
-    font-size: 1.05rem;
-    color: var(--text-muted);
-    margin-bottom: 16px;
-}
-
-/* ============================================
-   FORMATI PROPRIETARI
-   ============================================ */
-.section-proprietary {
-    background: linear-gradient(135deg, #f8fbff 0%, #eef4fb 100%);
-}
-
-.proprietary-banner {
-    max-width: 900px;
-    margin: 0 auto;
-    background: #fff;
-    padding: 48px 40px;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border);
-}
-
-.proprietary-icon {
-    font-size: 3rem;
-    text-align: center;
-    margin-bottom: 20px;
-    line-height: 1;
-}
-
-.proprietary-content h2 {
-    font-size: 2rem;
-    color: var(--bg-dark);
-    text-align: center;
-    margin-bottom: 16px;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-}
-
-.proprietary-subtitle {
-    font-size: 1.05rem;
-    color: var(--text-muted);
-    text-align: center;
-    margin-bottom: 36px;
-    line-height: 1.7;
-    max-width: 640px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.proprietary-steps {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-bottom: 36px;
-    max-width: 640px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.proprietary-step {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    padding: 16px 20px;
-    background: #f8f9fa;
-    border-radius: var(--radius);
-    border-left: 4px solid var(--primary);
-}
-
-.step-number {
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    background: var(--primary);
-    color: #fff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.95rem;
-}
-
-.step-content {
-    color: var(--text);
-    font-size: 0.95rem;
-    line-height: 1.6;
-    padding-top: 4px;
-}
-
-.step-content strong {
-    color: var(--bg-dark);
-}
-
-.proprietary-actions {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 24px;
-}
-
-.proprietary-note {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    text-align: center;
-    line-height: 1.6;
-    padding-top: 20px;
-    border-top: 1px dashed var(--border);
-}
-
-/* ============================================
-   RESPONSIVE (nuove sezioni)
-   ============================================ */
-@media (max-width: 992px) {
-    .conversions-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .conversions-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-    .proprietary-banner {
-        padding: 32px 24px;
-    }
-
-    .proprietary-content h2 {
-        font-size: 1.5rem;
-    }
-
-    .proprietary-subtitle {
-        font-size: 0.95rem;
-    }
-
-    .proprietary-actions {
-        flex-direction: column;
-    }
-
-    .proprietary-actions .btn {
-        width: 100%;
-    }
-}
-
-/* ============================================
-   FIX PULSANTI NELLE PAGINE GUIDA SEO
-   ============================================ */
-.guide-cta .btn,
-.guide-cta .btn-primary,
-.guide-cta a.btn,
-.guide-cta a.btn-primary,
-.guide-cta a.btn:visited,
-.guide-cta a.btn:link {
-    color: #ffffff !important;
-    background-color: var(--primary) !important;
-    border-color: var(--primary) !important;
-    text-decoration: none !important;
-    font-weight: 700 !important;
-}
-
-.guide-cta .btn:hover,
-.guide-cta .btn-primary:hover,
-.guide-cta a.btn:hover,
-.guide-cta a.btn-primary:hover {
-    color: #ffffff !important;
-    background-color: var(--primary-dark) !important;
-    border-color: var(--primary-dark) !important;
-    text-decoration: none !important;
-}
-
-.btn,
-.btn:visited,
-.btn:link,
-.btn:focus {
-    text-decoration: none;
-}
-
-/* ============================================
-   FIX PULSANTI PAGINE GUIDA — v2
-   ============================================ */
-
-.guide-page .btn,
-.guide-page .btn:link,
-.guide-page .btn:visited,
-.guide-page .btn:focus,
-.guide-page .btn:active,
-.guide-page .btn-primary,
-.guide-page a.btn,
-.guide-page a.btn-primary {
-    color: #ffffff !important;
-    background-color: #1f77b4 !important;
-    background: #1f77b4 !important;
-    border: 2px solid #1f77b4 !important;
-    text-decoration: none !important;
-    font-weight: 700 !important;
-    padding: 16px 32px !important;
-    border-radius: 8px !important;
-    display: inline-block !important;
-}
-
-.guide-page .btn:hover,
-.guide-page .btn-primary:hover,
-.guide-page a.btn:hover,
-.guide-page a.btn-primary:hover {
-    color: #ffffff !important;
-    background-color: #1565a0 !important;
-    background: #1565a0 !important;
-    border-color: #1565a0 !important;
-    text-decoration: none !important;
-}
-
-.guide-page .btn *,
-.guide-page .btn-primary *,
-.guide-page a.btn * {
-    color: #ffffff !important;
-    text-decoration: none !important;
-}
-
-/* ============================================
-   LANGUAGE SWITCHER (IT / EN)
-   ============================================ */
-.lang-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 12px;
-    margin-left: 12px;
-    background: #f0f4f8;
-    color: #1f77b4;
-    border-radius: 20px;
-    text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    border: 1px solid #d6e2f5;
-    flex-shrink: 0;
-}
-
-.lang-switch:hover {
-    background: #1f77b4;
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(31, 119, 180, 0.3);
-}
-
-.lang-switch:focus {
-    outline: 2px solid #1f77b4;
-    outline-offset: 2px;
-}
-
-@media (max-width: 900px) {
-    .lang-switch {
-        order: -1;
-        margin-left: 0;
-        margin-right: 8px;
-        padding: 5px 10px;
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 600px) {
-    .lang-switch {
-        padding: 4px 8px;
-        font-size: 0.75rem;
-    }
-}
-
-/* ============================================
-   HTML 3D VIEWER SECTION — BENEFITS
-   (classi usate in index.html: benefit-card)
-   ============================================ */
-.html-viewer-benefits {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin: 40px 0;
-}
-
-.benefit-card {
-    background: #fff;
-    padding: 24px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    text-align: center;
-    transition: all var(--transition);
-}
-
-.benefit-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-light);
-}
-
-.benefit-card .benefit-icon {
-    font-size: 2.2rem;
-    margin-bottom: 12px;
-    line-height: 1;
-    display: block;
-}
-
-.benefit-card h3 {
-    font-size: 1.1rem;
-    color: var(--bg-dark);
-    margin-bottom: 8px;
-    font-weight: 700;
-}
-
-.benefit-card p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    line-height: 1.6;
-}
-
-/* ============================================
-   HTML 3D VIEWER — COMPARISON TABLE
-   ============================================ */
-.html-viewer-comparison {
-    margin: 48px 0;
-}
-
-.html-viewer-comparison h3 {
-    font-size: 1.5rem;
-    color: var(--bg-dark);
-    text-align: center;
-    margin-bottom: 24px;
-    font-weight: 700;
-}
-
-.comparison-table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border);
-}
-
-.comparison-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    font-size: 0.9rem;
-    min-width: 600px;
-}
-
-.comparison-table thead {
-    background: linear-gradient(135deg, #1f77b4 0%, #1565a0 100%);
-    color: #fff;
-}
-
-.comparison-table th {
-    padding: 14px 16px;
-    text-align: left;
-    font-weight: 700;
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-
-.comparison-table th.highlight-col {
-    background: rgba(255, 255, 255, 0.12);
-}
-
-.comparison-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-    font-size: 0.85rem;
-}
-
-.comparison-table tbody tr:nth-child(even) {
-    background: #f8f9fa;
-}
-
-.comparison-table tbody tr:hover {
-    background: #eef4fb;
-}
-
-.comparison-table td.highlight-col {
-    background: #eaf4ff;
-    font-weight: 600;
-}
-
-.comparison-table tbody tr:nth-child(even) td.highlight-col {
-    background: #ddeeff;
-}
-
-/* ============================================
-   HTML 3D VIEWER — STEPS
-   ============================================ */
-.html-viewer-steps {
-    margin: 48px 0;
-}
-
-.html-viewer-steps h3 {
-    font-size: 1.5rem;
-    color: var(--bg-dark);
-    text-align: center;
-    margin-bottom: 24px;
-    font-weight: 700;
-}
-
-.steps-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-}
-
-.step-card {
-    background: #fff;
-    padding: 28px 24px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    text-align: center;
-    position: relative;
-    transition: all var(--transition);
-}
-
-.step-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-light);
-}
-
-.step-card .step-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: #fff;
-    font-weight: 700;
-    font-size: 1.1rem;
-    margin-bottom: 16px;
-}
-
-.step-card h4 {
-    font-size: 1.1rem;
-    color: var(--bg-dark);
-    margin-bottom: 8px;
-    font-weight: 700;
-}
-
-.step-card p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    line-height: 1.6;
-}
-
-/* ============================================
-   HTML 3D VIEWER — CTA
-   ============================================ */
-.html-viewer-cta {
-    text-align: center;
-    padding: 40px 24px;
-    background: linear-gradient(135deg, #f0f6ff 0%, #e8f1fb 100%);
-    border-radius: var(--radius);
-    margin-top: 48px;
-}
-
-.html-viewer-cta p {
-    font-size: 1.05rem;
-    color: var(--text-muted);
-    margin-bottom: 20px;
-    line-height: 1.7;
-}
-
-.html-viewer-cta strong {
-    color: var(--bg-dark);
-}
-
-/* ============================================
-   HTML 3D VIEWER — RESPONSIVE
-   ============================================ */
-@media (max-width: 992px) {
-    .html-viewer-benefits {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .steps-grid {
-        grid-template-columns: 1fr;
-        max-width: 500px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-}
-
-@media (max-width: 768px) {
-    .html-viewer-benefits {
-        grid-template-columns: 1fr;
-        gap: 16px;
-        margin: 24px 0;
-    }
-
-    .benefit-card {
-        padding: 20px;
-    }
-
-    .benefit-card .benefit-icon {
-        font-size: 1.8rem;
-    }
-
-    .html-viewer-comparison {
-        margin: 32px 0;
-    }
-
-    .html-viewer-comparison h3,
-    .html-viewer-steps h3 {
-        font-size: 1.2rem;
-        margin-bottom: 16px;
-    }
-
-    .comparison-table {
-        min-width: 520px;
-        font-size: 0.8rem;
-    }
-
-    .comparison-table th,
-    .comparison-table td {
-        padding: 10px 12px;
-        font-size: 0.78rem;
-    }
-
-    .html-viewer-steps {
-        margin: 32px 0;
-    }
-
-    .step-card {
-        padding: 22px 18px;
-    }
-
-    .html-viewer-cta {
-        padding: 28px 18px;
-        margin-top: 32px;
-    }
-
-    .html-viewer-cta p {
-        font-size: 0.95rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .benefit-card {
-        padding: 18px 16px;
-    }
-
-    .comparison-table {
-        min-width: 460px;
-    }
-
-    .comparison-table th,
-    .comparison-table td {
-        padding: 8px 10px;
-        font-size: 0.72rem;
-    }
-}
-
-/* ============================================
-   SECTION HTML VIEWER — padding responsive
-   ============================================ */
-.section-html-viewer {
-    padding: 80px 0;
-    background: var(--bg-alt);
-}
-
-@media (max-width: 768px) {
-    .section-html-viewer {
-        padding: 50px 0;
-    }
-}
+    </script>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+    <div class="container header-inner">
+        <a href="/" class="logo-link" aria-label="ArtiFix — Home">
+            <img src="images/Artifix_logo.png" alt="ArtiFix Logo" class="logo">
+        </a>
+        <nav class="main-nav" aria-label="Menu principale">
+            <a href="index.html#funzionalita">Funzionalità</a>
+            <a href="index.html#conversioni">Conversioni</a>
+            <a href="index.html#html-viewer">HTML Viewer</a>
+            <a href="index.html#formati">Formati</a>
+            <a href="omnibrain.html" style="color:#7c3aed;font-weight:700;">🧠 OmniBrain</a>
+            <a href="index.html#sponsor">Sponsor</a>
+            <a href="apri.html" class="btn-nav-cta">Apri ArtiFix →</a>
+        </nav>
+        <button class="menu-toggle" aria-label="Apri menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+
+<!-- HERO OMNIBRAIN -->
+<section class="hero hero-omnibrain">
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <div class="omnibrain-badge">🧠 AI Locale per CAD/CAM</div>
+            <h1>OmniBrain — L'AI che <span class="highlight-purple">capisce i tuoi modelli 3D</span></h1>
+            <p class="hero-subtitle">
+                Assistente AI <strong>completamente locale</strong> per ingegneri, progettisti e stampatori 3D.
+                Analisi DFM, suggerimenti di stampa, topologia, misure precise — <strong>senza cloud, senza abbonamenti</strong>.
+                I tuoi file non lasciano mai il tuo PC.
+            </p>
+            <div class="hero-cta">
+                <a href="download/OmniBrain_0.1.0_x64-setup.exe" class="btn btn-omnibrain btn-large" download>
+                    ⬇️ Scarica OmniBrain
+                </a>
+                <a href="#features" class="btn btn-secondary btn-large">
+                    Scopri le funzionalità
+                </a>
+            </div>
+            <ul class="hero-features">
+                <li>✅ Windows 10/11</li>
+                <li>✅ Ollama integrato</li>
+                <li>✅ 100% offline</li>
+            </ul>
+        </div>
+        <div class="hero-image">
+            <img src="images/omnibrain-screenshot.png" alt="OmniBrain — Screenshot interfaccia" loading="eager" class="omnibrain-screenshot">
+        </div>
+    </div>
+</section>
+
+<!-- COS'È OMNIBRAIN -->
+<section class="section section-omnibrain-intro">
+    <div class="container">
+        <div class="section-header">
+            <h2>Cos'è <span class="highlight-purple">OmniBrain</span>?</h2>
+            <p class="section-subtitle">
+                Un'app desktop che unisce un <strong>viewer 3D professionale</strong> a un'<strong>AI conversazionale locale</strong>.
+                Carica un modello STL/OBJ/PLY e chiedi all'AI di analizzarlo come farebbe un ingegnere.
+            </p>
+        </div>
+
+        <div class="omnibrain-intro-grid">
+            <div class="intro-card">
+                <div class="intro-icon">🔒</div>
+                <h3>Privacy Totale</h3>
+                <p>Nessun dato inviato al cloud. L'AI gira sul tuo PC via Ollama. I tuoi progetti restano tuoi.</p>
+            </div>
+            <div class="intro-card">
+                <div class="intro-icon">⚡</div>
+                <h3>Auto-Detect Hardware</h3>
+                <p>Rileva RAM, CPU e GPU (NVIDIA) e ti suggerisce il modello AI ottimale per il tuo PC.</p>
+            </div>
+            <div class="intro-card">
+                <div class="intro-icon">💬</div>
+                <h3>AI Contestuale</h3>
+                <p>L'AI "vede" il modello caricato: vertici, facce, bounding box. Risposte tecniche reali.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURE GRID -->
+<section id="features" class="section section-omnibrain-features">
+    <div class="container">
+        <div class="section-header">
+            <h2>Funzionalità <span class="highlight-purple">professionali</span></h2>
+            <p class="section-subtitle">Strumenti pensati per ingegneri, progettisti meccanici e appassionati di stampa 3D.</p>
+        </div>
+
+        <div class="features-grid">
+            <article class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3>AI Locale (Ollama)</h3>
+                <p>Supporto per llama3.2:1b/3b, llama3.1:8b/70b, qwen2.5:14b. Scegli il modello in base al tuo hardware.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🖥️</div>
+                <h3>Viewer 3D Avanzato</h3>
+                <p>Three.js + OrbitControls. Rotazione fluida, zoom, pan. Supporto STL, OBJ, PLY, STEP, IGES, GLTF, IFC.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">📏</div>
+                <h3>Misurazioni Magnetiche</h3>
+                <p>Snap intelligente ai vertici. Distanze precise in mm. Gestisci lista misure con rimozione singola.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">✂️</div>
+                <h3>Sezione 3D</h3>
+                <p>Piano di taglio dinamico attivabile. Perfetto per ispezionare interni di parti complesse.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Controlli Visivi</h3>
+                <p>Opacità 0-100%, griglia, assi cartesiani. Materiali realistici con illuminazione a 3 punti.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🔧</div>
+                <h3>Analisi DFM</h3>
+                <p>Chiedi all'AI consigli su design for manufacturing, tolleranze, spessori minimi, supporti di stampa.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🖨️</div>
+                <h3>Stampa 3D</h3>
+                <p>Suggerimenti su orientamento, supporti, layer height, temperature. Basati sulla geometria reale.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">📐</div>
+                <h3>Topologia</h3>
+                <p>Analisi di vertici, facce, bounding box, volume. Tutto visibile nella chat con l'AI.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<!-- REQUISITI -->
+<section class="section section-omnibrain-requirements">
+    <div class="container">
+        <div class="section-header">
+            <h2>Requisiti <span class="highlight-purple">di sistema</span></h2>
+            <p class="section-subtitle">OmniBrain si adatta a qualsiasi PC: dal portatile base alla workstation enterprise.</p>
+        </div>
+
+        <div class="requirements-grid">
+            <div class="requirement-card">
+                <div class="requirement-header">
+                    <span class="requirement-badge">🟢 Base</span>
+                    <span class="requirement-ram">7+ GB RAM</span>
+                </div>
+                <p class="requirement-model">llama3.2:3b</p>
+                <p class="requirement-desc">Modello 3B veloce e leggero. Perfetto per laptop di fascia media.</p>
+            </div>
+            <div class="requirement-card">
+                <div class="requirement-header">
+                    <span class="requirement-badge">🟡 Medio</span>
+                    <span class="requirement-ram">14+ GB RAM</span>
+                </div>
+                <p class="requirement-model">llama3.1:8b</p>
+                <p class="requirement-desc">Modello 8B bilanciato. Ottimo per la maggior parte dei PC moderni.</p>
+            </div>
+            <div class="requirement-card">
+                <div class="requirement-header">
+                    <span class="requirement-badge">🟠 Buono</span>
+                    <span class="requirement-ram">14+ GB RAM<br>6+ GB VRAM</span>
+                </div>
+                <p class="requirement-model">llama3.1:8b (GPU)</p>
+                <p class="requirement-desc">Con GPU dedicata (NVIDIA). Risposte molto più rapide.</p>
+            </div>
+            <div class="requirement-card">
+                <div class="requirement-header">
+                    <span class="requirement-badge">🔴 Ottimo</span>
+                    <span class="requirement-ram">14+ GB RAM<br>10+ GB VRAM</span>
+                </div>
+                <p class="requirement-model">qwen2.5:14b</p>
+                <p class="requirement-desc">Modello 14B ottimale per italiano e ragionamento complesso.</p>
+            </div>
+            <div class="requirement-card requirement-card-wide">
+                <div class="requirement-header">
+                    <span class="requirement-badge">⚫ Enterprise</span>
+                    <span class="requirement-ram">30+ GB RAM<br>16+ GB VRAM</span>
+                </div>
+                <p class="requirement-model">llama3.1:70b</p>
+                <p class="requirement-desc">Massima qualità di risposta. Per workstation professionali.</p>
+            </div>
+        </div>
+
+        <div class="requirements-note">
+            <p><strong>📌 Requisiti minimi assoluti:</strong> Windows 10/11 (x64), 7 GB RAM, 2 GB disco libero. Ollama viene scaricato automaticamente al primo avvio se non presente.</p>
+        </div>
+    </div>
+</section>
+
+<!-- FREE vs PRO -->
+<section class="section section-omnibrain-pricing">
+    <div class="container">
+        <div class="section-header">
+            <h2>Scegli la tua <span class="highlight-purple">versione</span></h2>
+            <p class="section-subtitle">Inizia gratis. Passa a PRO quando vuoi, con un pagamento una tantum.</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- FREE -->
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3>Free</h3>
+                    <div class="pricing-price">
+                        <span class="price-amount">0€</span>
+                        <span class="price-period">per sempre</span>
+                    </div>
+                </div>
+                <ul class="pricing-features">
+                    <li>✅ Viewer 3D completo</li>
+                    <li>✅ AI locale via Ollama</li>
+                    <li>✅ Auto-detect hardware</li>
+                    <li>✅ Misurazioni magnetiche</li>
+                    <li>✅ Sezione 3D</li>
+                    <li>✅ Chat AI contestuale</li>
+                    <li>✅ Supporto STL, OBJ, PLY, GLTF</li>
+                </ul>
+                <a href="download/OmniBrain_0.1.0_x64-setup.exe" class="btn btn-secondary btn-large" download>
+                    ⬇️ Prova OmniBrain
+                </a>
+            </div>
+
+            <!-- PRO -->
+            <div class="pricing-card pricing-card-pro">
+                <div class="pricing-badge">⭐ Consigliato</div>
+                <div class="pricing-header">
+                    <h3>PRO</h3>
+                    <div class="pricing-price">
+                        <span class="price-amount">49€</span>
+                        <span class="price-period">una tantum</span>
+                    </div>
+                </div>
+                <ul class="pricing-features">
+                    <li>✅ <strong>Tutto di Free</strong></li>
+                    <li>🎯 Export PDF tecnici</li>
+                    <li>🎯 Analisi batch multi-file</li>
+                    <li>🎯 Report DFM professionali</li>
+                    <li>🎯 Supporto STEP, IGES, IFC</li>
+                    <li>🎯 Priorità aggiornamenti</li>
+                    <li>🎯 Supporto email prioritario</li>
+                </ul>
+                <a href="mailto:info@artifix.it?subject=Acquisto%20OmniBrain%20PRO" class="btn btn-omnibrain btn-large">
+                    💳 Acquista PRO
+                </a>
+                <p class="pricing-note">Pagamento sicuro via PayPal. Licenza a vita, aggiornamenti inclusi.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section class="section section-faq">
+    <div class="container">
+        <div class="section-header">
+            <h2>Domande <span class="highlight-purple">frequenti</span></h2>
+        </div>
+        <div class="faq-list">
+            <details>
+                <summary>Devo avere una connessione internet per usare OmniBrain?</summary>
+                <p>No, dopo il primo avvio (che scarica il modello AI) OmniBrain funziona <strong>completamente offline</strong>. L'AI gira sul tuo PC, nessun dato viene inviato al cloud.</p>
+            </details>
+            <details>
+                <summary>Serve Ollama? Devo installarlo separatamente?</summary>
+                <p>OmniBrain <strong>scarica e installa Ollama automaticamente</strong> al primo avvio se non è presente. Poi scarica il modello AI ottimale per il tuo hardware.</p>
+            </details>
+            <details>
+                <summary>Quali formati 3D supporta?</summary>
+                <p>Nella versione Free: <strong>STL, OBJ, PLY, GLTF, GLB</strong>. Nella versione PRO: anche <strong>STEP, IGES, IFC</strong> (BIM).</p>
+            </details>
+            <details>
+                <summary>Quanto costa la versione PRO?</summary>
+                <p><strong>49€ una tantum</strong>, senza abbonamenti. Licenza a vita, aggiornamenti inclusi. Pagamento sicuro via PayPal.</p>
+            </details>
+            <details>
+                <summary>Funziona su Mac o Linux?</summary>
+                <p>Per ora OmniBrain è disponibile <strong>solo per Windows 10/11</strong>. Versioni Mac/Linux sono in valutazione — scrivici a <a href="mailto:info@artifix.it">info@artifix.it</a> se sei interessato.</p>
+            </details>
+            <details>
+                <summary>I miei modelli 3D sono al sicuro?</summary>
+                <p>Sì. <strong>Nessun file viene mai inviato al cloud</strong>. L'AI gira in locale (Ollama), il viewer 3D è offline. Privacy totale, anche per progetti riservati.</p>
+            </details>
+        </div>
+    </div>
+</section>
+
+<!-- CTA FINALE -->
+<section class="section section-omnibrain-cta">
+    <div class="container">
+        <div class="cta-box">
+            <h2>Pronto a portare l'AI nel tuo flusso CAD?</h2>
+            <p>Scarica OmniBrain e inizia subito. Nessuna registrazione, nessuna carta di credito.</p>
+            <div class="cta-buttons">
+                <a href="download/OmniBrain_0.1.0_x64-setup.exe" class="btn btn-omnibrain btn-large" download>
+                    ⬇️ Scarica OmniBrain
+                </a>
+                <a href="mailto:info@artifix.it?subject=Informazioni%20OmniBrain%20PRO" class="btn btn-secondary btn-large">
+                    💬 Info su PRO
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+    <div class="container footer-inner">
+        <div class="footer-col">
+            <img src="images/Artifix_logo.png" alt="ArtiFix" class="footer-logo">
+            <p class="footer-tagline">Convert. Fix. Deliver.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Navigazione</h4>
+            <ul>
+                <li><a href="index.html#funzionalita">Funzionalità</a></li>
+                <li><a href="index.html#html-viewer">HTML 3D Viewer</a></li>
+                <li><a href="omnibrain.html">OmniBrain</a></li>
+                <li><a href="index.html#formati">Formati supportati</a></li>
+                <li><a href="index.html#sponsor">Sponsor</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Legale</h4>
+            <ul>
+                <li><a href="privacy.html">Privacy Policy</a></li>
+                <li><a href="cookie.html">Cookie Policy</a></li>
+                <li><a href="termini.html">Termini di Servizio</a></li>
+                <li><a href="mailto:info@artifix.it">info@artifix.it</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container">
+            <p>© 2026 ArtiFix — Tutti i diritti riservati. Progetto indipendente italiano.</p>
+        </div>
+    </div>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>
