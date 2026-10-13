@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apertura OmniBrain PRO Demo — ArtiFix</title>
+    <title>Avvio ArtiFix — Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/png" href="images/ArchiFix_cubo-logo.png" />
-    <meta http-equiv="refresh" content="2;url=https://artifix.streamlit.app">
     <style>
         body {
-            background-color: #0b0f19;
-            color: #f3f4f6;
+            background-color: #f8fafc;
+            color: #0f172a;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20,17 +19,17 @@
         }
         .loader-box {
             text-align: center;
-            background: #111827;
+            background: #ffffff;
             padding: 40px;
             border-radius: 12px;
-            border: 1px solid #1f2937;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             max-width: 400px;
             width: 100%;
         }
         .spinner {
-            border: 4px solid #1f2937;
-            border-top: 4px solid #7c3aed;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #0284c7;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -46,15 +45,15 @@
 <body>
     <div class="loader-box">
         <img src="images/Artifix_logo.png" alt="ArtiFix" style="width: 120px; margin-bottom: 15px;">
-        <h2>Preparazione OmniBrain PRO...</h2>
-        <p style="color: #9ca3af; font-size: 14px; margin-top: 5px;">Caricamento ambiente demo isolato in corso. Attendere...</p>
+        <h2>Sto preparando ArtiFix...</h2>
+        <p style="color: #64748b; font-size: 14px; margin-top: 5px;">L'applicazione si sta avviando.<br>Attendere qualche secondo...</p>
         <div class="spinner"></div>
-        <p style="font-size: 12px; color: #6b7280; margin-top: 15px;">Modello STL precaricato protetto attivo.</p>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 15px;">Powered by ArtiFix</p>
     </div>
     <script>
-        // Fallback di reindirizzamento via JS dopo 2 secondi
+        // Reindirizzamento alla dashboard classica di ArtiFix dopo il caricamento
         setTimeout(function() {
-            window.location.href = "https://artifix.streamlit.app";
+            window.location.href = "app.py"; // o alla pagina principale della dashboard
         }, 2000);
     </script>
 </body>
