@@ -1,26 +1,30 @@
 import streamlit as st
 import os
 
+# Configurazione della pagina (stile standard ArtiFix)
 st.set_page_config(
-    page_title="OmniBrain PRO — Analisi e DFM CAD",
+    page_title="OmniBrain PRO — Demo Interattiva",
     page_icon="🧠",
     layout="wide"
 )
 
-st.title("🧠 OmniBrain PRO — Analisi Avanzata CAD e Stampa 3D")
-st.markdown("Piattaforma di ingegneria, analisi mesh e reportistica DFM.")
+st.title("🧠 OmniBrain PRO — Demo Interattiva")
+st.markdown("Piattaforma di ingegneria, analisi mesh e reportistica DFM (Versione Demo).")
 
+# Percorso del file STL precaricato
 DEFAULT_STL_PATH = "skeleton dental model.stl"
 
 st.sidebar.header("📁 Gestione Modello 3D")
 st.sidebar.info("Modello precaricato (Demo): **skeleton dental model.stl**")
 
+# Pulsante di sostituzione bloccato per la versione demo
 st.sidebar.button(
     "Sostituisci file", 
     disabled=True, 
     help="Modello precaricato non sostituibile nella versione Demo di OmniBrain PRO."
 )
 
+# Controllo e caricamento sicuro del file STL
 if os.path.exists(DEFAULT_STL_PATH):
     with open(DEFAULT_STL_PATH, "rb") as f:
         stl_bytes = f.read()
@@ -46,32 +50,8 @@ if pdf_bytes:
         use_container_width=True
     )
 
-st.markdown("""
-<style>
-    .stApp {
-        overflow: hidden;
-    }
-    iframe {
-        width: 100% !important;
-        height: 100vh !important;
-        border: none;
-    }
-</style>
-<script>
-    function optimizeLayout() {
-        const container = document.getElementById('c');
-        if (container) {
-            container.style.width = '100%';
-            container.style.height = window.innerHeight + 'px';
-        }
-        document.body.style.overflow = 'hidden';
-    }
-    window.addEventListener('resize', optimizeLayout);
-    window.addEventListener('DOMContentLoaded', optimizeLayout);
-</script>
-""", unsafe_allow_html=True)
-
+# Area Principale Viewer / Dashboard
 if stl_bytes:
-    st.info("Visualizzazione 3D e dati DFM attivi per il modello dentale precaricato.")
+    st.success("Modello dentale caricato e pronto per l'ispezione con interfaccia OmniBrain PRO.")
 else:
-    st.error("Impossibile caricare il modello 3D predefinito.")
+    st.error("Impossibile caricare il modello 3D predefinito. Inserisci il file nella root.")
