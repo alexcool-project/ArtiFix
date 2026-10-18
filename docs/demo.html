@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
-    <!-- Favicon con percorso assoluto/relativo corretto per GitHub Pages -->
-    <link rel="icon" type="image/png" href="../ArchiFix_cubo-logo.png" onerror="this.href='ArchiFix_cubo-logo.png';" />
+    <!-- Favicon pulita direttamente dalla cartella docs -->
+    <link rel="icon" type="image/png" href="ArchiFix_cubo-logo.png" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -189,10 +189,10 @@
 <body>
 
     <div class="sidebar">
-        <!-- Header con logo cubo e gestione fallback -->
+        <!-- Header con logo cubo -->
         <div class="header">
             <div class="logo-area">
-                <img src="../ArchiFix_cubo-logo.png" alt="Logo Cubo" onerror="this.onerror=null; this.src='ArchiFix_cubo-logo.png';">
+                <img src="ArchiFix_cubo-logo.png" alt="Logo Cubo" onerror="this.src='../ArchiFix_cubo-logo.png';">
                 <span style="font-size: 14px; font-weight: 800; color: #f1f5f9;">
                     OmniBrain <span style="color: #a855f7;">PRO</span>
                 </span>
@@ -357,35 +357,24 @@
         let bbox = null;
         let modelLoadedSuccessfully = false;
 
-        // Prova a caricare il file STL tentando sia nella cartella superiore che locale
+        // Caricamento del file STL direttamente dalla stessa cartella docs/
         const loader = new THREE.STLLoader();
-        
-        function loadSTLFile(pathIndex = 0) {
-            const paths = ['Cnc12_Supporto_motore_x_y.stl', '../Cnc12_Supporto_motore_x_y.stl'];
-            if (pathIndex >= paths.length) {
-                document.getElementById('model-status').innerHTML = '<span style="color:#ef4444;">Errore: File STL non trovato</span>';
-                return;
-            }
+        loader.load('Cnc12_Supporto_motore_x_y.stl', function (geometry) {
+            geometry.center();
+            geometry.rotateX(-Math.PI / 2);
+            geometry.computeVertexNormals();
             
-            loader.load(paths[pathIndex], function (geometry) {
-                geometry.center();
-                geometry.rotateX(-Math.PI / 2);
-                geometry.computeVertexNormals();
-                
-                bbox = new THREE.Box3().setFromGeometry(geometry);
+            bbox = new THREE.Box3().setFromGeometry(geometry);
 
-                loadedMesh = new THREE.Mesh(geometry, material);
-                scene.add(loadedMesh);
-                
-                modelLoadedSuccessfully = true;
-                document.getElementById('model-status').innerText = "712 vertici, 1456 facce (Online)";
-            }, undefined, function (error) {
-                console.warn('Tentativo percorso fallito:', paths[pathIndex]);
-                loadSTLFile(pathIndex + 1);
-            });
-        }
-
-        loadSTLFile();
+            loadedMesh = new THREE.Mesh(geometry, material);
+            scene.add(loadedMesh);
+            
+            modelLoadedSuccessfully = true;
+            document.getElementById('model-status').innerText = "712 vertici, 1456 facce (Online)";
+        }, undefined, function (error) {
+            console.error('Errore caricamento STL:', error);
+            document.getElementById('model-status').innerHTML = '<span style="color:#ef4444;">Errore caricamento file STL</span>';
+        });
 
         function animate() {
             requestAnimationFrame(animate);
@@ -468,7 +457,7 @@
                 setTimeout(() => {
                     let aiReply = "";
                     if (!modelLoadedSuccessfully) {
-                        aiReply = `[OmniBrain PRO Engine]\n⚠️ Il modello 3D non è ancora visibile a schermo. Verifica che il file STL sia correttamente posizionato nella repository.`;
+                        aiReply = `[OmniBrain PRO Engine]\n⚠️ Il modello 3D non è ancora visibile a schermo. Assicurati che "Cnc12_Supporto_motore_x_y.stl" sia caricato nella cartella docs/.`;
                     } else {
                         aiReply = `[OmniBrain PRO Engine]\nAnalisi file "Cnc12_Supporto_motore_x_y.stl":\n• Modello visibile e renderizzato con successo (712 vertici, 1456 facce).\n• Orientamento Asse Z corretto verso l'alto.\n• Struttura ottimizzata per lavorazioni meccaniche CNC.`;
                         
