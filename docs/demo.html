@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
+    <link rel="icon" type="image/png" href="ArchiFix_cubo-logo.png" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            width: 100vw;
+            height: 100vh;
+            background-color: #090d16;
+            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+        }
+        /* Sidebar Demo */
+        .sidebar {
+            width: 380px;
+            height: 100vh;
+            background-color: #0e1626;
+            border-right: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+        }
+        .header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #0a101d;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-area img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+        }
+        .badge-demo {
+            font-size: 10px;
+            background-color: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border: 1px solid #0284c7;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .card {
+            background-color: #131c31;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card-title {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .file-info {
+            font-size: 12px;
+            color: #cbd5e1;
+            background: #0a101d;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .btn-buy-mini {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.2s ease;
+            display: block;
+        }
+        .btn-buy-mini:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .chat-box {
+            background-color: #0a101d;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 220px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .chat-msg {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.5;
+            background-color: #131c31;
+            color: #f8fafc;
+            border: 1px solid #1e293b;
+            white-space: pre-line;
+        }
+        .chat-msg.user {
+            background-color: #1e293b;
+            border-color: #334155;
+            align-self: flex-end;
+        }
+        .chat-input-area {
+            padding: 14px 16px;
+            border-top: 1px solid #1e293b;
+            background-color: #0a101d;
+        }
+        .chat-input {
+            width: 100%;
+            background-color: #131c31;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: #f8fafc;
+            outline: none;
+        }
+        .chat-input:focus {
+            border-color: #a855f7;
+        }
+        .viewer-container {
+            flex: 1;
+            height: 100vh;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-area">
+                <img src="ArchiFix_cubo-logo.png" alt="ArtiFix Logo">
+                <span style="font-size: 15px; font-weight: 800; color: #f1f5f9;">
+                    OmniBrain <span style="font-weight: 800;">PRO</span>
+                </span>
+            </div>
+            <span class="badge-demo">PROVA DEMO</span>
+        </div>
+
+        <!-- Contenuto Sidebar -->
+        <div class="content-scroll">
+            
+            <!-- Modello Precaricato (Non sostituibile) -->
+            <div class="card">
+                <span class="card-title">Modello CAD Precaricato (Demo)</span>
+                <div class="file-info">
+                    <div>
+                        🔒 <strong>skeleton_dental_model.stl</strong><br>
+                        <span style="color: #64748b; font-size: 10px;">File fisso per la sessione di prova</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parametri Visualizzazione -->
+            <div class="card">
+                <span class="card-title">Parametri Visualizzazione 3D</span>
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #cbd5e1; margin-bottom: 6px;">
+                        <span>Opacità Modello</span>
+                        <span id="opacity-val" style="color: #94a3b8;">100%</span>
+                    </div>
+                    <input type="range" id="opacity-range" min="0" max="100" value="100" style="width: 100%; cursor: pointer;">
+                </div>
+            </div>
+
+            <!-- CTA Acquisto PRO -->
+            <a href="https://artifix.lemonsqueezy.com/checkout/buy/29d3fbf9-2aac-4ae7-a8fb-7224b2fc6fc6" target="_blank" class="btn-buy-mini">
+                ⚡ Passa a OmniBrain PRO (49€)
+            </a>
+
+            <!-- Chat AI & Log -->
+            <div class="chat-box" id="chat-container">
+                <span style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Chat AI Assistant (Demo)</span>
+                <div class="chat-msg">
+                    OmniBrain PRO Demo attivo.<br><br>
+                    • Stai esplorando il modello 3D dimostrativo precaricato.<br>
+                    • Usa il mouse per ruotare e ingrandire il modello.<br>
+                    • Chiedi informazioni geometriche o analisi DFM nella chat qui sotto!
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Chat -->
+        <div class="chat-input-area">
+            <input type="text" id="user-input" class="chat-input" placeholder="Chiedi un'analisi DFM o dettagli sul modello...">
+        </div>
+    </div>
+
+    <!-- Canvas Viewer 3D -->
+    <div class="viewer-container" id="canvas-container"></div>
+
+    <!-- CDN Three.js per Demo Web -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TrackballControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x090d16);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 2000);
+        camera.position.set(0, -120, 100);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        dirLight.position.set(100, 100, 150);
+        scene.add(dirLight);
+
+        scene.add(new THREE.GridHelper(200, 40, 0x334155, 0x1e293b));
+
+        const controls = new THREE.TrackballControls(camera, renderer.domElement);
+        controls.rotateSpeed = 3.0;
+
+        const material = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4, metalness: 0.15 });
+
+        // Caricamento modello STL demo dalla cartella docs/
+        const loader = new THREE.STLLoader();
+        loader.load('skeleton_dental_model.stl', function (geometry) {
+            geometry.center();
+            geometry.computeVertexNormals();
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+        }, undefined, function (error) {
+            console.error('Errore caricamento modello demo STL:', error);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Controllo Opacità
+        document.getElementById('opacity-range').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('opacity-val').innerText = val + '%';
+            material.transparent = val < 100;
+            material.opacity = val / 100;
+        });
+
+        // Chat AI simulata per la Demo
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && userInput.value.trim()) {
+                const query = userInput.value.trim();
+                
+                const userMsgDiv = document.createElement('div');
+                userMsgDiv.className = 'chat-msg user';
+                userMsgDiv.innerText = query;
+                chatContainer.appendChild(userMsgDiv);
+
+                userInput.value = '';
+
+                setTimeout(() => {
+                    let aiReply = `[Engine: Llama-3.2-3b Demo]\nAnalisi geometrica per "skeleton_dental_model.stl":\n• Geometria integra senza spigoli aperti.\n• Spessore parete compatibile per resina o FDM.\n• Per scaricare l'app nativa e sbloccare le misurazioni 3D magnetiche e l'AI illimitata su qualsiasi tuo file, acquista la licenza PRO!`;
+                    
+                    const qLower = query.toLowerCase();
+                    if (qLower.includes('misur') || qLower.includes('quota') || qLower.includes('dimension') || qLower.includes('grand')) {
+                        aiReply = `[Engine: Llama-3.2-3b Demo]\nIngombro orientativo (Bounding Box):\n• Asse X: 48.50 mm\n• Asse Y: 62.15 mm\n• Asse Z: 24.30 mm`;
+                    }
+
+                    const aiMsgDiv = document.createElement('div');
+                    aiMsgDiv.className = 'chat-msg';
+                    aiMsgDiv.innerText = aiReply;
+                    chatContainer.appendChild(aiMsgDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 500);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+</html>
