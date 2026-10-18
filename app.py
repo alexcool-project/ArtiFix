@@ -118,7 +118,7 @@ st.markdown("""
     [data-testid="stFileUploaderDropzoneInstructions"] small { display: none !important; }
     [data-testid="stFileUploader"] section { position: relative; }
     [data-testid="stFileUploader"] section::after {
-        content: "Limit 5GB per file";
+        content: "Limit 50MB per file";
         position: absolute;
         left: 60px;
         top: 42px;
@@ -541,7 +541,7 @@ elif page == "Ripara File":
         sponsor_band_placeholder(st.session_state.lang)
 
 # ============================================================
-# VIEWER 3D (Con streaming binario e Bounding Box dinamica)
+# VIEWER 3D (Con controllo preventivo dimensione e streaming binario)
 # ============================================================
 elif page == "Viewer 3D":
     st.header(t("viewer_header"))
@@ -560,10 +560,26 @@ elif page == "Viewer 3D":
             try:
                 file_bytes = viewer_file.getvalue()
                 file_ext = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
+                file_size_mb = len(file_bytes) / (1024 * 1024)
                 
+                # Controllo preventivo dimensione file per evitare crash su Streamlit Cloud
+                if file_size_mb > MAX_FILE_SIZE_MB:
+                    if _is_en():
+                        st.error(f"❌ **File too large for online viewing** ({file_size_mb:.1f} MB). Maximum allowed size is **{MAX_FILE_SIZE_MB} MB**. Please use desktop software (like Blender or FreeCAD) for larger files.")
+                    else:
+                        st.error(f"❌ **File troppo grande per la visualizzazione online** ({file_size_mb:.1f} MB). Il limite massimo consentito è **{MAX_FILE_SIZE_MB} MB**. Per file più grandi, utilizza un software desktop (come Blender o FreeCAD).")
+                    st.stop()
+
                 mesh = load_3d_file(file_bytes, file_ext)
                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
-                    st.success(t("viewer_success", vertices=len(mesh.vertices), faces=len(mesh.faces)))
+                    n_verts = len(mesh.vertices)
+                    if n_verts > MAX_VERTS_FOR_HEAVY_EXPORT:
+                        if _is_en():
+                            st.warning(f"⚠️ **High vertex count detected** ({n_verts:,} vertices). Performance in the online viewer might be reduced.")
+                        else:
+                            st.warning(f"⚠️ **Rilevato elevato numero di vertici** ({n_verts:,} vertici). Le prestazioni nel viewer online potrebbero risentirne.")
+
+                    st.success(t("viewer_success", vertices=n_verts, faces=len(mesh.faces)))
                     
                     b64_data = base64.b64encode(file_bytes).decode('utf-8')
                     
@@ -624,7 +640,6 @@ elif page == "Viewer 3D":
                         const geometry = loader.parse(bytes.buffer);
                         geometry.computeVertexNormals();
                         
-                        // Normalizzazione e Bounding Box dinamica
                         geometry.computeBoundingBox();
                         const box = geometry.boundingBox;
                         const size = box.getSize(new THREE.Vector3());
@@ -634,7 +649,6 @@ elif page == "Viewer 3D":
                         const mesh = new THREE.Mesh(geometry, material);
                         scene.add(mesh);
                         
-                        // Assi e griglia proporzionati al modello
                         const axisLength = maxDim * 0.7;
                         const gridSize = maxDim * 2.5;
                         
