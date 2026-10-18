@@ -541,7 +541,7 @@ elif page == "Ripara File":
         sponsor_band_placeholder(st.session_state.lang)
 
 # ============================================================
-# VIEWER 3D (Z-up strict, blue axis vertical, base at Z=0)
+# VIEWER 3D (Z-up strict, clean grid, model on top at Z=0)
 # ============================================================
 elif page == "Viewer 3D":
     st.header(t("viewer_header"))
