@@ -541,7 +541,7 @@ elif page == "Ripara File":
         sponsor_band_placeholder(st.session_state.lang)
 
 # ============================================================
-# VIEWER 3D (Assi alla base, asse Z blu verticale e antisfocatura solida)
+# VIEWER 3D (Modello poggiato sopra il piano Z=0, asse Z blu verticale)
 # ============================================================
 elif page == "Viewer 3D":
     st.header(t("viewer_header"))
@@ -632,14 +632,18 @@ elif page == "Viewer 3D":
                         const geometry = loader.parse(bytes.buffer);
                         geometry.computeVertexNormals();
                         
+                        // 1. Ruotiamo prima la geometria
+                        geometry.rotateX(Math.PI / 2);
+                        
+                        // 2. Ricalcoliamo il bounding box dopo la rotazione
                         geometry.computeBoundingBox();
                         const box = geometry.boundingBox;
                         const size = box.getSize(new THREE.Vector3());
                         const center = box.getCenter(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z);
                         
+                        // 3. Ancoriamo la base esattamente sopra il piano Z = 0
                         geometry.translate(-center.x, -center.y, -box.min.z);
-                        geometry.rotateX(Math.PI / 2);
                         
                         const mesh = new THREE.Mesh(geometry, material);
                         scene.add(mesh);
@@ -648,15 +652,15 @@ elif page == "Viewer 3D":
                         const gridSize = maxDim * 2.5;
                         
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
-                        controls.target.set(0, size.z / 2, 0);
-                        camera.position.set(maxDim * 1.5, maxDim * 1.5, maxDim * 1.2);
+                        controls.target.set(0, 0, size.z / 2);
+                        camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
                         controls.update();
                         
                     }} else if (ext === 'obj') {{
@@ -669,33 +673,34 @@ elif page == "Viewer 3D":
                             if (child.isMesh) child.material = material;
                         }});
                         
-                        const box = new THREE.Box3().setFromObject(object);
+                        const meshGroup = new THREE.Group();
+                        meshGroup.add(object);
+                        meshGroup.rotation.x = Math.PI / 2;
+                        
+                        const box = new THREE.Box3().setFromObject(meshGroup);
                         const center = box.getCenter(new THREE.Vector3());
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z);
                         
-                        object.position.x -= center.x;
-                        object.position.y -= center.y;
-                        object.position.z -= box.min.z;
+                        meshGroup.position.x -= center.x;
+                        meshGroup.position.y -= center.y;
+                        meshGroup.position.z -= box.min.z;
                         
-                        const meshGroup = new THREE.Group();
-                        meshGroup.add(object);
-                        meshGroup.rotation.x = Math.PI / 2;
                         scene.add(meshGroup);
                         
                         const axisLength = maxDim * 0.7;
                         const gridSize = maxDim * 2.5;
                         
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
-                        controls.target.set(0, size.z / 2, 0);
-                        camera.position.set(maxDim * 1.5, maxDim * 1.5, maxDim * 1.2);
+                        controls.target.set(0, 0, size.z / 2);
+                        camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
                         controls.update();
                     }}
                     
