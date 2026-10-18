@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
     <!-- Favicon Cubo ArtiFix Ufficiale Vettoriale -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230a101d'/><path d='M16 6L6 12v10l10 6 10-6V12L16 6z' fill='none' stroke='%2338bdf8' stroke-width='2.5'/><path d='M16 18L6 12m10 6l10-6m-10 6v10' fill='none' stroke='%237c3aed' stroke-width='2'/></svg>" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230e1626'/><path d='M16 6L6 12v10l10 6 10-6V12L16 6z' fill='none' stroke='%2338bdf8' stroke-width='2.5'/><path d='M16 18L6 12m10 6l10-6m-10 6v10' fill='none' stroke='%237c3aed' stroke-width='2'/></svg>" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -243,12 +243,13 @@
 <body>
 
     <div class="sidebar">
-        <!-- Header con Logo Cubo ArtiFix Ufficiale -->
+        <!-- Header con Logo Cubo ArtiFix Ufficiale SVG -->
         <div class="header">
             <div class="logo-area">
                 <div class="logo-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <svg width="22" height="22" viewBox="0 0 32 32">
+                        <path d="M16 6L6 12v10l10 6 10-6V12L16 6z" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+                        <path d="M16 18L6 12m10 6l10-6m-10 6v10" fill="none" stroke="#7c3aed" stroke-width="2"/>
                     </svg>
                 </div>
                 <span style="font-size: 14px; font-weight: 800; color: #f1f5f9;">
@@ -385,7 +386,7 @@
         scene.background = new THREE.Color(0x090d16);
 
         const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 2000);
-        camera.position.set(0, -160, 130);
+        camera.position.set(0, -170, 140);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, localClippingEnabled: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
@@ -420,35 +421,50 @@
 
         const material = new THREE.MeshStandardMaterial({ 
             color: 0x38bdf8, 
-            roughness: 0.3, 
-            metalness: 0.35,
+            roughness: 0.25, 
+            metalness: 0.4,
             clippingPlanes: clipPlanes,
             clipShadows: true,
             side: THREE.DoubleSide
         });
 
-        // ----------------------------------------------------
-        // COSTRUZIONE GEOMETRICA PRECISA DEL SUPPORTO MOTORE CNC
-        // ----------------------------------------------------
+        // -------------------------------------------------------------------------
+        // COSTRUZIONE GEOMETRICA PRECISA E CAVA DEL SUPPORTO MOTORE CNC Cnc12
+        // -------------------------------------------------------------------------
         const motorGroup = new THREE.Group();
 
-        // Flangia di base
-        const baseGeo = new THREE.BoxGeometry(90, 90, 16);
+        // 1. Flangia di base squadrata con foro centrale passante
+        const baseShape = new THREE.Shape();
+        const bw = 90;
+        baseShape.moveTo(-bw/2, -bw/2);
+        baseShape.lineTo(bw/2, -bw/2);
+        baseShape.lineTo(bw/2, bw/2);
+        baseShape.lineTo(-bw/2, bw/2);
+        baseShape.closePath();
+
+        // Foro centrale flangia
+        const holePath = new THREE.Path();
+        const holeRadius = 22;
+        holePath.absarc(0, 0, holeRadius, 0, Math.PI * 2, true);
+        baseShape.holes.push(holePath);
+
+        const extrudeSettings = { depth: 16, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 1, bevelThickness: 1 };
+        const baseGeo = new THREE.ExtrudeGeometry(baseShape, extrudeSettings);
+        baseGeo.center();
         const baseMesh = new THREE.Mesh(baseGeo, material);
-        baseMesh.position.z = 8;
         motorGroup.add(baseMesh);
 
-        // Corpo centrale rialzato
+        // 2. Corpo centrale rialzato del supporto motore
         const bodyGeo = new THREE.BoxGeometry(64, 64, 42);
         const bodyMesh = new THREE.Mesh(bodyGeo, material);
         bodyMesh.position.z = 16 + 21;
         motorGroup.add(bodyMesh);
 
-        // Colletto superiore cilindrico
-        const collarGeo = new THREE.CylinderGeometry(24, 24, 18, 32);
+        // 3. Colletto superiore cilindrico cavo
+        const collarGeo = new THREE.CylinderGeometry(24, 24, 20, 32);
         const collarMesh = new THREE.Mesh(collarGeo, material);
         collarMesh.rotation.x = Math.PI / 2;
-        collarMesh.position.z = 16 + 42 + 9;
+        collarMesh.position.z = 16 + 42 + 10;
         motorGroup.add(collarMesh);
 
         // Orientamento Z corretto verso l'alto
@@ -481,7 +497,6 @@
                 const pt = intersects[0].point;
                 snapPoints.push(pt);
 
-                // Pallino visivo di snap
                 const sphereGeo = new THREE.SphereGeometry(2.5, 16, 16);
                 const sphereMat = new THREE.MeshBasicMaterial({ color: 0xa855f7 });
                 const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
@@ -492,20 +507,18 @@
                     const dist = snapPoints[0].distanceTo(snapPoints[1]);
                     measureRes.innerHTML = `✅ <strong>Quota Rilevata (Snap):</strong> <span style="color:#38bdf8; font-size:13px; font-weight:700;">${dist.toFixed(2)} mm</span> (Tolleranza ISO 2768-m)`;
                     
-                    // Linea di misura 3D
                     const lineGeo = new THREE.BufferGeometry().setFromPoints(snapPoints);
                     const lineMat = new THREE.LineBasicMaterial({ color: 0xa855f7, linewidth: 3 });
                     const line = new THREE.Line(lineGeo, lineMat);
                     scene.add(line);
 
-                    snapPoints = []; // Reset per nuova misura
+                    snapPoints = [];
                 } else {
                     measureRes.innerHTML = `🎯 Primo vertice agganciato. Seleziona il secondo punto sul modello.`;
                 }
             }
         });
 
-        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
@@ -560,7 +573,7 @@
             document.getElementById(id).addEventListener('input', updateClipping);
         });
 
-        // Modale Gestione Report e Guide
+        // Modale Report e Guide
         const modal = document.getElementById('system-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalText = document.getElementById('modal-text');
@@ -600,7 +613,7 @@
             modal.style.display = 'flex';
         });
 
-        // AI Assistant Professionale e Dettagliato
+        // AI Assistant Professionale
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
 
