@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
-    <!-- Favicon pulita direttamente dalla cartella docs -->
-    <link rel="icon" type="image/png" href="ArchiFix_cubo-logo.png" />
+    <!-- Favicon SVG inline incorporata per evitare errori 404 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%237c3aed'/><path d='M16 6L6 12v10l10 6 10-6V12L16 6z' fill='none' stroke='%23ffffff' stroke-width='2'/></svg>" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -40,10 +40,15 @@
             align-items: center;
             gap: 10px;
         }
-        .logo-area img {
+        .logo-icon {
             width: 32px;
             height: 32px;
-            object-fit: contain;
+            background: linear-gradient(135deg, #7c3aed, #38bdf8);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
         }
         .badge-demo {
             font-size: 10px;
@@ -189,10 +194,16 @@
 <body>
 
     <div class="sidebar">
-        <!-- Header con logo cubo -->
+        <!-- Header con logo cubo SVG perfetto -->
         <div class="header">
             <div class="logo-area">
-                <img src="ArchiFix_cubo-logo.png" alt="Logo Cubo" onerror="this.src='../ArchiFix_cubo-logo.png';">
+                <div class="logo-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </div>
                 <span style="font-size: 14px; font-weight: 800; color: #f1f5f9;">
                     OmniBrain <span style="color: #a855f7;">PRO</span>
                 </span>
@@ -357,24 +368,41 @@
         let bbox = null;
         let modelLoadedSuccessfully = false;
 
-        // Caricamento del file STL direttamente dalla stessa cartella docs/
+        // Tentativo multiplo di caricamento STL per massima compatibilità GitHub Pages
         const loader = new THREE.STLLoader();
-        loader.load('Cnc12_Supporto_motore_x_y.stl', function (geometry) {
-            geometry.center();
-            geometry.rotateX(-Math.PI / 2);
-            geometry.computeVertexNormals();
-            
-            bbox = new THREE.Box3().setFromGeometry(geometry);
+        
+        function loadSTL(urlIndex = 0) {
+            const urls = [
+                'Cnc12_Supporto_motore_x_y.stl',
+                '../Cnc12_Supporto_motore_x_y.stl',
+                'https://raw.githubusercontent.com/alexcool-project/ArtiFix/main/docs/Cnc12_Supporto_motore_x_y.stl',
+                'https://raw.githubusercontent.com/alexcool-project/ArtiFix/main/Cnc12_Supporto_motore_x_y.stl'
+            ];
 
-            loadedMesh = new THREE.Mesh(geometry, material);
-            scene.add(loadedMesh);
-            
-            modelLoadedSuccessfully = true;
-            document.getElementById('model-status').innerText = "712 vertici, 1456 facce (Online)";
-        }, undefined, function (error) {
-            console.error('Errore caricamento STL:', error);
-            document.getElementById('model-status').innerHTML = '<span style="color:#ef4444;">Errore caricamento file STL</span>';
-        });
+            if (urlIndex >= urls.length) {
+                document.getElementById('model-status').innerHTML = '<span style="color:#ef4444;">Errore: File STL non trovato</span>';
+                return;
+            }
+
+            loader.load(urls[urlIndex], function (geometry) {
+                geometry.center();
+                geometry.rotateX(-Math.PI / 2);
+                geometry.computeVertexNormals();
+                
+                bbox = new THREE.Box3().setFromGeometry(geometry);
+
+                loadedMesh = new THREE.Mesh(geometry, material);
+                scene.add(loadedMesh);
+                
+                modelLoadedSuccessfully = true;
+                document.getElementById('model-status').innerText = "712 vertici, 1456 facce (Online)";
+            }, undefined, function (error) {
+                console.warn('Tentativo caricamento fallito da:', urls[urlIndex]);
+                loadSTL(urlIndex + 1);
+            });
+        }
+
+        loadSTL();
 
         function animate() {
             requestAnimationFrame(animate);
@@ -457,7 +485,7 @@
                 setTimeout(() => {
                     let aiReply = "";
                     if (!modelLoadedSuccessfully) {
-                        aiReply = `[OmniBrain PRO Engine]\n⚠️ Il modello 3D non è ancora visibile a schermo. Assicurati che "Cnc12_Supporto_motore_x_y.stl" sia caricato nella cartella docs/.`;
+                        aiReply = `[OmniBrain PRO Engine]\n⚠️ Il modello 3D non è ancora visibile a schermo. Attendi il caricamento completo.`;
                     } else {
                         aiReply = `[OmniBrain PRO Engine]\nAnalisi file "Cnc12_Supporto_motore_x_y.stl":\n• Modello visibile e renderizzato con successo (712 vertici, 1456 facce).\n• Orientamento Asse Z corretto verso l'alto.\n• Struttura ottimizzata per lavorazioni meccaniche CNC.`;
                         
