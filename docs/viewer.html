@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
-    <!-- Favicon Cubo ArtiFix Ufficiale -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230e1626'/><path d='M16 5L5 11.5v13L16 31l11-6.5v-13L16 5z' fill='none' stroke='%2338bdf8' stroke-width='2'/><path d='M16 5v13l11 6.5M16 18L5 24.5' fill='none' stroke='%237c3aed' stroke-width='2'/></svg>" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -193,7 +192,6 @@
             height: 100vh;
             position: relative;
         }
-        /* Modali */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -255,12 +253,28 @@
             cursor: pointer;
             font-weight: 600;
         }
+
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .sidebar {
+                width: 100% !important;
+                height: auto !important;
+                max-height: none !important;
+            }
+            .viewer-container {
+                width: 100% !important;
+                height: 400px !important;
+                min-height: 400px !important;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <!-- Header con Logo Cubo ArtiFix Ufficiale -->
         <div class="header">
             <div class="logo-area">
                 <div class="logo-icon">
@@ -276,10 +290,7 @@
             <span class="badge-demo">PROVA DEMO</span>
         </div>
 
-        <!-- Contenuto Sidebar -->
         <div class="content-scroll">
-            
-            <!-- Modello Precaricato -->
             <div class="card">
                 <span class="card-title">Modello CAD Precaricato</span>
                 <div class="file-info">
@@ -290,7 +301,6 @@
                 </div>
             </div>
 
-            <!-- Parametri Visualizzazione -->
             <div class="card">
                 <span class="card-title">Parametri Visualizzazione 3D</span>
                 <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -306,7 +316,6 @@
                 </div>
             </div>
 
-            <!-- Strumenti di Misura PRO con Snap -->
             <div class="card">
                 <span class="card-title">Strumenti di Misura PRO</span>
                 <div class="control-row">
@@ -318,7 +327,6 @@
                 </div>
             </div>
 
-            <!-- Sezionamento 3 Assi (Clipping) Reale -->
             <div class="card">
                 <span class="card-title">Sezionamento 3 Assi (Clipping)</span>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -346,7 +354,6 @@
                 </div>
             </div>
 
-            <!-- Funzioni Report PDF e Guida PRO -->
             <div class="card">
                 <span class="card-title">Esportazione & Documentazione</span>
                 <div style="display: flex; gap: 8px;">
@@ -355,12 +362,10 @@
                 </div>
             </div>
 
-            <!-- CTA Acquisto -->
             <a href="https://artifix.lemonsqueezy.com/checkout/buy/29d3fbf9-2aac-4ae7-a8fb-7224b2fc6fc6" target="_blank" class="btn-buy-mini">
                 ⚡ Sblocca Licenza PRO Illimitata (49€)
             </a>
 
-            <!-- AI Assistant -->
             <div class="chat-box" id="chat-container">
                 <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">AI Assistant Engine PRO</span>
                 <div class="chat-msg">
@@ -376,10 +381,8 @@
         </div>
     </div>
 
-    <!-- Canvas Viewer 3D -->
     <div class="viewer-container" id="canvas-container"></div>
 
-    <!-- Modale -->
     <div class="modal-overlay" id="system-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -424,10 +427,9 @@
         const controls = new THREE.TrackballControls(camera, renderer.domElement);
         controls.rotateSpeed = 2.8;
 
-        // Piani di clipping dedicati con orientamento e costanti precise
-        const clipX = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 100);
-        const clipY = new THREE.Plane(new THREE.Vector3(0, -1, 0), 100);
-        const clipZ = new THREE.Plane(new THREE.Vector3(0, 0, -1), 100);
+        const clipX = new THREE.Plane(new THREE.Vector3(1, 0, 0), 1000);
+        const clipY = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1000);
+        const clipZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 1000);
         const clipPlanes = [clipX, clipY, clipZ];
 
         const material = new THREE.MeshStandardMaterial({ 
@@ -439,7 +441,6 @@
             side: THREE.DoubleSide
         });
 
-        // Costruzione Supporto Motore
         const motorGroup = new THREE.Group();
 
         const baseShape = new THREE.Shape();
@@ -470,14 +471,12 @@
         motorGroup.rotation.x = Math.PI / 2;
         scene.add(motorGroup);
 
-        // Calcolo dimensioni e centro per il clipping perfetto
         const bbox = new THREE.Box3().setFromObject(motorGroup);
         const size = new THREE.Vector3();
         const center = new THREE.Vector3();
         bbox.getSize(size);
         bbox.getCenter(center);
 
-        // Controllo sezionamento 3 assi reattivo e funzionante al 100%
         function updateClipping() {
             const xVal = document.getElementById('clip-x').value / 100;
             const yVal = document.getElementById('clip-y').value / 100;
@@ -487,16 +486,17 @@
             document.getElementById('clip-y-val').innerText = Math.round(yVal * 100) + '%';
             document.getElementById('clip-z-val').innerText = Math.round(zVal * 100) + '%';
 
-            clipX.constant = (center.x - size.x * 0.7) + xVal * (size.x * 1.4);
-            clipY.constant = (center.y - size.y * 0.7) + yVal * (size.y * 1.4);
-            clipZ.constant = (center.z - size.z * 0.7) + zVal * (size.z * 1.4);
+            clipX.constant = -(center.x - size.x * 0.5 + xVal * size.x);
+            clipY.constant = -(center.y - size.y * 0.5 + yVal * size.y);
+            clipZ.constant = -(center.z - size.z * 0.5 + zVal * size.z);
         }
+
+        updateClipping();
 
         ['clip-x', 'clip-y', 'clip-z'].forEach(id => {
             document.getElementById(id).addEventListener('input', updateClipping);
         });
 
-        // Opacità
         document.getElementById('opacity-range').addEventListener('input', (e) => {
             const val = e.target.value;
             document.getElementById('opacity-val').innerText = val + '%';
@@ -504,7 +504,6 @@
             material.opacity = val / 100;
         });
 
-        // Griglia
         let gridVisible = true;
         document.getElementById('btn-toggle-grid').addEventListener('click', (e) => {
             gridVisible = !gridVisible;
@@ -514,7 +513,6 @@
             e.target.classList.toggle('active', gridVisible);
         });
 
-        // Snap & Misura
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let measureActive = false;
@@ -553,7 +551,6 @@
             }
         });
 
-        // Modali Report e Guida
         const modal = document.getElementById('system-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalText = document.getElementById('modal-text');
@@ -592,7 +589,6 @@
             modal.style.display = 'flex';
         });
 
-        // AI Assistant
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
         userInput.addEventListener('keydown', (e) => {
