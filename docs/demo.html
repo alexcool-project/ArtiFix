@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
-    <!-- Favicon aggiornata con il logo del cubo -->
     <link rel="icon" type="image/png" href="ArchiFix_cubo-logo.png" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -142,8 +141,8 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            min-height: 160px;
-            max-height: 200px;
+            min-height: 140px;
+            max-height: 180px;
             overflow-y: auto;
         }
         .chat-msg {
@@ -189,7 +188,7 @@
 <body>
 
     <div class="sidebar">
-        <!-- Header con logo cubo -->
+        <!-- Header con logo cubo visibile -->
         <div class="header">
             <div class="logo-area">
                 <img src="ArchiFix_cubo-logo.png" alt="ArtiFix Logo">
@@ -209,7 +208,7 @@
                 <div class="file-info">
                     <div>
                         🔒 <strong>Cnc12_Supporto_motore_x_y.stl</strong><br>
-                        <span style="color: #64748b; font-size: 10px;">712 vertici, 1456 facce</span>
+                        <span id="model-status" style="color: #38bdf8; font-size: 10px;">Caricamento in corso...</span>
                     </div>
                 </div>
             </div>
@@ -270,6 +269,15 @@
                 </div>
             </div>
 
+            <!-- Funzioni Report PDF e Guida PRO -->
+            <div class="card">
+                <span class="card-title">Esportazione & Documentazione</span>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-action" id="btn-pdf" style="flex: 1; text-align: center;">📄 Genera Report PDF</button>
+                    <button class="btn-action" id="btn-guide" style="flex: 1; text-align: center;">📖 Guida PRO</button>
+                </div>
+            </div>
+
             <!-- CTA Acquisto -->
             <a href="https://artifix.lemonsqueezy.com/checkout/buy/29d3fbf9-2aac-4ae7-a8fb-7224b2fc6fc6" target="_blank" class="btn-buy-mini">
                 ⚡ Sblocca Licenza PRO Illimitata (49€)
@@ -280,7 +288,7 @@
                 <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">AI Assistant Locale</span>
                 <div class="chat-msg">
                     OmniBrain PRO Demo attivo.<br>
-                    • Modello orientato con asse Z (blu) verso l'alto.<br>
+                    • In attesa del rendering del modello 3D...<br>
                     • Chiedi dettagli geometrici o analisi DFM.
                 </div>
             </div>
@@ -346,7 +354,9 @@
 
         let loadedMesh = null;
         let bbox = null;
+        let modelLoadedSuccessfully = false;
 
+        // Caricamento robusto del file STL
         const loader = new THREE.STLLoader();
         loader.load('Cnc12_Supporto_motore_x_y.stl', function (geometry) {
             geometry.center();
@@ -357,8 +367,12 @@
 
             loadedMesh = new THREE.Mesh(geometry, material);
             scene.add(loadedMesh);
+            
+            modelLoadedSuccessfully = true;
+            document.getElementById('model-status').innerText = "712 vertici, 1456 facce (Online)";
         }, undefined, function (error) {
             console.error('Errore caricamento STL:', error);
+            document.getElementById('model-status').innerText = "Errore caricamento file STL";
         });
 
         function animate() {
@@ -394,6 +408,14 @@
             measureRes.style.display = measureActive ? 'block' : 'none';
         });
 
+        // Eventi pulsanti PDF e Guida
+        document.getElementById('btn-pdf').addEventListener('click', () => {
+            alert('Funzionalità PRO: Generazione Report PDF DFM disponibile nella versione completa.');
+        });
+        document.getElementById('btn-guide').addEventListener('click', () => {
+            alert('Guida OmniBrain PRO: Consulta la documentazione tecnica sul sito principale ArtiFix.');
+        });
+
         function updateClipping() {
             if (!bbox) return;
             const size = new THREE.Vector3();
@@ -418,6 +440,7 @@
             document.getElementById(id).addEventListener('input', updateClipping);
         });
 
+        // Chat AI con controllo effettivo sullo stato del modello 3D
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
 
@@ -433,13 +456,18 @@
                 userInput.value = '';
 
                 setTimeout(() => {
-                    let aiReply = `[OmniBrain PRO Engine]\nAnalisi file "Cnc12_Supporto_motore_x_y.stl":\n• Orientamento Asse Z corretto verso l'alto.\n• 712 vertici, 1456 facce.\n• Struttura ottimizzata per lavorazioni meccaniche CNC.`;
-                    
-                    const qLower = query.toLowerCase();
-                    if (qLower.includes('misur') || qLower.includes('distanz') || qLower.includes('quota')) {
-                        aiReply = `[Engine PRO]\nMisurazione attiva: Utilizza il pulsante "Attiva Snap" per calcolare con precisione millimetrica i punti sul modello 3D.`;
-                    } else if (qLower.includes('sezion') || qLower.includes('tagli')) {
-                        aiReply = `[Engine PRO]\nUsa i cursori di sezionamento sui tre assi (X, Y, Z) nella barra laterale per sezionare l'interno del pezzo in tempo reale.`;
+                    let aiReply = "";
+                    if (!modelLoadedSuccessfully) {
+                        aiReply = `[OmniBrain PRO Engine]\n⚠️ Il modello 3D non è ancora completamente visibile a schermo. Attendi il caricamento completo del file STL per avviare l'analisi DFM.`;
+                    } else {
+                        aiReply = `[OmniBrain PRO Engine]\nAnalisi file "Cnc12_Supporto_motore_x_y.stl":\n• Modello visibile e renderizzato con successo (712 vertici, 1456 facce).\n• Orientamento Asse Z corretto verso l'alto.\n• Struttura ottimizzata per lavorazioni meccaniche CNC.`;
+                        
+                        const qLower = query.toLowerCase();
+                        if (qLower.includes('misur') || qLower.includes('distanz') || qLower.includes('quota')) {
+                            aiReply = `[Engine PRO]\nMisurazione attiva sul modello renderizzato: Utilizza il pulsante "Attiva Snap" per calcolare con precisione millimetrica i punti sul pezzo.`;
+                        } else if (qLower.includes('sezion') || qLower.includes('tagli')) {
+                            aiReply = `[Engine PRO]\nUsa i cursori di sezionamento sui tre assi (X, Y, Z) nella barra laterale per sezionare in tempo reale il supporto motore visibile a schermo.`;
+                        }
                     }
 
                     const aiMsgDiv = document.createElement('div');
