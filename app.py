@@ -269,7 +269,7 @@ def _export_dae_native(mesh):
     xml = (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">\n'
-        '  <asset><contributor><authoring_tool>ArtiFix</authoring_tool></contributor><unit name="meter" meter="1"/><up_axis>Y_UP</up_axis></asset>\n'
+        '  <asset><contributor><authoring_tool>ArtiFix</authoring_tool></contributor><unit name="meter" meter="1"/><up_axis>Z_UP</up_axis></asset>\n'
         '  <library_effects><effect id="' + eff_id + '"><profile_COMMON><technique sid="common"><phong><diffuse><color>0.12 0.47 0.71 1</color></diffuse></phong></technique></profile_COMMON></effect></library_effects>\n'
         '  <library_materials><material id="' + mat_id + '" name="' + mat_id + '"><instance_effect url="#' + eff_id + '"/></material></library_materials>\n'
         '  <library_geometries><geometry id="' + geom_id + '" name="' + geom_id + '"><mesh>\n'
@@ -541,7 +541,7 @@ elif page == "Ripara File":
         sponsor_band_placeholder(st.session_state.lang)
 
 # ============================================================
-# VIEWER 3D (Asse Z blu verticale perpendicolare alla griglia, base a Z=0)
+# VIEWER 3D (Z-up strict, blue axis vertical, base at Z=0)
 # ============================================================
 elif page == "Viewer 3D":
     st.header(t("viewer_header"))
@@ -600,6 +600,7 @@ elif page == "Viewer 3D":
                     scene.background = new THREE.Color(0xf0f2f6);
                     
                     const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 50000);
+                    camera.up.set(0, 0, 1);
                     
                     const renderer = new THREE.WebGLRenderer({{antialias:true}});
                     renderer.setPixelRatio(window.devicePixelRatio);
@@ -613,7 +614,7 @@ elif page == "Viewer 3D":
                     
                     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
                     const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-                    dirLight.position.set(15, 15, 30);
+                    dirLight.position.set(15, -15, 30);
                     scene.add(dirLight);
                     
                     const b64Data = "{b64_data}";
@@ -632,6 +633,8 @@ elif page == "Viewer 3D":
                         const geometry = loader.parse(bytes.buffer);
                         geometry.computeVertexNormals();
                         
+                        geometry.rotateX(Math.PI / 2);
+                        
                         geometry.computeBoundingBox();
                         const box = geometry.boundingBox;
                         const size = box.getSize(new THREE.Vector3());
@@ -646,17 +649,17 @@ elif page == "Viewer 3D":
                         const axisLength = maxDim * 0.7;
                         const gridSize = maxDim * 2.5;
                         
-                        // Assi: X Rosso, Y Verde, Z Blu verticale
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
+                        grid.rotation.x = Math.PI / 2;
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
                         controls.target.set(0, 0, size.z / 2);
-                        camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.5);
+                        camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
                         controls.update();
                         
                     }} else if (ext === 'obj') {{
@@ -671,6 +674,7 @@ elif page == "Viewer 3D":
                         
                         const meshGroup = new THREE.Group();
                         meshGroup.add(object);
+                        meshGroup.rotation.x = Math.PI / 2;
                         
                         const box = new THREE.Box3().setFromObject(meshGroup);
                         const center = box.getCenter(new THREE.Vector3());
@@ -691,11 +695,12 @@ elif page == "Viewer 3D":
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
+                        grid.rotation.x = Math.PI / 2;
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
                         controls.target.set(0, 0, size.z / 2);
-                        camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.5);
+                        camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
                         controls.update();
                     }}
                     
