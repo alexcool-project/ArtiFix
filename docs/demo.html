@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
-    <!-- Favicon Cubo ArtiFix Ufficiale -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230e1626'/><path d='M16 5L5 11.5v13L16 31l11-6.5v-13L16 5z' fill='none' stroke='%2338bdf8' stroke-width='2'/><path d='M16 5v13l11 6.5M16 18L5 24.5' fill='none' stroke='%237c3aed' stroke-width='2'/></svg>" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -149,8 +148,8 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            min-height: 150px;
-            max-height: 200px;
+            min-height: 140px;
+            max-height: 180px;
             overflow-y: auto;
         }
         .chat-msg {
@@ -193,7 +192,6 @@
             height: 100vh;
             position: relative;
         }
-        /* Modale di Sistema */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -255,12 +253,28 @@
             cursor: pointer;
             font-weight: 600;
         }
+
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .sidebar {
+                width: 100% !important;
+                height: auto !important;
+                max-height: none !important;
+            }
+            .viewer-container {
+                width: 100% !important;
+                height: 400px !important;
+                min-height: 400px !important;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <!-- Header con Logo Cubo ArtiFix Ufficiale -->
         <div class="header">
             <div class="logo-area">
                 <div class="logo-icon">
@@ -276,21 +290,17 @@
             <span class="badge-demo">PROVA DEMO</span>
         </div>
 
-        <!-- Contenuto Sidebar -->
         <div class="content-scroll">
-            
-            <!-- Modello Precaricato -->
             <div class="card">
                 <span class="card-title">Modello CAD Precaricato</span>
                 <div class="file-info">
                     <div>
                         🔒 <strong>Cnc12_Supporto_motore_x_y.stl</strong><br>
-                        <span id="model-status" style="color: #38bdf8; font-size: 10px;">1.428 vertici, 2.856 facce (Ottimizzato DFM)</span>
+                        <span style="color: #38bdf8; font-size: 10px;">1.428 vertici, 2.856 facce (Ottimizzato DFM)</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Parametri Visualizzazione -->
             <div class="card">
                 <span class="card-title">Parametri Visualizzazione 3D</span>
                 <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -306,7 +316,6 @@
                 </div>
             </div>
 
-            <!-- Strumenti di Misura PRO con Snap -->
             <div class="card">
                 <span class="card-title">Strumenti di Misura PRO</span>
                 <div class="control-row">
@@ -314,11 +323,10 @@
                     <button class="btn-action" id="btn-measure">Attiva Snap</button>
                 </div>
                 <div id="measure-result" style="font-size: 11px; color: #38bdf8; display: none; background: #0a101d; padding: 8px; border-radius: 4px; border: 1px solid #0284c7;">
-                    🎯 <strong>Snap Magnetico Attivo:</strong> Clicca due vertici sul modello per calcolare la quota millimetrica con tolleranza ISO.
+                    🎯 <strong>Snap Magnetico Attivo:</strong> Clicca due vertici sul modello per calcolare la quota millimetrica.
                 </div>
             </div>
 
-            <!-- Sezionamento 3 Assi (Clipping) Reale -->
             <div class="card">
                 <span class="card-title">Sezionamento 3 Assi (Clipping)</span>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -346,7 +354,6 @@
                 </div>
             </div>
 
-            <!-- Funzioni Report PDF e Guida PRO -->
             <div class="card">
                 <span class="card-title">Esportazione & Documentazione</span>
                 <div style="display: flex; gap: 8px;">
@@ -355,48 +362,40 @@
                 </div>
             </div>
 
-            <!-- CTA Acquisto -->
             <a href="https://artifix.lemonsqueezy.com/checkout/buy/29d3fbf9-2aac-4ae7-a8fb-7224b2fc6fc6" target="_blank" class="btn-buy-mini">
                 ⚡ Sblocca Licenza PRO Illimitata (49€)
             </a>
 
-            <!-- AI Assistant Professionale -->
             <div class="chat-box" id="chat-container">
                 <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">AI Assistant Engine PRO</span>
                 <div class="chat-msg">
                     [OmniBrain PRO Engine v4.2]
-                    • Modello "Cnc12_Supporto_motore_x_y.stl" analizzato con successo.
-                    • Pronto per interrogazioni avanzate su tolleranze, sezioni e DFM.
+                    • Modello "Cnc12_Supporto_motore_x_y.stl" pronto.
+                    • Interroga l'assistente per DFM, tolleranze e cicli CNC.
                 </div>
             </div>
         </div>
 
-        <!-- Input Chat -->
         <div class="chat-input-area">
             <input type="text" id="user-input" class="chat-input" placeholder="Chiedi analisi tecnica, quote o DFM...">
         </div>
     </div>
 
-    <!-- Canvas Viewer 3D -->
     <div class="viewer-container" id="canvas-container"></div>
 
-    <!-- Modale Dinamica per Report e Guide -->
     <div class="modal-overlay" id="system-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modal-title" style="font-size: 15px; color: #38bdf8;">Documentazione PRO</h3>
                 <button class="modal-close" onclick="closeModal()">✕</button>
             </div>
-            <div class="modal-body" id="modal-text">
-                Contenuto in elaborazione...
-            </div>
+            <div class="modal-body" id="modal-text">Contenuto in elaborazione...</div>
             <div class="modal-footer" id="modal-footer">
                 <button class="modal-close" onclick="closeModal()">Chiudi</button>
             </div>
         </div>
     </div>
 
-    <!-- Script Three.js & Controlli PRO -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TrackballControls.js"></script>
 
@@ -413,15 +412,11 @@
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
         const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.9);
         dirLight1.position.set(120, 120, 180);
         scene.add(dirLight1);
-        const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 0.4);
-        dirLight2.position.set(-120, -120, -100);
-        scene.add(dirLight2);
 
-        // Griglia e Assi
         const gridHelper = new THREE.GridHelper(220, 44, 0x334155, 0x1e293b);
         gridHelper.rotation.x = Math.PI / 2;
         scene.add(gridHelper);
@@ -432,12 +427,10 @@
         const controls = new THREE.TrackballControls(camera, renderer.domElement);
         controls.rotateSpeed = 2.8;
 
-        // Piani di clipping dedicati con DoubleSide per evitare zone nere
-        const clipPlanes = [
-            new THREE.Plane(new THREE.Vector3(-1, 0, 0), 1000),
-            new THREE.Plane(new THREE.Vector3(0, -1, 0), 1000),
-            new THREE.Plane(new THREE.Vector3(0, 0, -1), 1000)
-        ];
+        const clipX = new THREE.Plane(new THREE.Vector3(1, 0, 0), 1000);
+        const clipY = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1000);
+        const clipZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 1000);
+        const clipPlanes = [clipX, clipY, clipZ];
 
         const material = new THREE.MeshStandardMaterial({ 
             color: 0x38bdf8, 
@@ -448,7 +441,6 @@
             side: THREE.DoubleSide
         });
 
-        // Costruzione Supporto Motore CNC Cnc12
         const motorGroup = new THREE.Group();
 
         const baseShape = new THREE.Shape();
@@ -463,110 +455,28 @@
         holePath.absarc(0, 0, 22, 0, Math.PI * 2, true);
         baseShape.holes.push(holePath);
 
-        const extrudeSettings = { depth: 16, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 1, bevelThickness: 1 };
-        const baseGeo = new THREE.ExtrudeGeometry(baseShape, extrudeSettings);
+        const baseGeo = new THREE.ExtrudeGeometry(baseShape, { depth: 16, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 1, bevelThickness: 1 });
         baseGeo.center();
-        const baseMesh = new THREE.Mesh(baseGeo, material);
-        motorGroup.add(baseMesh);
+        motorGroup.add(new THREE.Mesh(baseGeo, material));
 
-        const bodyGeo = new THREE.BoxGeometry(64, 64, 42);
-        const bodyMesh = new THREE.Mesh(bodyGeo, material);
-        bodyMesh.position.z = 16 + 21;
+        const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(64, 64, 42), material);
+        bodyMesh.position.z = 37;
         motorGroup.add(bodyMesh);
 
-        const collarGeo = new THREE.CylinderGeometry(24, 24, 20, 32);
-        const collarMesh = new THREE.Mesh(collarGeo, material);
+        const collarMesh = new THREE.Mesh(new THREE.CylinderGeometry(24, 24, 20, 32), material);
         collarMesh.rotation.x = Math.PI / 2;
-        collarMesh.position.z = 16 + 42 + 10;
+        collarMesh.position.z = 68;
         motorGroup.add(collarMesh);
 
         motorGroup.rotation.x = Math.PI / 2;
         scene.add(motorGroup);
 
         const bbox = new THREE.Box3().setFromObject(motorGroup);
-        const modelSize = new THREE.Vector3();
-        bbox.getSize(modelSize);
-        const modelCenter = new THREE.Vector3();
-        bbox.getCenter(modelCenter);
+        const size = new THREE.Vector3();
+        const center = new THREE.Vector3();
+        bbox.getSize(size);
+        bbox.getCenter(center);
 
-        // Raycaster per Snap e Misura
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        let measureActive = false;
-        let snapPoints = [];
-        const measureRes = document.getElementById('measure-result');
-
-        container.addEventListener('click', (event) => {
-            if (!measureActive) return;
-            const rect = container.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(motorGroup, true);
-
-            if (intersects.length > 0) {
-                const pt = intersects[0].point;
-                snapPoints.push(pt);
-
-                const sphereGeo = new THREE.SphereGeometry(2.5, 16, 16);
-                const sphereMat = new THREE.MeshBasicMaterial({ color: 0xa855f7 });
-                const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-                sphereMesh.position.copy(pt);
-                scene.add(sphereMesh);
-
-                if (snapPoints.length === 2) {
-                    const dist = snapPoints[0].distanceTo(snapPoints[1]);
-                    measureRes.innerHTML = `✅ <strong>Quota Rilevata (Snap):</strong> <span style="color:#38bdf8; font-size:13px; font-weight:700;">${dist.toFixed(2)} mm</span> (Tolleranza ISO 2768-m)`;
-                    
-                    const lineGeo = new THREE.BufferGeometry().setFromPoints(snapPoints);
-                    const lineMat = new THREE.LineBasicMaterial({ color: 0xa855f7, linewidth: 3 });
-                    const line = new THREE.Line(lineGeo, lineMat);
-                    scene.add(line);
-
-                    snapPoints = [];
-                } else {
-                    measureRes.innerHTML = `🎯 Primo vertice agganciato. Seleziona il secondo punto sul modello.`;
-                }
-            }
-        });
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // Opacità
-        document.getElementById('opacity-range').addEventListener('input', (e) => {
-            const val = e.target.value;
-            document.getElementById('opacity-val').innerText = val + '%';
-            material.transparent = val < 100;
-            material.opacity = val / 100;
-        });
-
-        // Griglia
-        let gridVisible = true;
-        document.getElementById('btn-toggle-grid').addEventListener('click', (e) => {
-            gridVisible = !gridVisible;
-            gridHelper.visible = gridVisible;
-            axesHelper.visible = gridVisible;
-            e.target.innerText = gridVisible ? 'Attivi' : 'Disattivi';
-            e.target.classList.toggle('active', gridVisible);
-        });
-
-        // Snap
-        const measureBtn = document.getElementById('btn-measure');
-        measureBtn.addEventListener('click', () => {
-            measureActive = !measureActive;
-            measureBtn.innerText = measureActive ? 'Disattiva Snap' : 'Attiva Snap';
-            measureBtn.classList.toggle('active', measureActive);
-            measureRes.style.display = measureActive ? 'block' : 'none';
-            snapPoints = [];
-        });
-
-        // Sezionamento 3 Assi Reale e Scalato Correttamente
         function updateClipping() {
             const xVal = document.getElementById('clip-x').value / 100;
             const yVal = document.getElementById('clip-y').value / 100;
@@ -576,106 +486,142 @@
             document.getElementById('clip-y-val').innerText = Math.round(yVal * 100) + '%';
             document.getElementById('clip-z-val').innerText = Math.round(zVal * 100) + '%';
 
-            // Calcolo preciso dei piani basato sul bounding box effettivo del modello
-            clipPlanes[0].constant = modelCenter.x + (xVal - 0.5) * (modelSize.x * 1.4);
-            clipPlanes[1].constant = modelCenter.y + (yVal - 0.5) * (modelSize.y * 1.4);
-            clipPlanes[2].constant = modelCenter.z + (zVal - 0.5) * (modelSize.z * 1.4);
+            clipX.constant = -(center.x - size.x * 0.5 + xVal * size.x);
+            clipY.constant = -(center.y - size.y * 0.5 + yVal * size.y);
+            clipZ.constant = -(center.z - size.z * 0.5 + zVal * size.z);
         }
+
+        updateClipping();
 
         ['clip-x', 'clip-y', 'clip-z'].forEach(id => {
             document.getElementById(id).addEventListener('input', updateClipping);
         });
 
-        // Gestione Modali (PDF e Guida PRO)
+        document.getElementById('opacity-range').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('opacity-val').innerText = val + '%';
+            material.transparent = val < 100;
+            material.opacity = val / 100;
+        });
+
+        let gridVisible = true;
+        document.getElementById('btn-toggle-grid').addEventListener('click', (e) => {
+            gridVisible = !gridVisible;
+            gridHelper.visible = gridVisible;
+            axesHelper.visible = gridVisible;
+            e.target.innerText = gridVisible ? 'Attivi' : 'Disattivi';
+            e.target.classList.toggle('active', gridVisible);
+        });
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let measureActive = false;
+        let snapPoints = [];
+        const measureRes = document.getElementById('measure-result');
+
+        document.getElementById('btn-measure').addEventListener('click', (e) => {
+            measureActive = !measureActive;
+            e.target.innerText = measureActive ? 'Disattiva Snap' : 'Attiva Snap';
+            e.target.classList.toggle('active', measureActive);
+            measureRes.style.display = measureActive ? 'block' : 'none';
+            snapPoints = [];
+        });
+
+        container.addEventListener('click', (event) => {
+            if (!measureActive) return;
+            const rect = container.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(motorGroup, true);
+            if (intersects.length > 0) {
+                const pt = intersects[0].point;
+                snapPoints.push(pt);
+                const sMesh = new THREE.Mesh(new THREE.SphereGeometry(2.5, 16, 16), new THREE.MeshBasicMaterial({ color: 0xa855f7 }));
+                sMesh.position.copy(pt);
+                scene.add(sMesh);
+                if (snapPoints.length === 2) {
+                    const dist = snapPoints[0].distanceTo(snapPoints[1]);
+                    measureRes.innerHTML = `✅ <strong>Quota Rilevata:</strong> <span style="color:#38bdf8; font-weight:700;">${dist.toFixed(2)} mm</span> (ISO 2768-m)`;
+                    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(snapPoints), new THREE.LineBasicMaterial({ color: 0xa855f7, linewidth: 3 })));
+                    snapPoints = [];
+                } else {
+                    measureRes.innerHTML = `🎯 Primo punto agganciato. Seleziona il secondo punto.`;
+                }
+            }
+        });
+
         const modal = document.getElementById('system-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalText = document.getElementById('modal-text');
         const modalFooter = document.getElementById('modal-footer');
-
         function closeModal() { modal.style.display = 'none'; }
 
         document.getElementById('btn-pdf').addEventListener('click', () => {
             modalTitle.innerText = "📄 Report Tecnico DFM & Analisi CAD — OmniBrain PRO";
             modalText.innerHTML = `
-                <div style="display:flex; flex-direction:column; gap:12px;">
-                    <p><strong>Nome File CAD:</strong> Cnc12_Supporto_motore_x_y.stl</p>
-                    <p><strong>Volume Calcolato:</strong> 142.58 cm³ | <strong>Massa Stimata (Aluminium 6061-T6):</strong> 385.0 g</p>
-                    <hr style="border-color:#1e293b;">
-                    <h4 style="color:#38bdf8;">📊 Analisi DFM (Design for Manufacturing):</h4>
-                    <ul style="margin-left: 20px; display:flex; flex-direction:column; gap:6px;">
-                        <li>Sottosquadri rilevati: <strong>0</strong> (Ottimale per fresatura CNC a 3 assi)</li>
-                        <li>Raggi di raccordo minimi: <strong>R 2.0 mm</strong> (Conforme alle specifiche utensile)</li>
-                        <li>Angoli di sformo e tolleranze geometriche: <strong>Conforme standard ISO 2768-m</strong></li>
-                        <li>Accoppiamenti meccanici previsti: Sede cuscinetto con tolleranza H7</li>
-                    </ul>
-                    <hr style="border-color:#1e293b;">
-                    <p style="color:#a855f7; font-weight:600;">🔒 Certificato generato e validato dal motore di calcolo OmniBrain PRO.</p>
-                </div>
+                <p><strong>Nome File:</strong> Cnc12_Supporto_motore_x_y.stl</p>
+                <p><strong>Volume:</strong> 142.58 cm³ | <strong>Massa (Aluminium 6061-T6):</strong> 385.0 g</p>
+                <hr style="border-color:#1e293b; margin:10px 0;">
+                <h4 style="color:#38bdf8;">📊 Analisi DFM:</h4>
+                <ul style="margin-left: 20px; display:flex; flex-direction:column; gap:4px; margin-top:6px;">
+                    <li>Sottosquadri: <strong>0</strong> (Fresatura CNC 3 assi ottimale)</li>
+                    <li>Raggi minimi: <strong>R 2.0 mm</strong> (Conforme)</li>
+                    <li>Tolleranze: <strong>ISO 2768-m</strong> con sede H7</li>
+                </ul>
             `;
-            modalFooter.innerHTML = `
-                <button class="modal-close" onclick="closeModal()">Chiudi</button>
-                <button class="modal-primary" onclick="window.print()">Stampa / Esporta PDF</button>
-            `;
+            modalFooter.innerHTML = `<button class="modal-close" onclick="closeModal()">Chiudi</button><button class="modal-primary" onclick="window.print()">Stampa / Esporta PDF</button>`;
             modal.style.display = 'flex';
         });
 
         document.getElementById('btn-guide').addEventListener('click', () => {
-            modalTitle.innerText = "📖 Guida Ufficiale e Funzionalità — OmniBrain PRO";
+            modalTitle.innerText = "📖 Guida Ufficiale — OmniBrain PRO";
             modalText.innerHTML = `
-                <div style="display:flex; flex-direction:column; gap:12px;">
-                    <p>Benvenuto nella documentazione tecnica di <strong>OmniBrain PRO</strong>, la suite definitiva per l'analisi CAD e la preventivazione automatica.</p>
-                    <hr style="border-color:#1e293b;">
-                    <h4 style="color:#38bdf8;">⚙️ Funzionalità della Versione PRO:</h4>
-                    <ul style="margin-left: 20px; display:flex; flex-direction:column; gap:6px;">
-                        <li><strong>Sezionamento 3 Assi Avanzato:</strong> Ispeziona sezioni trasversali e interni geometrici complessi in tempo reale muovendo i cursori laterali.</li>
-                        <li><strong>Snap Magnetico & Misurazioni:</strong> Attiva lo strumento di misura per calcolare con precisione millimetrica le quote tra vertici geometrici.</li>
-                        <li><strong>Report DFM Automatico:</strong> Esporta certificati di producibilità e analisi dei costi di lavorazione CNC istantanei.</li>
-                        <li><strong>AI Assistant Ingegneristico:</strong> Interroga l'intelligenza artificiale per ottenere specifiche su tolleranze, accoppiamenti e cicli macchina.</li>
-                    </ul>
-                </div>
+                <p>Benvenuto nella documentazione tecnica di <strong>OmniBrain PRO</strong>.</p>
+                <hr style="border-color:#1e293b; margin:10px 0;">
+                <ul style="margin-left: 20px; display:flex; flex-direction:column; gap:6px;">
+                    <li><strong>Sezionamento 3 Assi:</strong> Muovi i cursori per sezionare la geometria in tempo reale.</li>
+                    <li><strong>Snap Magnetico:</strong> Clicca sui vertici per misurare le distanze geometriche.</li>
+                    <li><strong>AI Assistant:</strong> Chiedi informazioni su tolleranze, finiture e preventivi.</li>
+                </ul>
             `;
-            modalFooter.innerHTML = `
-                <button class="modal-close" onclick="closeModal()">Chiudi</button>
-                <a href="https://artifix.lemonsqueezy.com/checkout/buy/29d3fbf9-2aac-4ae7-a8fb-7224b2fc6fc6" target="_blank" style="background:#7c3aed; color:#fff; text-decoration:none; padding:8px 16px; border-radius:6px; font-weight:600; font-size:13px;">Sblocca PRO (49€)</a>
-            `;
+            modalFooter.innerHTML = `<button class="modal-close" onclick="closeModal()">Chiudi</button><a href="https://artifix.lemonsqueezy.com/checkout/buy/29d3fbf9-2aac-4ae7-a8fb-7224b2fc6fc6" target="_blank" style="background:#7c3aed; color:#fff; text-decoration:none; padding:8px 16px; border-radius:6px; font-weight:600; font-size:13px;">Sblocca PRO (49€)</a>`;
             modal.style.display = 'flex';
         });
 
-        // AI Assistant
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
-
         userInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && userInput.value.trim()) {
                 const query = userInput.value.trim();
-                
-                const userMsgDiv = document.createElement('div');
-                userMsgDiv.className = 'chat-msg user';
-                userMsgDiv.innerText = query;
-                chatContainer.appendChild(userMsgDiv);
-
+                const uDiv = document.createElement('div');
+                uDiv.className = 'chat-msg user';
+                uDiv.innerText = query;
+                chatContainer.appendChild(uDiv);
                 userInput.value = '';
-
                 setTimeout(() => {
-                    let aiReply = "[OmniBrain PRO Engine]\n• Analisi geometrica file Cnc12_Supporto_motore_x_y.stl completata.\n• Modello validato per fresatura CNC ad alta precisione.\n• Dimensioni d'ingombro: 90x90 mm con altezza totale 60 mm.";
-                    
-                    const qLower = query.toLowerCase();
-                    if (qLower.includes('tollera') || qLower.includes('misur') || qLower.includes('quota')) {
-                        aiReply = "[Analisi Tolleranze PRO]\n• Per questo supporto motore si consiglia una tolleranza H7 sui fori di alloggiamento cuscinetto.\n• Tolleranza geometrica di parallelismo: ±0.05 mm sulle superfici di flangia.";
-                    } else if (qLower.includes('materiale') || qLower.includes('alluminio') || qLower.includes('lega')) {
-                        aiReply = "[Analisi Materiali DFM]\n• Materiale raccomandato: Lega di Alluminio 6061-T6 (Ergal/Peraluman).\n• Ottimo rapporto rigidità/peso, eccellente stabilità dimensionale e finitura superficiale.";
-                    } else if (qLower.includes('costo') || qLower.hidden || qLower.includes('prezzo') || qLower.includes('lavora')) {
-                        aiReply = "[Preventivazione CNC PRO]\n• Tempo ciclo stimato su centro di lavoro 3 assi: ~14.5 minuti.\n• Operazioni previste: Sgrossatura ad alto avanzo e finitura superficiale con utensile torico.";
+                    let reply = "[OmniBrain PRO Engine]\n• Analisi geometrica completata.\n• Modello validato per fresatura CNC a 3 assi.";
+                    const q = query.toLowerCase();
+                    if (q.includes('tollera') || q.includes('misur') || q.includes('quota')) {
+                        reply = "[Tolleranze PRO]\n• Consigliata tolleranza H7 sul foro cuscinetto e ±0.05 mm sulla flangia.";
+                    } else if (q.includes('materiale') || q.includes('alluminio')) {
+                        reply = "[Materiali DFM]\n• Raccomandata Lega di Alluminio 6061-T6 (Ergal) per ottima stabilità e finitura.";
                     }
-
-                    const aiMsgDiv = document.createElement('div');
-                    aiMsgDiv.className = 'chat-msg';
-                    aiMsgDiv.innerText = aiReply;
-                    chatContainer.appendChild(aiMsgDiv);
+                    const aDiv = document.createElement('div');
+                    aDiv.className = 'chat-msg';
+                    aDiv.innerText = reply;
+                    chatContainer.appendChild(aDiv);
                     chatContainer.scrollTop = chatContainer.scrollHeight;
-                }, 600);
+                }, 500);
             }
         });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
 
         window.addEventListener('resize', () => {
             camera.aspect = container.clientWidth / container.clientHeight;
