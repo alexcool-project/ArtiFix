@@ -13,7 +13,7 @@ def render_share_section(uploaded_file, t, lang="it"):
     
     include_qr = st.checkbox(t('share_include_qr', default='Genera anche il QR Code'), value=True)
     
-    if st.button(t('share_generate_button', default='🚀 Genera file condivisibile'), type="primary", use_container_width=True):
+    if st.button(t('share_generate_button', default='🚀 Genera link pubblico condivisibile'), type="primary", use_container_width=True):
         file_bytes = uploaded_file.getvalue()
         file_ext = os.path.splitext(uploaded_file.name)[1].lower().replace('.', '')
         b64_data = base64.b64encode(file_bytes).decode('utf-8')
@@ -45,7 +45,6 @@ def render_share_section(uploaded_file, t, lang="it"):
             background: rgba(0,0,0,0.75); color: #fff; padding: 8px 18px; border-radius: 20px;
             font-size: 12px; z-index: 10; border: 1px solid rgba(255,255,255,0.1);
         }}
-        /* Modal Proprietà */
         #modal-overlay {{
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6);
             display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px);
@@ -219,7 +218,6 @@ def render_share_section(uploaded_file, t, lang="it"):
             controls.update();
         }}
 
-        // UI Event Listeners
         document.getElementById('opacityRange').addEventListener('input', (e) => {{
             material.transparent = e.target.value < 1;
             material.opacity = parseFloat(e.target.value);
@@ -266,11 +264,31 @@ def render_share_section(uploaded_file, t, lang="it"):
 </body>
 </html>"""
         
-        st.success("File HTML generato con successo!")
-        st.download_button(
-            label="📥 Scarica Viewer HTML Condivisibile",
-            data=html_content,
-            file_name=f"{project_name}_viewer.html",
-            mime="text/html",
-            use_container_width=True
+        # Generiamo il Data URI Base64 pubblico/condivisibile
+        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+        data_url = f"data:text/html;base64,{b64_html}"
+        
+        st.success("Link pubblico condivisibile generato con successo!")
+        
+        # Mostriamo il link pronto per essere copiato con un comodo box di testo e pulsante
+        st.text_input(
+            "Copia il link web condivisibile (funziona ovunque senza scaricare file):",
+            value=data_url,
+            key="shared_link_output"
         )
+        
+        # Pulsante per aprire direttamente il link in una nuova scheda
+        st.markdown(
+            f'<a href="{data_url}" target="_blank" style="display:block; text-align:center; background:#1f77b4; color:#ffffff; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; margin-top:10px;">🌐 Apri Viewer in Nuova Scheda</a>',
+            unsafe_allow_html=True
+        )
+        
+        if include_qr:
+            try:
+                import qrcode
+                img = qrcode.make(data_url)
+                buf = io.BytesIO()
+                img.save(buf, format="PNG")
+                st.image(buf.getvalue(), caption="QR Code per condivisione rapida su dispositivi mobili", width=200)
+            except Exception:
+                pass
