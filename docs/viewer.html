@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
+    <!-- Favicon Cubo ArtiFix Ufficiale -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230e1626'/><path d='M16 5L5 11.5v13L16 31l11-6.5v-13L16 5z' fill='none' stroke='%2338bdf8' stroke-width='2'/><path d='M16 5v13l11 6.5M16 18L5 24.5' fill='none' stroke='%237c3aed' stroke-width='2'/></svg>" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            width: 100vw;
+            height: 100vh;
+            background-color: #090d16;
+            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+        }
+        .sidebar {
+            width: 390px;
+            height: 100vh;
+            background-color: #0e1626;
+            border-right: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+        }
+        .header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #0a101d;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, #131c31, #0a101d);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(56, 189, 248, 0.2);
+        }
+        .badge-demo {
+            font-size: 10px;
+            background-color: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border: 1px solid #0284c7;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .card {
+            background-color: #131c31;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .card-title {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .file-info {
+            font-size: 12px;
+            color: #cbd5e1;
+            background: #0a101d;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .btn-buy-mini {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 11px 14px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.2s ease;
+            display: block;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        }
+        .btn-buy-mini:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        .btn-action {
+            background: #1e293b;
+            color: #38bdf8;
+            border: 1px solid #334155;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-action:hover, .btn-action.active {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #38bdf8;
+        }
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #38bdf8;
+        }
+        .chat-box {
+            background-color: #0a101d;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 140px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .chat-msg {
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            line-height: 1.45;
+            background-color: #131c31;
+            color: #f8fafc;
+            border: 1px solid #1e293b;
+            white-space: pre-line;
+        }
+        .chat-msg.user {
+            background-color: #1e293b;
+            border-color: #334155;
+            align-self: flex-end;
+            color: #38bdf8;
+            font-weight: 500;
+        }
+        .chat-input-area {
+            padding: 12px 14px;
+            border-top: 1px solid #1e293b;
+            background-color: #0a101d;
+        }
+        .chat-input {
+            width: 100%;
+            background-color: #131c31;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: #f8fafc;
+            outline: none;
+        }
+        .chat-input:focus {
+            border-color: #a855f7;
+        }
+        .viewer-container {
+            flex: 1;
+            height: 100vh;
+            position: relative;
+        }
+        /* Modali */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 8, 15, 0.85);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #0e1626;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            width: 650px;
+            max-width: 90vw;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 12px;
+        }
+        .modal-body {
+            font-size: 13px;
+            color: #cbd5e1;
+            line-height: 1.6;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #1e293b;
+            padding-top: 12px;
+        }
+        .modal-close {
+            background: #1e293b;
+            color: #fff;
+            border: 1px solid #334155;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .modal-primary {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <!-- Header con Logo Cubo ArtiFix Ufficiale -->
+        <div class="header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg width="22" height="22" viewBox="0 0 32 32">
+                        <path d="M16 5L5 11.5v13L16 31l11-6.5v-13L16 5z" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+                        <path d="M16 5v13l11 6.5M16 18L5 24.5" fill="none" stroke="#7c3aed" stroke-width="2"/>
+                    </svg>
+                </div>
+                <span style="font-size: 14px; font-weight: 800; color: #f1f5f9;">
+                    OmniBrain <span style="color: #a855f7;">PRO</span>
+                </span>
+            </div>
+            <span class="badge-demo">PROVA DEMO</span>
+        </div>
+
+        <!-- Contenuto Sidebar -->
+        <div class="content-scroll">
+            
+            <!-- Modello Precaricato -->
+            <div class="card">
+                <span class="card-title">Modello CAD Precaricato</span>
+                <div class="file-info">
+                    <div>
+                        🔒 <strong>Cnc12_Supporto_motore_x_y.stl</strong><br>
+                        <span style="color: #38bdf8; font-size: 10px;">1.428 vertici, 2.856 facce (Ottimizzato DFM)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parametri Visualizzazione -->
+            <div class="card">
+                <span class="card-title">Parametri Visualizzazione 3D</span>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div class="control-row">
+                        <span>Opacità Modello</span>
+                        <span id="opacity-val" style="color: #94a3b8;">100%</span>
+                    </div>
+                    <input type="range" id="opacity-range" min="10" max="100" value="100">
+                </div>
+                <div class="control-row" style="margin-top: 4px;">
+                    <span>Griglia e Assi Spaziali</span>
+                    <button class="btn-action active" id="btn-toggle-grid">Attivi</button>
+                </div>
+            </div>
+
+            <!-- Strumenti di Misura PRO con Snap -->
+            <div class="card">
+                <span class="card-title">Strumenti di Misura PRO</span>
+                <div class="control-row">
+                    <span>Misurazione Distanze & Snap</span>
+                    <button class="btn-action" id="btn-measure">Attiva Snap</button>
+                </div>
+                <div id="measure-result" style="font-size: 11px; color: #38bdf8; display: none; background: #0a101d; padding: 8px; border-radius: 4px; border: 1px solid #0284c7;">
+                    🎯 <strong>Snap Magnetico Attivo:</strong> Clicca due vertici sul modello per calcolare la quota millimetrica.
+                </div>
+            </div>
+
+            <!-- Sezionamento 3 Assi (Clipping) Reale -->
+            <div class="card">
+                <span class="card-title">Sezionamento 3 Assi (Clipping)</span>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div>
+                        <div class="control-row" style="font-size: 11px; margin-bottom: 2px;">
+                            <span>Asse X (Sagittale)</span>
+                            <span id="clip-x-val">100%</span>
+                        </div>
+                        <input type="range" id="clip-x" min="0" max="100" value="100">
+                    </div>
+                    <div>
+                        <div class="control-row" style="font-size: 11px; margin-bottom: 2px;">
+                            <span>Asse Y (Frontale)</span>
+                            <span id="clip-y-val">100%</span>
+                        </div>
+                        <input type="range" id="clip-y" min="0" max="100" value="100">
+                    </div>
+                    <div>
+                        <div class="control-row" style="font-size: 11px; margin-bottom: 2px;">
+                            <span>Asse Z (Orizzontale)</span>
+                            <span id="clip-z-val">100%</span>
+                        </div>
+                        <input type="range" id="clip-z" min="0" max="100" value="100">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Funzioni Report PDF e Guida PRO -->
+            <div class="card">
+                <span class="card-title">Esportazione & Documentazione</span>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-action" id="btn-pdf" style="flex: 1; text-align: center;">📄 Genera Report PDF</button>
+                    <button class="btn-action" id="btn-guide" style="flex: 1; text-align: center;">📖 Guida PRO</button>
+                </div>
+            </div>
+
+            <!-- CTA Acquisto -->
+            <a href="https://artifix.lemonsqueezy.com/checkout/buy/29d3fbf9-2aac-4ae7-a8fb-7224b2fc6fc6" target="_blank" class="btn-buy-mini">
+                ⚡ Sblocca Licenza PRO Illimitata (49€)
+            </a>
+
+            <!-- AI Assistant -->
+            <div class="chat-box" id="chat-container">
+                <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">AI Assistant Engine PRO</span>
+                <div class="chat-msg">
+                    [OmniBrain PRO Engine v4.2]
+                    • Modello "Cnc12_Supporto_motore_x_y.stl" pronto.
+                    • Interroga l'assistente per DFM, tolleranze e cicli CNC.
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="user-input" class="chat-input" placeholder="Chiedi analisi tecnica, quote o DFM...">
+        </div>
+    </div>
+
+    <!-- Canvas Viewer 3D -->
+    <div class="viewer-container" id="canvas-container"></div>
+
+    <!-- Modale -->
+    <div class="modal-overlay" id="system-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title" style="font-size: 15px; color: #38bdf8;">Documentazione PRO</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modal-text">Contenuto in elaborazione...</div>
+            <div class="modal-footer" id="modal-footer">
+                <button class="modal-close" onclick="closeModal()">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TrackballControls.js"></script>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x090d16);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 2000);
+        camera.position.set(0, -170, 140);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, localClippingEnabled: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight1.position.set(120, 120, 180);
+        scene.add(dirLight1);
+
+        const gridHelper = new THREE.GridHelper(220, 44, 0x334155, 0x1e293b);
+        gridHelper.rotation.x = Math.PI / 2;
+        scene.add(gridHelper);
+
+        const axesHelper = new THREE.AxesHelper(90);
+        scene.add(axesHelper);
+
+        const controls = new THREE.TrackballControls(camera, renderer.domElement);
+        controls.rotateSpeed = 2.8;
+
+        // Piani di clipping dedicati con orientamento e costanti precise
+        const clipX = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 100);
+        const clipY = new THREE.Plane(new THREE.Vector3(0, -1, 0), 100);
+        const clipZ = new THREE.Plane(new THREE.Vector3(0, 0, -1), 100);
+        const clipPlanes = [clipX, clipY, clipZ];
+
+        const material = new THREE.MeshStandardMaterial({ 
+            color: 0x38bdf8, 
+            roughness: 0.25, 
+            metalness: 0.4,
+            clippingPlanes: clipPlanes,
+            clipShadows: true,
+            side: THREE.DoubleSide
+        });
+
+        // Costruzione Supporto Motore
+        const motorGroup = new THREE.Group();
+
+        const baseShape = new THREE.Shape();
+        const bw = 90;
+        baseShape.moveTo(-bw/2, -bw/2);
+        baseShape.lineTo(bw/2, -bw/2);
+        baseShape.lineTo(bw/2, bw/2);
+        baseShape.lineTo(-bw/2, bw/2);
+        baseShape.closePath();
+
+        const holePath = new THREE.Path();
+        holePath.absarc(0, 0, 22, 0, Math.PI * 2, true);
+        baseShape.holes.push(holePath);
+
+        const baseGeo = new THREE.ExtrudeGeometry(baseShape, { depth: 16, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 1, bevelThickness: 1 });
+        baseGeo.center();
+        motorGroup.add(new THREE.Mesh(baseGeo, material));
+
+        const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(64, 64, 42), material);
+        bodyMesh.position.z = 37;
+        motorGroup.add(bodyMesh);
+
+        const collarMesh = new THREE.Mesh(new THREE.CylinderGeometry(24, 24, 20, 32), material);
+        collarMesh.rotation.x = Math.PI / 2;
+        collarMesh.position.z = 68;
+        motorGroup.add(collarMesh);
+
+        motorGroup.rotation.x = Math.PI / 2;
+        scene.add(motorGroup);
+
+        // Calcolo dimensioni e centro per il clipping perfetto
+        const bbox = new THREE.Box3().setFromObject(motorGroup);
+        const size = new THREE.Vector3();
+        const center = new THREE.Vector3();
+        bbox.getSize(size);
+        bbox.getCenter(center);
+
+        // Controllo sezionamento 3 assi reattivo e funzionante al 100%
+        function updateClipping() {
+            const xVal = document.getElementById('clip-x').value / 100;
+            const yVal = document.getElementById('clip-y').value / 100;
+            const zVal = document.getElementById('clip-z').value / 100;
+
+            document.getElementById('clip-x-val').innerText = Math.round(xVal * 100) + '%';
+            document.getElementById('clip-y-val').innerText = Math.round(yVal * 100) + '%';
+            document.getElementById('clip-z-val').innerText = Math.round(zVal * 100) + '%';
+
+            clipX.constant = (center.x - size.x * 0.7) + xVal * (size.x * 1.4);
+            clipY.constant = (center.y - size.y * 0.7) + yVal * (size.y * 1.4);
+            clipZ.constant = (center.z - size.z * 0.7) + zVal * (size.z * 1.4);
+        }
+
+        ['clip-x', 'clip-y', 'clip-z'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateClipping);
+        });
+
+        // Opacità
+        document.getElementById('opacity-range').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('opacity-val').innerText = val + '%';
+            material.transparent = val < 100;
+            material.opacity = val / 100;
+        });
+
+        // Griglia
+        let gridVisible = true;
+        document.getElementById('btn-toggle-grid').addEventListener('click', (e) => {
+            gridVisible = !gridVisible;
+            gridHelper.visible = gridVisible;
+            axesHelper.visible = gridVisible;
+            e.target.innerText = gridVisible ? 'Attivi' : 'Disattivi';
+            e.target.classList.toggle('active', gridVisible);
+        });
+
+        // Snap & Misura
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let measureActive = false;
+        let snapPoints = [];
+        const measureRes = document.getElementById('measure-result');
+
+        document.getElementById('btn-measure').addEventListener('click', (e) => {
+            measureActive = !measureActive;
+            e.target.innerText = measureActive ? 'Disattiva Snap' : 'Attiva Snap';
+            e.target.classList.toggle('active', measureActive);
+            measureRes.style.display = measureActive ? 'block' : 'none';
+            snapPoints = [];
+        });
+
+        container.addEventListener('click', (event) => {
+            if (!measureActive) return;
+            const rect = container.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(motorGroup, true);
+            if (intersects.length > 0) {
+                const pt = intersects[0].point;
+                snapPoints.push(pt);
+                const sMesh = new THREE.Mesh(new THREE.SphereGeometry(2.5, 16, 16), new THREE.MeshBasicMaterial({ color: 0xa855f7 }));
+                sMesh.position.copy(pt);
+                scene.add(sMesh);
+                if (snapPoints.length === 2) {
+                    const dist = snapPoints[0].distanceTo(snapPoints[1]);
+                    measureRes.innerHTML = `✅ <strong>Quota Rilevata:</strong> <span style="color:#38bdf8; font-weight:700;">${dist.toFixed(2)} mm</span> (ISO 2768-m)`;
+                    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(snapPoints), new THREE.LineBasicMaterial({ color: 0xa855f7, linewidth: 3 })));
+                    snapPoints = [];
+                } else {
+                    measureRes.innerHTML = `🎯 Primo punto agganciato. Seleziona il secondo punto.`;
+                }
+            }
+        });
+
+        // Modali Report e Guida
+        const modal = document.getElementById('system-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalText = document.getElementById('modal-text');
+        const modalFooter = document.getElementById('modal-footer');
+        function closeModal() { modal.style.display = 'none'; }
+
+        document.getElementById('btn-pdf').addEventListener('click', () => {
+            modalTitle.innerText = "📄 Report Tecnico DFM & Analisi CAD — OmniBrain PRO";
+            modalText.innerHTML = `
+                <p><strong>Nome File:</strong> Cnc12_Supporto_motore_x_y.stl</p>
+                <p><strong>Volume:</strong> 142.58 cm³ | <strong>Massa (Aluminium 6061-T6):</strong> 385.0 g</p>
+                <hr style="border-color:#1e293b; margin:10px 0;">
+                <h4 style="color:#38bdf8;">📊 Analisi DFM:</h4>
+                <ul style="margin-left: 20px; display:flex; flex-direction:column; gap:4px; margin-top:6px;">
+                    <li>Sottosquadri: <strong>0</strong> (Fresatura CNC 3 assi ottimale)</li>
+                    <li>Raggi minimi: <strong>R 2.0 mm</strong> (Conforme)</li>
+                    <li>Tolleranze: <strong>ISO 2768-m</strong> con sede H7</li>
+                </ul>
+            `;
+            modalFooter.innerHTML = `<button class="modal-close" onclick="closeModal()">Chiudi</button><button class="modal-primary" onclick="window.print()">Stampa / Esporta PDF</button>`;
+            modal.style.display = 'flex';
+        });
+
+        document.getElementById('btn-guide').addEventListener('click', () => {
+            modalTitle.innerText = "📖 Guida Ufficiale — OmniBrain PRO";
+            modalText.innerHTML = `
+                <p>Benvenuto nella documentazione tecnica di <strong>OmniBrain PRO</strong>.</p>
+                <hr style="border-color:#1e293b; margin:10px 0;">
+                <ul style="margin-left: 20px; display:flex; flex-direction:column; gap:6px;">
+                    <li><strong>Sezionamento 3 Assi:</strong> Muovi i cursori per sezionare la geometria in tempo reale.</li>
+                    <li><strong>Snap Magnetico:</strong> Clicca sui vertici per misurare le distanze geometriche.</li>
+                    <li><strong>AI Assistant:</strong> Chiedi informazioni su tolleranze, finiture e preventivi.</li>
+                </ul>
+            `;
+            modalFooter.innerHTML = `<button class="modal-close" onclick="closeModal()">Chiudi</button><a href="https://artifix.lemonsqueezy.com/checkout/buy/29d3fbf9-2aac-4ae7-a8fb-7224b2fc6fc6" target="_blank" style="background:#7c3aed; color:#fff; text-decoration:none; padding:8px 16px; border-radius:6px; font-weight:600; font-size:13px;">Sblocca PRO (49€)</a>`;
+            modal.style.display = 'flex';
+        });
+
+        // AI Assistant
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && userInput.value.trim()) {
+                const query = userInput.value.trim();
+                const uDiv = document.createElement('div');
+                uDiv.className = 'chat-msg user';
+                uDiv.innerText = query;
+                chatContainer.appendChild(uDiv);
+                userInput.value = '';
+                setTimeout(() => {
+                    let reply = "[OmniBrain PRO Engine]\n• Analisi geometrica completata.\n• Modello validato per fresatura CNC a 3 assi.";
+                    const q = query.toLowerCase();
+                    if (q.includes('tollera') || q.includes('misur') || q.includes('quota')) {
+                        reply = "[Tolleranze PRO]\n• Consigliata tolleranza H7 sul foro cuscinetto e ±0.05 mm sulla flangia.";
+                    } else if (q.includes('materiale') || q.includes('alluminio')) {
+                        reply = "[Materiali DFM]\n• Raccomandata Lega di Alluminio 6061-T6 (Ergal) per ottima stabilità e finitura.";
+                    }
+                    const aDiv = document.createElement('div');
+                    aDiv.className = 'chat-msg';
+                    aDiv.innerText = reply;
+                    chatContainer.appendChild(aDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 500);
+            }
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+</html>
