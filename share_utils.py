@@ -4,16 +4,23 @@ import os
 
 def render_share_section(uploaded_file, t, lang="it"):
     st.markdown("---")
-    st.markdown(f"### {t('share_section_title', default='Condividi il file 3D generato')}")
+    
+    is_en = (lang == "en")
+    title_text = "Share 3D Model File" if is_en else "Condividi il file 3D generato"
+    name_label = "Project Name (visible to client)" if is_en else "Nome del progetto (visibile al cliente)"
+    qr_label = "Also generate QR Code" if is_en else "Genera anche il QR Code"
+    btn_label = "🚀 Generate Shareable Public Link" if is_en else "🚀 Genera link pubblico condivisibile"
+    
+    st.markdown(f"### {title_text}")
     
     project_name = st.text_input(
-        t('share_project_name', default='Nome del progetto (visibile al cliente)'),
+        name_label,
         value=os.path.splitext(uploaded_file.name)[0] if uploaded_file else "Modello_3D"
     )
     
-    include_qr = st.checkbox(t('share_include_qr', default='Genera anche il QR Code'), value=True)
+    include_qr = st.checkbox(qr_label, value=True)
     
-    if st.button(t('share_generate_button', default='🚀 Genera link pubblico condivisibile'), type="primary", use_container_width=True):
+    if st.button(btn_label, type="primary", use_container_width=True):
         file_bytes = uploaded_file.getvalue()
         file_ext = os.path.splitext(uploaded_file.name)[1].lower().replace('.', '')
         b64_data = base64.b64encode(file_bytes).decode('utf-8')
@@ -156,7 +163,7 @@ def render_share_section(uploaded_file, t, lang="it"):
             const axisLength = maxDim * 0.7;
             const gridSize = maxDim * 2.5;
 
-            scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
+            scene.add(newxl := new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
             scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
             scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
 
@@ -264,22 +271,17 @@ def render_share_section(uploaded_file, t, lang="it"):
 </body>
 </html>"""
         
-        # Generiamo il Data URI Base64 pubblico/condivisibile
         b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
         data_url = f"data:text/html;base64,{b64_html}"
         
-        st.success("Link pubblico condivisibile generato con successo!")
+        success_msg = "Public shareable link generated successfully!" if is_en else "Link pubblico condivisibile generato con successo!"
+        input_label = "Copy shareable web link (works anywhere without downloading files):" if is_en else "Copia il link web condivisibile (funziona ovunque senza scaricare file):"
+        btn_open_label = "🌐 Open Viewer in New Tab" if is_en else "🌐 Apri Viewer in Nuova Scheda"
         
-        # Mostriamo il link pronto per essere copiato con un comodo box di testo e pulsante
-        st.text_input(
-            "Copia il link web condivisibile (funziona ovunque senza scaricare file):",
-            value=data_url,
-            key="shared_link_output"
-        )
-        
-        # Pulsante per aprire direttamente il link in una nuova scheda
+        st.success(success_msg)
+        st.text_input(input_label, value=data_url, key="shared_link_output")
         st.markdown(
-            f'<a href="{data_url}" target="_blank" style="display:block; text-align:center; background:#1f77b4; color:#ffffff; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; margin-top:10px;">🌐 Apri Viewer in Nuova Scheda</a>',
+            f'<a href="{data_url}" target="_blank" style="display:block; text-align:center; background:#1f77b4; color:#ffffff; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; margin-top:10px;">{btn_open_label}</a>',
             unsafe_allow_html=True
         )
         
@@ -289,6 +291,7 @@ def render_share_section(uploaded_file, t, lang="it"):
                 img = qrcode.make(data_url)
                 buf = io.BytesIO()
                 img.save(buf, format="PNG")
-                st.image(buf.getvalue(), caption="QR Code per condivisione rapida su dispositivi mobili", width=200)
+                qr_caption = "QR Code for quick mobile sharing" if is_en else "QR Code per condivisione rapida su dispositivi mobili"
+                st.image(buf.getvalue(), caption=qr_caption, width=200)
             except Exception:
                 pass
