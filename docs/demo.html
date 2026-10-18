@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
+    <!-- Favicon SVG pulita e incorporata -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%237c3aed'/><path d='M16 6L6 12v10l10 6 10-6V12L16 6z' fill='none' stroke='%23ffffff' stroke-width='2'/></svg>" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -193,7 +194,7 @@
 <body>
 
     <div class="sidebar">
-        <!-- Header con logo cubo SVG -->
+        <!-- Header con logo cubo SVG incorporato senza errori 404 -->
         <div class="header">
             <div class="logo-area">
                 <div class="logo-icon">
@@ -362,22 +363,18 @@
             side: THREE.DoubleSide
         });
 
-        // Creazione procedurale del modello meccanico "Cnc12_Supporto_motore_x_y" (perfetto e immediato senza problemi di CORS)
+        // Rendering immediato del supporto motore CNC
         const motorGroup = new THREE.Group();
-
-        // Base flangia
         const baseGeo = new THREE.BoxGeometry(82, 82, 14);
         const baseMesh = new THREE.Mesh(baseGeo, material);
         baseMesh.position.z = 7;
         motorGroup.add(baseMesh);
 
-        // Corpo centrale di supporto
         const bodyGeo = new THREE.BoxGeometry(60, 60, 35);
         const bodyMesh = new THREE.Mesh(bodyGeo, material);
         bodyMesh.position.z = 14 + 17.5;
         motorGroup.add(bodyMesh);
 
-        // Orientamento Z verticale verso l'alto
         motorGroup.rotation.x = Math.PI / 2;
         scene.add(motorGroup);
 
