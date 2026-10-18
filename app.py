@@ -541,7 +541,7 @@ elif page == "Ripara File":
         sponsor_band_placeholder(st.session_state.lang)
 
 # ============================================================
-# VIEWER 3D (Z-up strict, clean grid, model on top at Z=0 + share section)
+# VIEWER 3D (Z-up strict, horizontal grid perpendicular to blue Z axis, share section)
 # ============================================================
 elif page == "Viewer 3D":
     st.header(t("viewer_header"))
@@ -652,6 +652,7 @@ elif page == "Viewer 3D":
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
+                        grid.rotation.x = Math.PI / 2;
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
@@ -691,6 +692,7 @@ elif page == "Viewer 3D":
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
+                        grid.rotation.x = Math.PI / 2;
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
