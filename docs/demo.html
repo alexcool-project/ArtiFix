@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
-    <!-- Favicon Cubo ArtiFix Vettoriale -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230e1626'/><path d='M16 6L6 12v10l10 6 10-6V12L16 6z' fill='none' stroke='%2338bdf8' stroke-width='2.5'/><path d='M16 18L6 12m10 6l10-6m-10 6v10' fill='none' stroke='%237c3aed' stroke-width='2'/></svg>" />
+    <!-- Favicon Cubo ArtiFix Ufficiale Vettoriale -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230a101d'/><path d='M16 6L6 12v10l10 6 10-6V12L16 6z' fill='none' stroke='%2338bdf8' stroke-width='2.5'/><path d='M16 18L6 12m10 6l10-6m-10 6v10' fill='none' stroke='%237c3aed' stroke-width='2'/></svg>" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -193,7 +193,6 @@
             height: 100vh;
             position: relative;
         }
-        /* Modale di Sistema Professionale */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -244,7 +243,7 @@
 <body>
 
     <div class="sidebar">
-        <!-- Header con Logo Cubo ArtiFix -->
+        <!-- Header con Logo Cubo ArtiFix Ufficiale -->
         <div class="header">
             <div class="logo-area">
                 <div class="logo-icon">
@@ -347,7 +346,9 @@
             <div class="chat-box" id="chat-container">
                 <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">AI Assistant Engine PRO</span>
                 <div class="chat-msg">
-                    [OmniBrain PRO Engine v4.2]\n• Modello "Cnc12_Supporto_motore_x_y.stl" analizzato.\n• Pronto per interrogazioni su tolleranze, sezioni e DFM.
+                    [OmniBrain PRO Engine v4.2]
+                    • Modello "Cnc12_Supporto_motore_x_y.stl" analizzato con successo.
+                    • Pronto per interrogazioni avanzate su tolleranze, sezioni e DFM.
                 </div>
             </div>
         </div>
@@ -615,15 +616,15 @@
                 userInput.value = '';
 
                 setTimeout(() => {
-                    let aiReply = `[OmniBrain PRO Engine]\nAnalisi approfondita file "Cnc12_Supporto_motore_x_y.stl":\n• Geometria validata per fresatura CNC ad alta precisione.\n• Dimensioni d'ingombro di base: 90x90 mm con altezza totale 60 mm.\n• Struttura priva di criticità geometriche o facce degenerate.`;
+                    let aiReply = "[OmniBrain PRO Engine]\n• Analisi geometrica file Cnc12_Supporto_motore_x_y.stl completata.\n• Modello validato per fresatura CNC ad alta precisione.\n• Dimensioni d'ingombro: 90x90 mm con altezza totale 60 mm.";
                     
                     const qLower = query.toLowerCase();
                     if (qLower.includes('tollera') || qLower.includes('misur') || qLower.includes('quota')) {
-                        aiReply = `[Analisi Tolleranze PRO]\nPer questo supporto motore si consiglia una tolleranza H7 sui fori di alloggiamento cuscinetto e ±0.1 mm sulle quote di flangia per garantire l'accoppiamento meccanico ottimale.`;
+                        aiReply = "[Analisi Tolleranze PRO]\n• Per questo supporto motore si consiglia una tolleranza H7 sui fori di alloggiamento cuscinetto.\n• Tolleranza geometrica di parallelismo: ±0.05 mm sulle superfici di flangia.";
                     } else if (qLower.includes('materiale') || qLower.includes('alluminio') || qLower.includes('lega')) {
-                        aiReply = `[Analisi Materiali DFM]\nIl pezzo è ideale per la produzione in Lega di Alluminio 6061-T6 (Ergal/Peraluman), garantendo eccellente rigidità torsionale e ottima finitura superficiale da fresatura.`;
+                        aiReply = "[Analisi Materiali DFM]\n• Materiale raccomandato: Lega di Alluminio 6061-T6 (Ergal/Peraluman).\n• Ottimo rapporto rigidità/peso, eccellente stabilità dimensionale e finitura superficiale.";
                     } else if (qLower.includes('costo') || qLower.includes('prezzo') || qLower.includes('lavora')) {
-                        aiReply = `[Preventivazione CNC PRO]\nTempo stimato di lavorazione su centro di lavoro 3 assi: ~14.5 minuti per ciclo completo (sgrossatura + finitura).`;
+                        aiReply = "[Preventivazione CNC PRO]\n• Tempo ciclo stimato su centro di lavoro 3 assi: ~14.5 minuti.\n• Operazioni previste: Sgrossatura ad alto avanzo e finitura superficiale con utensile torico.";
                     }
 
                     const aiMsgDiv = document.createElement('div');
