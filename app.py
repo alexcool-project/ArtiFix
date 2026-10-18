@@ -541,7 +541,7 @@ elif page == "Ripara File":
         sponsor_band_placeholder(st.session_state.lang)
 
 # ============================================================
-# VIEWER 3D (Con controllo preventivo dimensione e streaming binario)
+# VIEWER 3D (Assi allineati alla base e asse Z verticale)
 # ============================================================
 elif page == "Viewer 3D":
     st.header(t("viewer_header"))
@@ -562,23 +562,16 @@ elif page == "Viewer 3D":
                 file_ext = os.path.splitext(viewer_file.name)[1].lower().replace('.', '')
                 file_size_mb = len(file_bytes) / (1024 * 1024)
                 
-                # Controllo preventivo dimensione file per evitare crash su Streamlit Cloud
                 if file_size_mb > MAX_FILE_SIZE_MB:
                     if _is_en():
-                        st.error(f"❌ **File too large for online viewing** ({file_size_mb:.1f} MB). Maximum allowed size is **{MAX_FILE_SIZE_MB} MB**. Please use desktop software (like Blender or FreeCAD) for larger files.")
+                        st.error(f"❌ **File too large for online viewing** ({file_size_mb:.1f} MB). Maximum allowed size is **{MAX_FILE_SIZE_MB} MB**.")
                     else:
-                        st.error(f"❌ **File troppo grande per la visualizzazione online** ({file_size_mb:.1f} MB). Il limite massimo consentito è **{MAX_FILE_SIZE_MB} MB**. Per file più grandi, utilizza un software desktop (come Blender o FreeCAD).")
+                        st.error(f"❌ **File troppo grande per la visualizzazione online** ({file_size_mb:.1f} MB). Il limite massimo consentito è **{MAX_FILE_SIZE_MB} MB**.")
                     st.stop()
 
                 mesh = load_3d_file(file_bytes, file_ext)
                 if mesh and hasattr(mesh, 'vertices') and len(mesh.vertices) > 0:
                     n_verts = len(mesh.vertices)
-                    if n_verts > MAX_VERTS_FOR_HEAVY_EXPORT:
-                        if _is_en():
-                            st.warning(f"⚠️ **High vertex count detected** ({n_verts:,} vertices). Performance in the online viewer might be reduced.")
-                        else:
-                            st.warning(f"⚠️ **Rilevato elevato numero di vertici** ({n_verts:,} vertici). Le prestazioni nel viewer online potrebbero risentirne.")
-
                     st.success(t("viewer_success", vertices=n_verts, faces=len(mesh.faces)))
                     
                     b64_data = base64.b64encode(file_bytes).decode('utf-8')
@@ -640,11 +633,15 @@ elif page == "Viewer 3D":
                         const geometry = loader.parse(bytes.buffer);
                         geometry.computeVertexNormals();
                         
+                        // Calcoliamo la bounding box per centramento perfetto e base sul piano zero
                         geometry.computeBoundingBox();
                         const box = geometry.boundingBox;
                         const size = box.getSize(new THREE.Vector3());
+                        const center = box.getCenter(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z);
-                        geometry.center();
+                        
+                        // Centriamo X e Z sull'origine, posizionando la base a Y = 0 (asse Z blu verticale)
+                        geometry.translate(-center.x, -box.min.y, -center.z);
                         
                         const mesh = new THREE.Mesh(geometry, material);
                         scene.add(mesh);
@@ -652,15 +649,17 @@ elif page == "Viewer 3D":
                         const axisLength = maxDim * 0.7;
                         const gridSize = maxDim * 2.5;
                         
+                        // Assi posizionati esattamente all'origine della base del modello
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
+                        // Griglia posizionata esattamente sul piano di base (Y = 0)
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
-                        grid.position.y = -size.y / 2;
+                        grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
-                        controls.target.set(0, 0, 0);
+                        controls.target.set(0, size.y / 2, 0);
                         camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.5);
                         controls.update();
                         
@@ -679,7 +678,9 @@ elif page == "Viewer 3D":
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z);
                         
-                        object.position.sub(center);
+                        object.position.x -= center.x;
+                        object.position.y -= box.min.y;
+                        object.position.z -= center.z;
                         scene.add(object);
                         
                         const axisLength = maxDim * 0.7;
@@ -690,10 +691,10 @@ elif page == "Viewer 3D":
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
-                        grid.position.y = -size.y / 2;
+                        grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
-                        controls.target.set(0, 0, 0);
+                        controls.target.set(0, size.y / 2, 0);
                         camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.5);
                         controls.update();
                     }}
