@@ -541,7 +541,7 @@ elif page == "Ripara File":
         sponsor_band_placeholder(st.session_state.lang)
 
 # ============================================================
-# VIEWER 3D (Assi allineati alla base, asse Z blu verticale e buffer logaritmico antisfocatura)
+# VIEWER 3D (Assi alla base, asse Z blu verticale e antisfocatura solida)
 # ============================================================
 elif page == "Viewer 3D":
     st.header(t("viewer_header"))
@@ -599,12 +599,11 @@ elif page == "Viewer 3D":
                     const scene = new THREE.Scene();
                     scene.background = new THREE.Color(0xf0f2f6);
                     
-                    const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 1, 10000);
+                    const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 50000);
                     
-                    const renderer = new THREE.WebGLRenderer({{antialias:true, powerPreference: "high-performance"}});
-                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                    const renderer = new THREE.WebGLRenderer({{antialias:true}});
+                    renderer.setPixelRatio(window.devicePixelRatio);
                     renderer.setSize(container.clientWidth, container.clientHeight);
-                    renderer.logarithmicDepthBuffer = true;
                     container.appendChild(renderer.domElement);
                     
                     const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -649,16 +648,15 @@ elif page == "Viewer 3D":
                         const gridSize = maxDim * 2.5;
                         
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
-                        grid.rotation.x = Math.PI / 2;
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
-                        controls.target.set(0, 0, size.z / 2);
-                        camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
+                        controls.target.set(0, size.z / 2, 0);
+                        camera.position.set(maxDim * 1.5, maxDim * 1.5, maxDim * 1.2);
                         controls.update();
                         
                     }} else if (ext === 'obj') {{
@@ -689,16 +687,15 @@ elif page == "Viewer 3D":
                         const gridSize = maxDim * 2.5;
                         
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
-                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
-                        grid.rotation.x = Math.PI / 2;
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
-                        controls.target.set(0, 0, size.z / 2);
-                        camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
+                        controls.target.set(0, size.z / 2, 0);
+                        camera.position.set(maxDim * 1.5, maxDim * 1.5, maxDim * 1.2);
                         controls.update();
                     }}
                     
