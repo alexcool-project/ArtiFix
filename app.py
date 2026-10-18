@@ -633,8 +633,6 @@ elif page == "Viewer 3D":
                         const geometry = loader.parse(bytes.buffer);
                         geometry.computeVertexNormals();
                         
-                        geometry.rotateX(Math.PI / 2);
-                        
                         geometry.computeBoundingBox();
                         const box = geometry.boundingBox;
                         const size = box.getSize(new THREE.Vector3());
@@ -654,7 +652,6 @@ elif page == "Viewer 3D":
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
-                        grid.rotation.x = Math.PI / 2;
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
@@ -674,7 +671,6 @@ elif page == "Viewer 3D":
                         
                         const meshGroup = new THREE.Group();
                         meshGroup.add(object);
-                        meshGroup.rotation.x = Math.PI / 2;
                         
                         const box = new THREE.Box3().setFromObject(meshGroup);
                         const center = box.getCenter(new THREE.Vector3());
@@ -695,7 +691,6 @@ elif page == "Viewer 3D":
                         scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
                         
                         const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
-                        grid.rotation.x = Math.PI / 2;
                         grid.position.set(0, 0, 0);
                         scene.add(grid);
                         
