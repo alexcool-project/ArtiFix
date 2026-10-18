@@ -432,11 +432,11 @@
         const controls = new THREE.TrackballControls(camera, renderer.domElement);
         controls.rotateSpeed = 2.8;
 
-        // Piani di clipping attivi
+        // Piani di clipping globali per il sezionamento 3 assi
         const clipPlanes = [
-            new THREE.Plane(new THREE.Vector3(1, 0, 0), 500),
-            new THREE.Plane(new THREE.Vector3(0, 1, 0), 500),
-            new THREE.Plane(new THREE.Vector3(0, 0, 1), 500)
+            new THREE.Plane(new THREE.Vector3(-1, 0, 0), 100),
+            new THREE.Plane(new THREE.Vector3(0, -1, 0), 100),
+            new THREE.Plane(new THREE.Vector3(0, 0, -1), 100)
         ];
 
         const material = new THREE.MeshStandardMaterial({ 
@@ -566,7 +566,7 @@
             snapPoints = [];
         });
 
-        // Sezionamento 3 Assi Reale (Clipping corretto)
+        // Sezionamento 3 Assi Reale e Calibrato con i cursori
         function updateClipping() {
             const xVal = document.getElementById('clip-x').value / 100;
             const yVal = document.getElementById('clip-y').value / 100;
@@ -576,10 +576,10 @@
             document.getElementById('clip-y-val').innerText = Math.round(yVal * 100) + '%';
             document.getElementById('clip-z-val').innerText = Math.round(zVal * 100) + '%';
 
-            // Invertiamo il segno e scaliamo correttamente per sezionare il modello
-            clipPlanes[0].constant = modelCenter.x + (xVal - 0.5) * (modelSize.x * 1.5);
-            clipPlanes[1].constant = modelCenter.y + (yVal - 0.5) * (modelSize.y * 1.5);
-            clipPlanes[2].constant = modelCenter.z + (zVal - 0.5) * (modelSize.z * 1.5);
+            // Mappatura diretta dei piani di clipping sul bounding box del modello
+            clipPlanes[0].constant = (modelCenter.x - modelSize.x * 0.6) + xVal * (modelSize.x * 1.2);
+            clipPlanes[1].constant = (modelCenter.y - modelSize.y * 0.6) + yVal * (modelSize.y * 1.2);
+            clipPlanes[2].constant = (modelCenter.z - modelSize.z * 0.6) + zVal * (modelSize.z * 1.2);
         }
 
         ['clip-x', 'clip-y', 'clip-z'].forEach(id => {
@@ -663,7 +663,7 @@
                     if (qLower.includes('tollera') || qLower.includes('misur') || qLower.includes('quota')) {
                         aiReply = "[Analisi Tolleranze PRO]\n• Per questo supporto motore si consiglia una tolleranza H7 sui fori di alloggiamento cuscinetto.\n• Tolleranza geometrica di parallelismo: ±0.05 mm sulle superfici di flangia.";
                     } else if (qLower.includes('materiale') || qLower.includes('alluminio') || qLower.includes('lega')) {
-                        aiReply = "[Analisi Materiali DFM]\n• Materiale raccomandato: Lega di Alluminio 6061-T6 (Ergal/Peraluman).\n• Ottimo rapporto rigidità/peso, eccellente stabilità dimensionale e finitura superficiale.";
+                        aiReply = "[Analisi Materiali DFM]\n• caricamento lega di alluminio 6061-T6 (Ergal/Peraluman).\n• Ottimo rapporto rigidità/peso, eccellente stabilità dimensionale e finitura superficiale.";
                     } else if (qLower.includes('costo') || qLower.includes('prezzo') || qLower.includes('lavora')) {
                         aiReply = "[Preventivazione CNC PRO]\n• Tempo ciclo stimato su centro di lavoro 3 assi: ~14.5 minuti.\n• Operazioni previste: Sgrossatura ad alto avanzo e finitura superficiale con utensile torico.";
                     }
