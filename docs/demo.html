@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
-    <link rel="icon" type="image/png" href="ArchiFix_cubo-logo.png" />
+    <!-- Favicon con percorso assoluto/relativo corretto per GitHub Pages -->
+    <link rel="icon" type="image/png" href="../ArchiFix_cubo-logo.png" onerror="this.href='ArchiFix_cubo-logo.png';" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -188,10 +189,10 @@
 <body>
 
     <div class="sidebar">
-        <!-- Header con logo cubo visibile -->
+        <!-- Header con logo cubo e gestione fallback -->
         <div class="header">
             <div class="logo-area">
-                <img src="ArchiFix_cubo-logo.png" alt="ArtiFix Logo">
+                <img src="../ArchiFix_cubo-logo.png" alt="Logo Cubo" onerror="this.onerror=null; this.src='ArchiFix_cubo-logo.png';">
                 <span style="font-size: 14px; font-weight: 800; color: #f1f5f9;">
                     OmniBrain <span style="color: #a855f7;">PRO</span>
                 </span>
@@ -356,24 +357,35 @@
         let bbox = null;
         let modelLoadedSuccessfully = false;
 
-        // Caricamento robusto del file STL
+        // Prova a caricare il file STL tentando sia nella cartella superiore che locale
         const loader = new THREE.STLLoader();
-        loader.load('Cnc12_Supporto_motore_x_y.stl', function (geometry) {
-            geometry.center();
-            geometry.rotateX(-Math.PI / 2);
-            geometry.computeVertexNormals();
+        
+        function loadSTLFile(pathIndex = 0) {
+            const paths = ['Cnc12_Supporto_motore_x_y.stl', '../Cnc12_Supporto_motore_x_y.stl'];
+            if (pathIndex >= paths.length) {
+                document.getElementById('model-status').innerHTML = '<span style="color:#ef4444;">Errore: File STL non trovato</span>';
+                return;
+            }
             
-            bbox = new THREE.Box3().setFromGeometry(geometry);
+            loader.load(paths[pathIndex], function (geometry) {
+                geometry.center();
+                geometry.rotateX(-Math.PI / 2);
+                geometry.computeVertexNormals();
+                
+                bbox = new THREE.Box3().setFromGeometry(geometry);
 
-            loadedMesh = new THREE.Mesh(geometry, material);
-            scene.add(loadedMesh);
-            
-            modelLoadedSuccessfully = true;
-            document.getElementById('model-status').innerText = "712 vertici, 1456 facce (Online)";
-        }, undefined, function (error) {
-            console.error('Errore caricamento STL:', error);
-            document.getElementById('model-status').innerText = "Errore caricamento file STL";
-        });
+                loadedMesh = new THREE.Mesh(geometry, material);
+                scene.add(loadedMesh);
+                
+                modelLoadedSuccessfully = true;
+                document.getElementById('model-status').innerText = "712 vertici, 1456 facce (Online)";
+            }, undefined, function (error) {
+                console.warn('Tentativo percorso fallito:', paths[pathIndex]);
+                loadSTLFile(pathIndex + 1);
+            });
+        }
+
+        loadSTLFile();
 
         function animate() {
             requestAnimationFrame(animate);
@@ -408,7 +420,6 @@
             measureRes.style.display = measureActive ? 'block' : 'none';
         });
 
-        // Eventi pulsanti PDF e Guida
         document.getElementById('btn-pdf').addEventListener('click', () => {
             alert('Funzionalità PRO: Generazione Report PDF DFM disponibile nella versione completa.');
         });
@@ -440,7 +451,6 @@
             document.getElementById(id).addEventListener('input', updateClipping);
         });
 
-        // Chat AI con controllo effettivo sullo stato del modello 3D
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
 
@@ -458,7 +468,7 @@
                 setTimeout(() => {
                     let aiReply = "";
                     if (!modelLoadedSuccessfully) {
-                        aiReply = `[OmniBrain PRO Engine]\n⚠️ Il modello 3D non è ancora completamente visibile a schermo. Attendi il caricamento completo del file STL per avviare l'analisi DFM.`;
+                        aiReply = `[OmniBrain PRO Engine]\n⚠️ Il modello 3D non è ancora visibile a schermo. Verifica che il file STL sia correttamente posizionato nella repository.`;
                     } else {
                         aiReply = `[OmniBrain PRO Engine]\nAnalisi file "Cnc12_Supporto_motore_x_y.stl":\n• Modello visibile e renderizzato con successo (712 vertici, 1456 facce).\n• Orientamento Asse Z corretto verso l'alto.\n• Struttura ottimizzata per lavorazioni meccaniche CNC.`;
                         
