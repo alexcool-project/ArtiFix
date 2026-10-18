@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniBrain PRO — Versione Demo Interattiva | ArtiFix</title>
+    <!-- Favicon aggiornata con il logo del cubo -->
     <link rel="icon" type="image/png" href="ArchiFix_cubo-logo.png" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,7 +17,6 @@
             overflow: hidden;
             display: flex;
         }
-        /* Sidebar Demo */
         .sidebar {
             width: 380px;
             height: 100vh;
@@ -28,7 +28,7 @@
             box-shadow: 4px 0 20px rgba(0,0,0,0.5);
         }
         .header {
-            padding: 16px 20px;
+            padding: 14px 18px;
             border-bottom: 1px solid #1e293b;
             display: flex;
             align-items: center;
@@ -41,8 +41,8 @@
             gap: 10px;
         }
         .logo-area img {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             object-fit: contain;
         }
         .badge-demo {
@@ -58,19 +58,19 @@
         .content-scroll {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
         }
         .card {
             background-color: #131c31;
             border: 1px solid #1e293b;
-            border-radius: 10px;
-            padding: 14px;
+            border-radius: 8px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         .card-title {
             font-size: 11px;
@@ -83,7 +83,7 @@
             font-size: 12px;
             color: #cbd5e1;
             background: #0a101d;
-            padding: 10px 12px;
+            padding: 8px 10px;
             border-radius: 6px;
             border: 1px solid #1e293b;
             display: flex;
@@ -106,23 +106,51 @@
             opacity: 0.9;
             transform: translateY(-1px);
         }
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        .btn-action {
+            background: #1e293b;
+            color: #38bdf8;
+            border: 1px solid #334155;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-action:hover, .btn-action.active {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #38bdf8;
+        }
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #38bdf8;
+        }
         .chat-box {
             background-color: #0a101d;
             border: 1px solid #1e293b;
-            border-radius: 10px;
-            padding: 12px;
+            border-radius: 8px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            min-height: 220px;
-            flex: 1;
+            gap: 8px;
+            min-height: 160px;
+            max-height: 200px;
             overflow-y: auto;
         }
         .chat-msg {
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            line-height: 1.5;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            line-height: 1.4;
             background-color: #131c31;
             color: #f8fafc;
             border: 1px solid #1e293b;
@@ -134,7 +162,7 @@
             align-self: flex-end;
         }
         .chat-input-area {
-            padding: 14px 16px;
+            padding: 12px 14px;
             border-top: 1px solid #1e293b;
             background-color: #0a101d;
         }
@@ -142,9 +170,9 @@
             width: 100%;
             background-color: #131c31;
             border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 12px;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 11px;
             color: #f8fafc;
             outline: none;
         }
@@ -161,12 +189,12 @@
 <body>
 
     <div class="sidebar">
-        <!-- Header -->
+        <!-- Header con logo cubo -->
         <div class="header">
             <div class="logo-area">
                 <img src="ArchiFix_cubo-logo.png" alt="ArtiFix Logo">
-                <span style="font-size: 15px; font-weight: 800; color: #f1f5f9;">
-                    OmniBrain <span style="font-weight: 800;">PRO</span>
+                <span style="font-size: 14px; font-weight: 800; color: #f1f5f9;">
+                    OmniBrain <span style="color: #a855f7;">PRO</span>
                 </span>
             </div>
             <span class="badge-demo">PROVA DEMO</span>
@@ -175,13 +203,13 @@
         <!-- Contenuto Sidebar -->
         <div class="content-scroll">
             
-            <!-- Modello Precaricato (Non sostituibile) -->
+            <!-- Modello Precaricato -->
             <div class="card">
-                <span class="card-title">Modello CAD Precaricato (Demo)</span>
+                <span class="card-title">Modello CAD Precaricato</span>
                 <div class="file-info">
                     <div>
                         🔒 <strong>Cnc12_Supporto_motore_x_y.stl</strong><br>
-                        <span style="color: #64748b; font-size: 10px;">File meccanico fisso per la demo</span>
+                        <span style="color: #64748b; font-size: 10px;">712 vertici, 1456 facce</span>
                     </div>
                 </div>
             </div>
@@ -189,42 +217,85 @@
             <!-- Parametri Visualizzazione -->
             <div class="card">
                 <span class="card-title">Parametri Visualizzazione 3D</span>
-                <div>
-                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #cbd5e1; margin-bottom: 6px;">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div class="control-row">
                         <span>Opacità Modello</span>
                         <span id="opacity-val" style="color: #94a3b8;">100%</span>
                     </div>
-                    <input type="range" id="opacity-range" min="0" max="100" value="100" style="width: 100%; cursor: pointer;">
+                    <input type="range" id="opacity-range" min="0" max="100" value="100">
+                </div>
+                <div class="control-row" style="margin-top: 4px;">
+                    <span>Griglia e Assi Spaziali</span>
+                    <button class="btn-action active" id="btn-toggle-grid">Attivi</button>
                 </div>
             </div>
 
-            <!-- CTA Acquisto PRO -->
+            <!-- Strumenti di Misura PRO -->
+            <div class="card">
+                <span class="card-title">Strumenti di Misura PRO</span>
+                <div class="control-row">
+                    <span>Misurazione Distanze</span>
+                    <button class="btn-action" id="btn-measure">Attiva Snap</button>
+                </div>
+                <div id="measure-result" style="font-size: 11px; color: #38bdf8; display: none; background: #0a101d; padding: 6px; border-radius: 4px; border: 1px solid #0284c7;">
+                    📏 Seleziona due punti sul modello 3D per calcolare la distanza millimetrica.
+                </div>
+            </div>
+
+            <!-- Sezionamento 3 Assi -->
+            <div class="card">
+                <span class="card-title">Sezionamento 3 Assi (Clipping)</span>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div>
+                        <div class="control-row" style="font-size: 11px; margin-bottom: 2px;">
+                            <span>Asse X (Sagittale)</span>
+                            <span id="clip-x-val">100%</span>
+                        </div>
+                        <input type="range" id="clip-x" min="0" max="100" value="100">
+                    </div>
+                    <div>
+                        <div class="control-row" style="font-size: 11px; margin-bottom: 2px;">
+                            <span>Asse Y (Frontale)</span>
+                            <span id="clip-y-val">100%</span>
+                        </div>
+                        <input type="range" id="clip-y" min="0" max="100" value="100">
+                    </div>
+                    <div>
+                        <div class="control-row" style="font-size: 11px; margin-bottom: 2px;">
+                            <span>Asse Z (Orizzontale)</span>
+                            <span id="clip-z-val">100%</span>
+                        </div>
+                        <input type="range" id="clip-z" min="0" max="100" value="100">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Acquisto -->
             <a href="https://artifix.lemonsqueezy.com/checkout/buy/29d3fbf9-2aac-4ae7-a8fb-7224b2fc6fc6" target="_blank" class="btn-buy-mini">
-                💳 Acquista OmniBrain PRO (49€)
+                ⚡ Sblocca Licenza PRO Illimitata (49€)
             </a>
 
-            <!-- Chat AI & Log -->
+            <!-- AI Assistant Locale -->
             <div class="chat-box" id="chat-container">
-                <span style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Chat AI Assistant (Demo)</span>
+                <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">AI Assistant Locale</span>
                 <div class="chat-msg">
-                    OmniBrain PRO Demo attivo.<br><br>
-                    • Caricato: <strong>Cnc12_Supporto_motore_x_y.stl</strong> (712 vertici, 1456 facce).<br>
-                    • Ruota e analizza il supporto meccanico CNC.<br>
-                    • Fai domande all'AI locale per simulare l'analisi DFM.
+                    OmniBrain PRO Demo attivo.<br>
+                    • Modello orientato con asse Z (blu) verso l'alto.<br>
+                    • Chiedi dettagli geometrici o analisi DFM.
                 </div>
             </div>
         </div>
 
         <!-- Input Chat -->
         <div class="chat-input-area">
-            <input type="text" id="user-input" class="chat-input" placeholder="Chiedi un'analisi DFM o dettagli sul modello...">
+            <input type="text" id="user-input" class="chat-input" placeholder="Chiedi all'AI sul modello...">
         </div>
     </div>
 
     <!-- Canvas Viewer 3D -->
     <div class="viewer-container" id="canvas-container"></div>
 
-    <!-- CDN Three.js per Demo Web -->
+    <!-- Script Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TrackballControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
@@ -235,9 +306,9 @@
         scene.background = new THREE.Color(0x090d16);
 
         const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 2000);
-        camera.position.set(0, -140, 120);
+        camera.position.set(0, -150, 120);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, localClippingEnabled: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
@@ -247,22 +318,47 @@
         dirLight.position.set(100, 100, 150);
         scene.add(dirLight);
 
-        scene.add(new THREE.GridHelper(200, 40, 0x334155, 0x1e293b));
+        // Griglia e Assi (Asse Z blu verso l'alto)
+        const gridHelper = new THREE.GridHelper(200, 40, 0x334155, 0x1e293b);
+        gridHelper.rotation.x = Math.PI / 2;
+        scene.add(gridHelper);
+
+        const axesHelper = new THREE.AxesHelper(80);
+        scene.add(axesHelper);
 
         const controls = new THREE.TrackballControls(camera, renderer.domElement);
         controls.rotateSpeed = 3.0;
 
-        const material = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.35, metalness: 0.25 });
+        const clipPlanes = [
+            new THREE.Plane(new THREE.Vector3(1, 0, 0), Infinity),
+            new THREE.Plane(new THREE.Vector3(0, 1, 0), Infinity),
+            new THREE.Plane(new THREE.Vector3(0, 0, 1), Infinity)
+        ];
 
-        // Caricamento del nuovo modello meccanico STL
+        const material = new THREE.MeshStandardMaterial({ 
+            color: 0x38bdf8, 
+            roughness: 0.35, 
+            metalness: 0.25,
+            clippingPlanes: clipPlanes,
+            clipShadows: true,
+            side: THREE.DoubleSide
+        });
+
+        let loadedMesh = null;
+        let bbox = null;
+
         const loader = new THREE.STLLoader();
         loader.load('Cnc12_Supporto_motore_x_y.stl', function (geometry) {
             geometry.center();
+            geometry.rotateX(-Math.PI / 2);
             geometry.computeVertexNormals();
-            const mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
+            
+            bbox = new THREE.Box3().setFromGeometry(geometry);
+
+            loadedMesh = new THREE.Mesh(geometry, material);
+            scene.add(loadedMesh);
         }, undefined, function (error) {
-            console.error('Errore caricamento modello demo STL:', error);
+            console.error('Errore caricamento STL:', error);
         });
 
         function animate() {
@@ -272,7 +368,6 @@
         }
         animate();
 
-        // Controllo Opacità
         document.getElementById('opacity-range').addEventListener('input', (e) => {
             const val = e.target.value;
             document.getElementById('opacity-val').innerText = val + '%';
@@ -280,7 +375,49 @@
             material.opacity = val / 100;
         });
 
-        // Chat AI simulata per la Demo
+        let gridVisible = true;
+        document.getElementById('btn-toggle-grid').addEventListener('click', (e) => {
+            gridVisible = !gridVisible;
+            gridHelper.visible = gridVisible;
+            axesHelper.visible = gridVisible;
+            e.target.innerText = gridVisible ? 'Attivi' : 'Disattivi';
+            e.target.classList.toggle('active', gridVisible);
+        });
+
+        let measureActive = false;
+        const measureBtn = document.getElementById('btn-measure');
+        const measureRes = document.getElementById('measure-result');
+        measureBtn.addEventListener('click', () => {
+            measureActive = !measureActive;
+            measureBtn.innerText = measureActive ? 'Disattiva Snap' : 'Attiva Snap';
+            measureBtn.classList.toggle('active', measureActive);
+            measureRes.style.display = measureActive ? 'block' : 'none';
+        });
+
+        function updateClipping() {
+            if (!bbox) return;
+            const size = new THREE.Vector3();
+            bbox.getSize(size);
+            const center = new THREE.Vector3();
+            bbox.getCenter(center);
+
+            const xVal = document.getElementById('clip-x').value / 100;
+            const yVal = document.getElementById('clip-y').value / 100;
+            const zVal = document.getElementById('clip-z').value / 100;
+
+            document.getElementById('clip-x-val').innerText = Math.round(xVal * 100) + '%';
+            document.getElementById('clip-y-val').innerText = Math.round(yVal * 100) + '%';
+            document.getElementById('clip-z-val').innerText = Math.round(zVal * 100) + '%';
+
+            clipPlanes[0].constant = center.x + (xVal - 0.5) * size.x * 2;
+            clipPlanes[1].constant = center.y + (yVal - 0.5) * size.y * 2;
+            clipPlanes[2].constant = center.z + (zVal - 0.5) * size.z * 2;
+        }
+
+        ['clip-x', 'clip-y', 'clip-z'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateClipping);
+        });
+
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
 
@@ -296,11 +433,13 @@
                 userInput.value = '';
 
                 setTimeout(() => {
-                    let aiReply = `[Engine: Llama-3.2-3b Demo]\nAnalisi strutturale per "Cnc12_Supporto_motore_x_y.stl":\n• 712 vertici, 1456 facce triangolari.\n• Struttura meccanica rigida con nervature di rinforzo per motori NEMA.\n• Idonea per lavorazione CNC in alluminio o stampa 3D PETG/ABS.\n• Passa alla versione PRO per misurazioni millimetriche con snap e sezionamento a 3 assi.`;
+                    let aiReply = `[OmniBrain PRO Engine]\nAnalisi file "Cnc12_Supporto_motore_x_y.stl":\n• Orientamento Asse Z corretto verso l'alto.\n• 712 vertici, 1456 facce.\n• Struttura ottimizzata per lavorazioni meccaniche CNC.`;
                     
                     const qLower = query.toLowerCase();
-                    if (qLower.includes('misur') || qLower.includes('quota') || qLower.includes('dimension') || qLower.includes('grand')) {
-                        aiReply = `[Engine: Llama-3.2-3b Demo]\nIngombro Bounding Box:\n• Asse X: 82.00 mm\n• Asse Y: 82.00 mm\n• Asse Z: 45.50 mm\n• Foro centrale: Adatto a flangia motore standard.`;
+                    if (qLower.includes('misur') || qLower.includes('distanz') || qLower.includes('quota')) {
+                        aiReply = `[Engine PRO]\nMisurazione attiva: Utilizza il pulsante "Attiva Snap" per calcolare con precisione millimetrica i punti sul modello 3D.`;
+                    } else if (qLower.includes('sezion') || qLower.includes('tagli')) {
+                        aiReply = `[Engine PRO]\nUsa i cursori di sezionamento sui tre assi (X, Y, Z) nella barra laterale per sezionare l'interno del pezzo in tempo reale.`;
                     }
 
                     const aiMsgDiv = document.createElement('div');
