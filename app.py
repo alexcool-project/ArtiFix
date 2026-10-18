@@ -541,7 +541,7 @@ elif page == "Ripara File":
         sponsor_band_placeholder(st.session_state.lang)
 
 # ============================================================
-# VIEWER 3D (Ottimizzato con caricamento binario Base64)
+# VIEWER 3D (Con streaming binario e Bounding Box dinamica)
 # ============================================================
 elif page == "Viewer 3D":
     st.header(t("viewer_header"))
@@ -591,7 +591,6 @@ elif page == "Viewer 3D":
                     scene.background = new THREE.Color(0xf0f2f6);
                     
                     const camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 5000);
-                    camera.position.set(15, 12, 15);
                     
                     const renderer = new THREE.WebGLRenderer({{antialias:true}});
                     renderer.setPixelRatio(window.devicePixelRatio);
@@ -609,14 +608,6 @@ elif page == "Viewer 3D":
                     dirLight.position.set(15, 30, 15);
                     scene.add(dirLight);
                     
-                    const al = 8;
-                    scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), al, 0xff4444, 0.5, 0.3));
-                    scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), al, 0x44ff44, 0.5, 0.3));
-                    scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), al, 0x4444ff, 0.5, 0.3));
-                    
-                    const grid = new THREE.GridHelper(40, 40, 0x888888, 0xcccccc);
-                    scene.add(grid);
-                    
                     const b64Data = "{b64_data}";
                     const binaryString = atob(b64Data);
                     const len = binaryString.length;
@@ -632,22 +623,65 @@ elif page == "Viewer 3D":
                         const loader = new THREE.STLLoader();
                         const geometry = loader.parse(bytes.buffer);
                         geometry.computeVertexNormals();
-                        const mesh = new THREE.Mesh(geometry, material);
+                        
+                        // Normalizzazione e Bounding Box dinamica
                         geometry.computeBoundingBox();
+                        const box = geometry.boundingBox;
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
                         geometry.center();
+                        
+                        const mesh = new THREE.Mesh(geometry, material);
                         scene.add(mesh);
+                        
+                        // Assi e griglia proporzionati al modello
+                        const axisLength = maxDim * 0.7;
+                        const gridSize = maxDim * 2.5;
+                        
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
+                        
+                        const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
+                        grid.position.y = -size.y / 2;
+                        scene.add(grid);
+                        
                         controls.target.set(0, 0, 0);
-                        camera.position.set(0, 0, geometry.boundingBox.max.z * 3 || 50);
+                        camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.5);
                         controls.update();
+                        
                     }} else if (ext === 'obj') {{
                         const textDecoder = new TextDecoder();
                         const objText = textDecoder.decode(bytes);
                         const loader = new THREE.OBJLoader();
                         const object = loader.parse(objText);
+                        
                         object.traverse((child) => {{
                             if (child.isMesh) child.material = material;
                         }});
+                        
+                        const box = new THREE.Box3().setFromObject(object);
+                        const center = box.getCenter(new THREE.Vector3());
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        
+                        object.position.sub(center);
                         scene.add(object);
+                        
+                        const axisLength = maxDim * 0.7;
+                        const gridSize = maxDim * 2.5;
+                        
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
+                        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
+                        
+                        const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0xcccccc);
+                        grid.position.y = -size.y / 2;
+                        scene.add(grid);
+                        
+                        controls.target.set(0, 0, 0);
+                        camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.5);
+                        controls.update();
                     }}
                     
                     function animate() {{
@@ -715,7 +749,7 @@ elif page == "Converti Formati":
                         result_bytes, error_msg = convert_mesh(mesh, target_ext)
                         if result_bytes:
                             st.success("Conversione completata!")
-                            st.download_button(label=f"📥 Scarica {target_ext.upper()}", data=result_bytes, file_name=f"{os.path.splitext(file_name)[0]}.target_ext", use_container_width=True)
+                            st.download_button(label=f"📥 Scarica {target_ext.upper()}", data=result_bytes, file_name=f"{os.path.splitext(file_name)[0]}.{target_ext}", use_container_width=True)
                         else:
                             st.error(f"Errore: {error_msg}")
                     else:
