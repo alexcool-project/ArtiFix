@@ -9,7 +9,7 @@ def render_share_section(uploaded_file, t, lang="it"):
     title_text = "Share 3D Model File" if is_en else "Condividi il file 3D generato"
     name_label = "Project Name (visible to client)" if is_en else "Nome del progetto (visibile al cliente)"
     qr_label = "Also generate QR Code" if is_en else "Genera anche il QR Code"
-    btn_label = "🚀 Genera Link Condivisibile" if is_en else "🚀 Genera Link Condivisibile"
+    btn_label = "🚀 Genera File HTML Condivisibile" if is_en else "🚀 Genera File HTML Condivisibile"
     
     st.markdown(f"### {title_text}")
     
@@ -272,14 +272,11 @@ def render_share_section(uploaded_file, t, lang="it"):
 </body>
 </html>"""
         
-        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-        data_url = f"data:text/html;base64,{b64_html}"
-        
-        st.success("Viewer generato con successo!")
-        st.markdown("**Copia il link per la condivisione rapida:**")
-        st.code(data_url, language="text")
-        
-        st.markdown(
-            f'<a href="{data_url}" target="_blank" style="display:block; text-align:center; background:#1f77b4; color:#ffffff; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; margin-top:10px;">🌐 Apri Viewer in Nuova Scheda</a>',
-            unsafe_allow_html=True
+        st.success("Viewer HTML generato con successo!")
+        st.download_button(
+            label="📥 Scarica Viewer 3D Completo (Funziona ovunque)",
+            data=html_content,
+            file_name=f"{project_name}_viewer.html",
+            mime="text/html",
+            use_container_width=True
         )
