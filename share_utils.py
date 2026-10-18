@@ -1,313 +1,205 @@
-"""
-Utility per la condivisione di viewer HTML 3D su GitHub Pages.
-
-Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con pulsanti "📸 Scatta foto" e "💾 Scarica HTML".
-
-Espone:
-  - render_share_section(uploaded_file, t, lang): pulsante + nota + form
-  - handle_share_action(...): elabora file e pubblica viewer
-
-Usato da 'Viewer 3D' in app.py.
-"""
-from __future__ import annotations
-
-import html
-import os
-import tempfile
-from pathlib import Path
-
 import streamlit as st
+import base64
+import os
 
-
-def render_share_info_tooltip(t) -> None:
-    """Mostra la nota informativa (i) con spiegazione della condivisione."""
-    with st.expander(t("share_info_tooltip"), expanded=False):
-        st.markdown(f"### {t('share_info_title')}")
-        st.markdown(t("share_info_body"))
-        st.markdown("---")
-        st.markdown(t("share_info_features"))
-        st.markdown("---")
-        st.markdown(t("share_info_use_cases"))
-
-
-def _render_copy_button(url: str, label: str, t) -> None:
-    """Renderizza un pulsante 'Copia link' con feedback visivo tradotto."""
-    safe_url = html.escape(url, quote=True)
-    clean_label = label.replace("📋 ", "").replace(" 📋", "").strip()
-    display_label = f"📋 {clean_label}" if clean_label else "📋 Copia link"
-
-    copied_text = t("share_copy_success")
-    error_text = t("share_copy_error")
-
-    copy_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
+def render_share_section(uploaded_file, t, lang="it"):
+    st.markdown("---")
+    st.markdown(f"### {t('share_section_title', default='Condividi il file 3D generato')}")
+    
+    project_name = st.text_input(
+        t('share_project_name', default='Nome del progetto (visibile al cliente)'),
+        value=os.path.splitext(uploaded_file.name)[0] if uploaded_file else "Modello_3D"
+    )
+    
+    include_qr = st.checkbox(t('share_include_qr', default='Genera anche il QR Code'), value=True)
+    
+    if st.button(t('share_generate_button', default='🚀 Genera file condivisibile'), type="primary", use_container_width=True):
+        file_bytes = uploaded_file.getvalue()
+        file_ext = os.path.splitext(uploaded_file.name)[1].lower().replace('.', '')
+        b64_data = base64.b64encode(file_bytes).decode('utf-8')
+        
+        html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{project_name} - ArtiFix 3D Viewer</title>
     <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        body {{ margin: 0; overflow: hidden; background: #1a1a1a; font-family: sans-serif; }}
+        #canvas-container {{ width: 100vw; height: 100vh; display: block; }}
+        .ui-panel {{
+            position: absolute; top: 20px; right: 20px; background: rgba(30, 30, 30, 0.85);
+            padding: 15px; border-radius: 8px; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px); z-index: 10; display: flex; flex-direction: column; gap: 10px;
         }}
-        .copy-btn {{
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            padding: 12px 24px;
-            background: #1f77b4;
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease, transform 0.1s ease;
+        .ui-panel label {{ font-size: 12px; color: #aaa; }}
+        .ui-panel input[type="range"] {{ width: 150px; cursor: pointer; }}
+        .btn-group {{ display: flex; gap: 5px; }}
+        .ui-btn {{ background: #333; color: #fff; border: 1px solid #555; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }}
+        .ui-btn.active {{ background: #1f77b4; border-color: #1f77b4; }}
+        #info-bar {{
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: #fff; padding: 6px 16px; border-radius: 20px;
+            font-size: 12px; pointer-events: none; z-index: 10;
         }}
-        .copy-btn:hover {{ background: #155a8a; }}
-        .copy-btn:active {{ transform: scale(0.98); }}
-        .copy-btn.copied {{ background: #2ecc71; }}
     </style>
-    </head>
-    <body>
-    <button class="copy-btn" id="copyBtn" onclick="copyLink()">
-        <span id="btnText">{display_label}</span>
-    </button>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/PLYLoader.js"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="info-bar">{project_name} | Z-up View</div>
+    
+    <div class="ui-panel">
+        <label>OPACITÀ</label>
+        <input type="range" id="opacityRange" min="0.1" max="1" step="0.05" value="1">
+        <label>VISUALIZZAZIONE</label>
+        <div class="btn-group">
+            <button class="ui-btn active" id="btnSmooth">Smooth</button>
+            <button class="ui-btn" id="btnWire">Wireframe</button>
+        </div>
+    </div>
 
     <script>
-        function copyLink() {{
-            const url = "{safe_url}";
-            const btn = document.getElementById('copyBtn');
-            const txt = document.getElementById('btnText');
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a1a);
 
-            if (navigator.clipboard && window.isSecureContext) {{
-                navigator.clipboard.writeText(url).then(() => {{
-                    showSuccess();
-                }}).catch(err => {{
-                    fallbackCopy(url);
-                }});
-            }} else {{
-                fallbackCopy(url);
-            }}
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50000);
+        camera.up.set(0, 0, 1);
 
-            function fallbackCopy(text) {{
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                ta.style.position = 'fixed';
-                ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.select();
-                try {{
-                    document.execCommand('copy');
-                    showSuccess();
-                }} catch (err) {{
-                    txt.textContent = '{error_text}';
-                }}
-                document.body.removeChild(ta);
-            }}
+        const renderer = new THREE.WebGLRenderer({{ antialias: true }});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
 
-            function showSuccess() {{
-                btn.classList.add('copied');
-                txt.textContent = '{copied_text}';
-                setTimeout(() => {{
-                    btn.classList.remove('copied');
-                    txt.textContent = '{display_label}';
-                }}, 2500);
-            }}
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(15, -15, 30);
+        scene.add(dirLight);
+
+        const b64Data = "{b64_data}";
+        const binaryString = atob(b64Data);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {{
+            bytes[i] = binaryString.charCodeAt(i);
         }}
+
+        const ext = "{file_ext}";
+        let loadedMesh = null;
+        const material = new THREE.MeshStandardMaterial({{ color: 0x1f77b4, roughness: 0.4, metalness: 0.1, side: THREE.DoubleSide }});
+
+        function setupModel(geometry) {{
+            geometry.computeVertexNormals();
+            geometry.computeBoundingBox();
+            const box = geometry.boundingBox;
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+
+            geometry.translate(-center.x, -center.y, -box.min.z);
+
+            loadedMesh = new THREE.Mesh(geometry, material);
+            scene.add(loadedMesh);
+
+            const axisLength = maxDim * 0.7;
+            const gridSize = maxDim * 2.5;
+
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
+
+            const grid = new THREE.GridHelper(gridSize, 20, 0x555555, 0x333333);
+            grid.rotation.x = Math.PI / 2;
+            grid.position.set(0, 0, 0);
+            scene.add(grid);
+
+            controls.target.set(0, 0, size.z / 2);
+            camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
+            controls.update();
+        }}
+
+        if (ext === 'stl') {{
+            const loader = new THREE.STLLoader();
+            const geom = loader.parse(bytes.buffer);
+            setupModel(geom);
+        }} else if (ext === 'obj') {{
+            const textDecoder = new TextDecoder();
+            const objText = textDecoder.decode(bytes);
+            const loader = new THREE.OBJLoader();
+            const object = loader.parse(objText);
+            const group = new THREE.Group();
+            group.add(object);
+            
+            scene.add(group);
+            const box = new THREE.Box3().setFromObject(group);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            
+            group.position.set(-center.x, -center.y, -box.min.z);
+            
+            const axisLength = maxDim * 0.7;
+            const gridSize = maxDim * 2.5;
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
+            scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
+            
+            const grid = new THREE.GridHelper(gridSize, 20, 0x555555, 0x333333);
+            grid.rotation.x = Math.PI / 2;
+            scene.add(grid);
+            
+            controls.target.set(0, 0, size.z / 2);
+            camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
+            controls.update();
+        }}
+
+        document.getElementById('opacityRange').addEventListener('input', (e) => {{
+            material.transparent = e.target.value < 1;
+            material.opacity = parseFloat(e.target.value);
+        }});
+
+        document.getElementById('btnSmooth').addEventListener('click', () => {{
+            material.wireframe = false;
+            document.getElementById('btnSmooth').classList.add('active');
+            document.getElementById('btnWire').classList.remove('active');
+        }});
+
+        document.getElementById('btnWire').addEventListener('click', () => {{
+            material.wireframe = true;
+            document.getElementById('btnWire').classList.add('active');
+            document.getElementById('btnSmooth').classList.remove('active');
+        }});
+
+        function animate() {{
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }}
+        animate();
+
+        window.addEventListener('resize', () => {{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }});
     </script>
-    </body>
-    </html>
-    """
-
-    st.components.v1.html(copy_html, height=60)
-
-
-def handle_share_action(
-    uploaded_file,
-    project_title: str,
-    generate_qr: bool,
-    t,
-    lang: str = "it",
-) -> None:
-    """
-    Genera il viewer HTML, applica la correzione per l'asse Z verticale e lo pubblica su GitHub Pages.
-    """
-    try:
-        from mesh2u3d.io.mesh_reader import MeshReader
-        from mesh2u3d.html.writer import mesh_to_html
-        from mesh2u3d.share import share_html_viewer
-    except ImportError as e:
-        st.error(f"❌ Libreria `mesh2u3d` non disponibile: {e}")
-        st.info("💡 Controlla `requirements.txt`.")
-        return
-
-    progress = st.progress(0)
-    status = st.empty()
-
-    try:
-        # Step 1 — Leggi mesh
-        status.text(t("share_status_loading"))
-        progress.progress(20)
-
-        file_ext = os.path.splitext(uploaded_file.name)[1].lower()
-        with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as tmp:
-            tmp.write(uploaded_file.getvalue())
-            tmp_path = tmp.name
-
-        try:
-            mesh_data = MeshReader.read(tmp_path)
-            status.text(
-                t("share_status_processing").format(
-                    v=mesh_data.vertex_count, f=mesh_data.triangle_count
-                )
-            )
-            progress.progress(50)
-
-            # Step 2 — Genera viewer HTML
-            html_path = Path(tempfile.gettempdir()) / f"{mesh_data.name}.html"
-            mesh_to_html(
-                mesh_data,
-                html_path,
-                title=project_title or mesh_data.name,
-                source_format=file_ext.replace(".", "").upper(),
-                lang=lang,
-            )
-
-            # Patch dell'HTML generato per allineare l'asse Z in verticale e ancorare il modello a Z=0
-            with open(html_path, "r", encoding="utf-8") as f:
-                html_content = f.read()
-
-            custom_geometry_script = """
-            // Patch ArtiFix: orientamento asse Z blu verticale e ancoraggio alla base
-            if (typeof geometry !== 'undefined') {
-                geometry.computeBoundingBox();
-                const box = geometry.boundingBox;
-                const size = box.getSize(new THREE.Vector3());
-                const center = box.getCenter(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                
-                geometry.translate(-center.x, -center.y, -box.min.z);
-                geometry.rotateX(Math.PI / 2);
-                
-                const axisLength = maxDim * 0.7;
-                const gridSize = maxDim * 2.5;
-                
-                scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
-                scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
-                scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
-                
-                const grid = new THREE.GridHelper(gridSize, 20, 0x888888, 0x444444);
-                grid.position.set(0, 0, 0);
-                scene.add(grid);
-                
-                if (typeof controls !== 'undefined' && typeof camera !== 'undefined') {
-                    controls.target.set(0, size.z / 2, 0);
-                    camera.position.set(maxDim * 1.5, maxDim * 1.5, maxDim * 1.2);
-                    controls.update();
-                }
-            }
-            """
-
-            if "renderer.render" in html_content:
-                html_content = html_content.replace("renderer.render", custom_geometry_script + "\nrenderer.render")
-                with open(html_path, "w", encoding="utf-8") as f:
-                    f.write(html_content)
-
-            # Step 3 — Pubblica su GitHub Pages
-            status.text(t("share_status_publishing"))
-            progress.progress(75)
-
-            result = share_html_viewer(
-                html_path,
-                title=project_title or mesh_data.name,
-                generate_qr=generate_qr,
-            )
-            progress.progress(100)
-            status.text(t("share_status_done"))
-
-        finally:
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
-
-        # --- Mostra risultato ---
-        st.success(t("share_success"))
-        st.warning(t("share_warning_propagation"))
-        st.markdown("---")
-        st.subheader(t("share_result_title"))
-        st.markdown(f"**{t('share_result_url')}**")
-        st.code(result["url"], language=None)
-        _render_copy_button(result["url"], t("share_copy_link"), t)
-
-        if result.get("qr_path"):
-            st.markdown("---")
-            st.subheader(t("share_qr_title"))
-            st.image(result["qr_path"], width=250, caption=t("share_qr_caption"))
-            with open(result["qr_path"], "rb") as f:
-                st.download_button(
-                    t("share_download_qr"),
-                    data=f.read(),
-                    file_name=f"{result['viewer_id']}_qr.png",
-                    mime="image/png",
-                    use_container_width=True,
-                )
-
-        st.info(t("share_info_id").format(id=result["viewer_id"]))
-
-    except Exception as e:
-        progress.empty()
-        status.empty()
-        st.error(t("share_error").format(error=str(e)))
-        with st.expander("🔍 Dettagli errore", expanded=False):
-            st.exception(e)
-
-
-def render_share_section(uploaded_file, t, lang: str = "it") -> None:
-    """
-    Renderizza la sezione di condivisione sotto il viewer.
-
-    Parameters
-    ----------
-    uploaded_file : file caricato dall'utente
-    t : funzione di traduzione
-    lang : lingua corrente ("it" o "en")
-    """
-    st.markdown("---")
-    st.markdown(f"### {t('share_button')}")
-    render_share_info_tooltip(t)
-
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        base_name = os.path.splitext(uploaded_file.name)[0]
-        project_title = st.text_input(
-            t("share_project_title"),
-            value=base_name,
-            key="share_project_title",
-        )
-    with col2:
-        generate_qr = st.checkbox(
-            t("share_generate_qr"),
-            value=True,
-            key="share_generate_qr",
-        )
-
-    # --- Pulsante unico: genera viewer HTML ---
-    if st.button(
-        t("share_generate_button"),
-        type="primary",
-        use_container_width=True,
-        key="share_generate_button",
-    ):
-        handle_share_action(
-            uploaded_file,
-            project_title,
-            generate_qr,
-            t,
-            lang=lang,
+</body>
+</html>"""
+        
+        st.success("File HTML generato con successo!")
+        st.download_button(
+            label="📥 Scarica Viewer HTML Condivisibile",
+            data=html_content,
+            file_name=f"{project_name}_viewer.html",
+            mime="text/html",
+            use_container_width=True
         )
