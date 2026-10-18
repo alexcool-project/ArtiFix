@@ -1,6 +1,7 @@
 import streamlit as st
 import base64
 import os
+import requests
 
 def render_share_section(uploaded_file, t, lang="it"):
     st.markdown("---")
@@ -9,7 +10,7 @@ def render_share_section(uploaded_file, t, lang="it"):
     title_text = "Share 3D Model File" if is_en else "Condividi il file 3D generato"
     name_label = "Project Name (visible to client)" if is_en else "Nome del progetto (visibile al cliente)"
     qr_label = "Also generate QR Code" if is_en else "Genera anche il QR Code"
-    btn_label = "🚀 Genera Link Pubblico Condivisibile" if is_en else "🚀 Genera Link Pubblico Condivisibile"
+    btn_label = "🚀 Genera Link https:// Pubblico" if is_en else "🚀 Genera Link https:// Pubblico"
     
     st.markdown(f"### {title_text}")
     
@@ -21,7 +22,6 @@ def render_share_section(uploaded_file, t, lang="it"):
     
     include_qr = st.checkbox(qr_label, value=True, key="checkbox_include_qr_share")
     
-    # Usiamo un unique key per il pulsante
     if st.button(btn_label, type="primary", use_container_width=True, key="btn_generate_share_link"):
         file_bytes = uploaded_file.getvalue()
         file_ext = os.path.splitext(uploaded_file.name)[1].lower().replace('.', '')
@@ -273,29 +273,57 @@ def render_share_section(uploaded_file, t, lang="it"):
 </body>
 </html>"""
         
-        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-        data_url = f"data:text/html;base64,{b64_html}"
-        
-        success_msg = "Public shareable link generated successfully!" if is_en else "Link pubblico condivisibile generato con successo!"
-        st.success(success_msg)
-        
-        # Mostriamo il link in un blocco di codice con il tasto di copia rapida integrato di Streamlit
-        st.markdown("**Copia il link pubblico (clicca sull'icona in alto a destra del box per copiarlo):**" if not is_en else "**Copy public share link:**")
-        st.code(data_url, language="text")
-        
-        btn_open_label = "🌐 Open Viewer in New Tab" if is_en else "🌐 Apri Viewer in Nuova Scheda"
-        st.markdown(
-            f'<a href="{data_url}" target="_blank" style="display:block; text-align:center; background:#1f77b4; color:#ffffff; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; margin-top:10px;">{btn_open_label}</a>',
-            unsafe_allow_html=True
-        )
-        
-        if include_qr:
+        # Pubblichiamo istantaneamente il file HTML su un servizio di paste/hosting pubblico HTTPS via API
+        public_url = ""
+        try:
+            response = requests.post(
+                "https://hastebin.com/documents",
+                data=html_content.encode('utf-8'),
+                timeout=5
+            )
+            if response.status_code == 200:
+                key = response.json().get("key")
+                public_url = f"https://hastebin.com/raw/{key}"
+        except Exception:
+            pass
+            
+        # Fallback a un servizio alternativo se hastebin fallisce
+        if not public_url:
             try:
-                import qrcode
-                img = qrcode.make(data_url)
-                buf = io.BytesIO()
-                img.save(buf, format="PNG")
-                qr_caption = "QR Code for quick mobile sharing" if is_en else "QR Code per condivisione rapida su dispositivi mobili"
-                st.image(buf.getvalue(), caption=qr_caption, width=200)
+                response = requests.post(
+                    "https://dpaste.com/api/",
+                    data={
+                        "content": html_content,
+                        "syntax": "html",
+                        "expiry_days": 7
+                    },
+                    timeout=5
+                )
+                if response.status_code in [200, 201, 302]:
+                    public_url = response.url.strip()
+                    if not public_url.endswith(".txt") and not public_url.endswith("/raw/"):
+                        public_url = public_url.rstrip("/") + ".txt"
             except Exception:
                 pass
+
+        if public_url:
+            st.success("Link https:// pubblico generato con successo!")
+            st.markdown("**Copia il link https:// ufficiale da inviare al cliente:**")
+            st.code(public_url, language="text")
+            
+            st.markdown(
+                f'<a href="{public_url}" target="_blank" style="display:block; text-align:center; background:#1f77b4; color:#ffffff; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; margin-top:10px;">🌐 Apri Viewer in Nuova Scheda</a>',
+                unsafe_allow_html=True
+            )
+            
+            if include_qr:
+                try:
+                    import qrcode
+                    img = qrcode.make(public_url)
+                    buf = io.BytesIO()
+                    img.save(buf, format="PNG")
+                    st.image(buf.getvalue(), caption="QR Code per condivisione rapida", width=200)
+                except Exception:
+                    pass
+        else:
+            st.error("Errore di connessione al servizio di hosting pubblico. Riprova tra poco.")
