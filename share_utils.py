@@ -17,6 +17,7 @@ def render_share_section(uploaded_file, t, lang="it"):
         file_bytes = uploaded_file.getvalue()
         file_ext = os.path.splitext(uploaded_file.name)[1].lower().replace('.', '')
         b64_data = base64.b64encode(file_bytes).decode('utf-8')
+        file_size_mb = len(file_bytes) / (1024 * 1024)
         
         html_content = f"""<!DOCTYPE html>
 <html>
@@ -24,23 +25,40 @@ def render_share_section(uploaded_file, t, lang="it"):
     <meta charset="utf-8">
     <title>{project_name} - ArtiFix 3D Viewer</title>
     <style>
-        body {{ margin: 0; overflow: hidden; background: #1a1a1a; font-family: sans-serif; }}
+        body {{ margin: 0; overflow: hidden; background: #1a1a1a; font-family: Arial, sans-serif; }}
         #canvas-container {{ width: 100vw; height: 100vh; display: block; }}
         .ui-panel {{
-            position: absolute; top: 20px; right: 20px; background: rgba(30, 30, 30, 0.85);
-            padding: 15px; border-radius: 8px; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            backdrop-filter: blur(5px); z-index: 10; display: flex; flex-direction: column; gap: 10px;
+            position: absolute; top: 20px; right: 20px; background: rgba(30, 30, 30, 0.9);
+            padding: 15px; border-radius: 10px; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            backdrop-filter: blur(6px); z-index: 10; display: flex; flex-direction: column; gap: 12px; width: 220px;
         }}
-        .ui-panel label {{ font-size: 12px; color: #aaa; }}
-        .ui-panel input[type="range"] {{ width: 150px; cursor: pointer; }}
-        .btn-group {{ display: flex; gap: 5px; }}
-        .ui-btn {{ background: #333; color: #fff; border: 1px solid #555; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }}
+        .ui-panel label {{ font-size: 11px; color: #aaa; font-weight: bold; letter-spacing: 0.5px; }}
+        .ui-panel input[type="range"] {{ width: 100%; cursor: pointer; accent-color: #1f77b4; }}
+        .btn-group {{ display: flex; gap: 6px; }}
+        .ui-btn {{ background: #333; color: #fff; border: 1px solid #555; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; flex: 1; text-align: center; transition: background 0.2s; }}
+        .ui-btn:hover {{ background: #444; }}
         .ui-btn.active {{ background: #1f77b4; border-color: #1f77b4; }}
+        .action-btn {{ width: 100%; background: #1f77b4; color: #fff; border: none; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 4px; }}
+        .action-btn:hover {{ background: #155a8a; }}
         #info-bar {{
             position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.7); color: #fff; padding: 6px 16px; border-radius: 20px;
-            font-size: 12px; pointer-events: none; z-index: 10;
+            background: rgba(0,0,0,0.75); color: #fff; padding: 8px 18px; border-radius: 20px;
+            font-size: 12px; z-index: 10; border: 1px solid rgba(255,255,255,0.1);
         }}
+        /* Modal Proprietà */
+        #modal-overlay {{
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6);
+            display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px);
+        }}
+        .modal-content {{
+            background: #242424; padding: 25px; border-radius: 12px; width: 350px; color: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #444;
+        }}
+        .modal-content h3 {{ margin-top: 0; color: #1f77b4; font-size: 18px; }}
+        .modal-row {{ display: flex; justify-content: space-between; margin: 10px 0; font-size: 13px; border-bottom: 1px solid #333; padding-bottom: 6px; }}
+        .modal-row span:last-child {{ color: #ccc; font-weight: bold; }}
+        .close-modal {{ background: #444; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }}
+        .close-modal:hover {{ background: #555; }}
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -55,10 +73,27 @@ def render_share_section(uploaded_file, t, lang="it"):
     <div class="ui-panel">
         <label>OPACITÀ</label>
         <input type="range" id="opacityRange" min="0.1" max="1" step="0.05" value="1">
+        
         <label>VISUALIZZAZIONE</label>
         <div class="btn-group">
             <button class="ui-btn active" id="btnSmooth">Smooth</button>
             <button class="ui-btn" id="btnWire">Wireframe</button>
+        </div>
+
+        <label>STRUMENTI</label>
+        <button class="action-btn" id="btnPhoto">📸 Scatta Foto</button>
+        <button class="action-btn" id="btnInfo" style="background: #333; border: 1px solid #555;">ℹ️ Proprietà File</button>
+    </div>
+
+    <div id="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>Proprietà Modello</h3>
+            <div class="modal-row"><span>Nome File:</span><span>{project_name}.{file_ext}</span></div>
+            <div class="modal-row"><span>Formato:</span><span>{file_ext.upper()}</span></div>
+            <div class="modal-row"><span>Dimensione:</span><span>{file_size_mb:.2f} MB</span></div>
+            <div class="modal-row"><span>Vertici:</span><span id="lblVerts">-</span></div>
+            <div class="modal-row"><span>Facce:</span><span id="lblFaces">-</span></div>
+            <button class="close-modal" id="btnCloseModal">Chiudi</button>
         </div>
     </div>
 
@@ -70,7 +105,7 @@ def render_share_section(uploaded_file, t, lang="it"):
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50000);
         camera.up.set(0, 0, 1);
 
-        const renderer = new THREE.WebGLRenderer({{ antialias: true }});
+        const renderer = new THREE.WebGLRenderer({{ antialias: true, preserveDrawingBuffer: true }});
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(renderer.domElement);
@@ -110,6 +145,15 @@ def render_share_section(uploaded_file, t, lang="it"):
             loadedMesh = new THREE.Mesh(geometry, material);
             scene.add(loadedMesh);
 
+            if (geometry.index) {{
+                document.getElementById('lblFaces').innerText = geometry.index.count / 3;
+            }} else if (geometry.attributes.position) {{
+                document.getElementById('lblFaces').innerText = geometry.attributes.position.count / 3;
+            }}
+            if (geometry.attributes.position) {{
+                document.getElementById('lblVerts').innerText = geometry.attributes.position.count;
+            }}
+
             const axisLength = maxDim * 0.7;
             const gridSize = maxDim * 2.5;
 
@@ -147,6 +191,19 @@ def render_share_section(uploaded_file, t, lang="it"):
             
             group.position.set(-center.x, -center.y, -box.min.z);
             
+            let totalVerts = 0;
+            let totalFaces = 0;
+            object.traverse((child) => {{
+                if (child.isMesh && child.geometry) {{
+                    const g = child.geometry;
+                    if (g.attributes.position) totalVerts += g.attributes.position.count;
+                    if (g.index) totalFaces += g.index.count / 3;
+                    else if (g.attributes.position) totalFaces += g.attributes.position.count / 3;
+                }}
+            }});
+            document.getElementById('lblVerts').innerText = totalVerts;
+            document.getElementById('lblFaces').innerText = totalFaces;
+
             const axisLength = maxDim * 0.7;
             const gridSize = maxDim * 2.5;
             scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
@@ -162,6 +219,7 @@ def render_share_section(uploaded_file, t, lang="it"):
             controls.update();
         }}
 
+        // UI Event Listeners
         document.getElementById('opacityRange').addEventListener('input', (e) => {{
             material.transparent = e.target.value < 1;
             material.opacity = parseFloat(e.target.value);
@@ -178,6 +236,19 @@ def render_share_section(uploaded_file, t, lang="it"):
             document.getElementById('btnWire').classList.add('active');
             document.getElementById('btnSmooth').classList.remove('active');
         }});
+
+        document.getElementById('btnPhoto').addEventListener('click', () => {{
+            renderer.render(scene, camera);
+            const dataURL = renderer.domElement.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = '{project_name}_screenshot.png';
+            link.href = dataURL;
+            link.click();
+        }});
+
+        const modal = document.getElementById('modal-overlay');
+        document.getElementById('btnInfo').addEventListener('click', () => {{ modal.style.display = 'flex'; }});
+        document.getElementById('btnCloseModal').addEventListener('click', () => {{ modal.style.display = 'none'; }});
 
         function animate() {{
             requestAnimationFrame(animate);
