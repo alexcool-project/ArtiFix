@@ -2,7 +2,7 @@
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con pulsante per la generazione del report PDF.
+con pulsante per la generazione del report PDF e log di debug avanzati.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
@@ -135,7 +135,7 @@ def handle_share_action(
     lang: str = "it",
 ) -> None:
     """
-    Genera il viewer HTML e lo pubblica su GitHub Pages.
+    Genera il viewer HTML e lo pubblica su GitHub Pages con log di debug.
     """
     try:
         from mesh2u3d.io.mesh_reader import MeshReader
@@ -273,7 +273,6 @@ def handle_share_action(
                     }}, 1000);
                 }});
                 </script>
-                </body>
                 """
 
                 if "</body>" in html_code:
@@ -288,6 +287,12 @@ def handle_share_action(
                 title=project_title or mesh_data.name,
                 generate_qr=generate_qr,
             )
+            
+            # --- LOG DI DEBUG AGGIUNTI ---
+            print("--- DEBUG SHARE RESULT ---")
+            print(result)
+            st.write("🔍 **Debug Risultato Condivisione:**", result)
+
             progress.progress(100)
             status.text(t("share_status_done"))
 
