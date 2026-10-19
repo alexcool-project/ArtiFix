@@ -1,28 +1,35 @@
+import streamlit as st
 import base64
 import os
 
-def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
-    """
-    Legge un file 3D (es. STL) e genera una stringa HTML autonoma contenente 
-    il viewer interattivo Three.js, l'identità visiva ArtiFix e il modello incorporato in Base64.
-    """
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File non trovato: {file_path}")
-
-    # Leggi il file binario e convertilo in Base64 per l'embedding nativo nell'HTML
-    with open(file_path, "rb") as f:
-        file_bytes = f.read()
-        encoded_data = base64.b64encode(file_bytes).decode("utf-8")
-
-    file_size_mb = len(file_bytes) / (1024 * 1024)
-    file_ext = os.path.splitext(file_path)[1].lower().replace('.', '')
-
-    html_content = f"""<!DOCTYPE html>
+def render_share_section(uploaded_file, t, lang="it"):
+    st.markdown("---")
+    
+    is_en = (lang == "en")
+    title_text = "Share 3D Model" if is_en else "Condividi il modello 3D"
+    name_label = "Project Name (visible to client)" if is_en else "Nome del progetto (visibile al cliente)"
+    btn_label = "🚀 Genera Viewer 3D ArtiFix" if is_en else "🚀 Genera Viewer 3D ArtiFix"
+    
+    st.markdown(f"### {title_text}")
+    
+    project_name = st.text_input(
+        name_label,
+        value=os.path.splitext(uploaded_file.name)[0] if uploaded_file else "Modello_3D",
+        key="input_project_name_share"
+    )
+    
+    if st.button(btn_label, type="primary", use_container_width=True, key="btn_generate_share_link"):
+        file_bytes = uploaded_file.getvalue()
+        file_ext = os.path.splitext(uploaded_file.name)[1].lower().replace('.', '')
+        encoded_data = base64.b64encode(file_bytes).decode('utf-8')
+        file_size_mb = len(file_bytes) / (1024 * 1024)
+        
+        html_content = f"""<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArtiFix 3D Viewer - {model_name}</title>
+    <title>ArtiFix 3D Viewer - {project_name}</title>
     <style>
         body, html {{
             margin: 0; padding: 0; width: 100vw; height: 100vh;
@@ -31,7 +38,6 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
         }}
         #canvas-container {{ width: 100vw; height: 100vh; display: block; }}
         
-        /* Brand Header & Watermark ArtiFix */
         .artifix-brand {{
             position: absolute; top: 20px; left: 20px; display: flex; align-items: center; gap: 12px;
             background: rgba(15, 23, 42, 0.85); padding: 10px 16px; border-radius: 12px;
@@ -42,7 +48,6 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
         .brand-logo:hover {{ color: #7dd3fc; }}
         .model-badge {{ font-size: 12px; color: #94a3b8; border-left: 1px solid rgba(148, 163, 184, 0.3); padding-left: 12px; }}
 
-        /* UI Control Panel */
         .ui-panel {{
             position: absolute; top: 20px; right: 20px; background: rgba(15, 23, 42, 0.85);
             padding: 16px; border-radius: 12px; color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
@@ -58,14 +63,12 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
         .action-btn {{ width: 100%; background: #0284c7; color: #fff; border: none; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 4px; transition: background 0.2s; }}
         .action-btn:hover {{ background: #0369a1; }}
 
-        /* Info Bar in basso */
         #info-bar {{
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.85); color: #94a3b8; padding: 8px 18px; border-radius: 20px;
             font-size: 12px; z-index: 10; border: 1px solid rgba(148, 163, 184, 0.2); backdrop-filter: blur(8px);
         }}
 
-        /* Modale Proprietà File */
         #modal-overlay {{
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7);
             display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(6px);
@@ -80,7 +83,6 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
         .close-modal {{ background: #334155; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }}
         .close-modal:hover {{ background: #475569; }}
     </style>
-    <!-- Import di Three.js e loader tramite CDN ufficiale -->
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">
       {{
@@ -94,16 +96,14 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
 <body>
     <div id="canvas-container"></div>
     
-    <!-- Header con Brand ArtiFix e Cubo interattivo -->
     <div class="artifix-brand">
         <a href="https://artifix.it" target="_blank" class="brand-logo" title="Visita ArtiFix.it">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
             ArtiFix
         </a>
-        <div class="model-badge">{model_name}</div>
+        <div class="model-badge">{project_name}</div>
     </div>
 
-    <!-- Pannello UI laterale -->
     <div class="ui-panel">
         <label>OPACITÀ</label>
         <input type="range" id="opacityRange" min="0.1" max="1" step="0.05" value="1">
@@ -121,11 +121,10 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
 
     <div id="info-bar">ArtiFix 3D Viewer | Z-up System</div>
 
-    <!-- Modale Proprietà -->
     <div id="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h3>Proprietà Modello 3D</h3>
-            <div class="modal-row"><span>Nome File:</span><span>{model_name}.{file_ext}</span></div>
+            <div class="modal-row"><span>Nome File:</span><span>{project_name}.{file_ext}</span></div>
             <div class="modal-row"><span>Formato:</span><span>{file_ext.upper()}</span></div>
             <div class="modal-row"><span>Dimensione:</span><span>{file_size_mb:.2f} MB</span></div>
             <div class="modal-row"><span>Vertici:</span><span id="lblVerts">-</span></div>
@@ -140,7 +139,6 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
         import {{ STLLoader }} from 'three/addons/loaders/STLLoader.js';
 
         const container = document.getElementById('canvas-container');
-        
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0b0f19);
 
@@ -162,14 +160,11 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
         dirLight.position.set(300, 300, 500);
         scene.add(dirLight);
 
-        // Decodifica del modello in Base64 incorporato nel file HTML
         const base64Data = "{encoded_data}";
         const binaryString = atob(base64Data);
         const len = binaryString.length;
         const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {{
-            bytes[i] = binaryString.charCodeAt(i);
-        }}
+        for (let i = 0; i < len; i++) {{ bytes[i] = binaryString.charCodeAt(i); }}
 
         const loader = new STLLoader();
         const geometry = loader.parse(bytes.buffer);
@@ -193,7 +188,6 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
         const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
 
-        // Statistiche Vertici e Facce
         if (geometry.index) {{
             document.getElementById('lblFaces').innerText = geometry.index.count / 3;
         }} else if (geometry.attributes.position) {{
@@ -203,7 +197,6 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
             document.getElementById('lblVerts').innerText = geometry.attributes.position.count;
         }}
 
-        // Griglia e Assi Z-up allineati
         const axisLength = maxDim * 0.7;
         const gridSize = maxDim * 2.5;
         scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xef4444, axisLength*0.1, axisLength*0.06));
@@ -218,7 +211,6 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
         camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
         controls.update();
 
-        // Gestione Interattività UI
         document.getElementById('opacityRange').addEventListener('input', (e) => {{
             material.transparent = e.target.value < 1;
             material.opacity = parseFloat(e.target.value);
@@ -240,7 +232,7 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
             renderer.render(scene, camera);
             const dataURL = renderer.domElement.toDataURL('image/png');
             const link = document.createElement('a');
-            link.download = '{model_name}_screenshot.png';
+            link.download = '{project_name}_screenshot.png';
             link.href = dataURL;
             link.click();
         }});
@@ -265,4 +257,12 @@ def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
 </body>
 </html>
 """
-    return html_content
+        
+        st.success("Viewer HTML generato con successo!")
+        st.download_button(
+            label="📥 Scarica Viewer 3D ArtiFix (HTML Autonomo)",
+            data=html_content,
+            file_name=f"{project_name}_viewer.html",
+            mime="text/html",
+            use_container_width=True
+        )
