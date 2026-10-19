@@ -187,38 +187,38 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing robusto del file HTML generato ---
+            # --- Post-processing definitivo per allineare gli assi al vertice del modello su z=0 ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
-                # Sostituiamo la logica di centratura originale di mesh2u3d con il posizionamento 
-                # del vertice minimo (box.min) esattamente sull'origine (0,0,0) del piano z=0.
-                target_js_block = """
+                # Sostituiamo la centratura standard di mesh2u3d con il posizionamento dell'angolo minimo su (0,0,0)
+                translation_replacement = """
                 geometry.computeBoundingBox();
                 const box = geometry.boundingBox;
-                const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
 
-                // Allinea il vertice inferiore/esterno del modello all'origine (0,0,0)
+                // Sposta la geometria affinché il vertice d'angolo (box.min) coincida con l'origine (0,0,0) sul piano z=0
                 geometry.translate(-box.min.x, -box.min.y, -box.min.z);
                 geometry.computeBoundingBox();
-                const newBox = geometry.boundingBox;
-                const newCenter = newBox.getCenter(new THREE.Vector3());
+                const updatedBox = geometry.boundingBox;
+                const updatedCenter = updatedBox.getCenter(new THREE.Vector3());
                 """
                 
-                # Cerchiamo blocchi simili di calcolo bounding box/centratura nel codice JS generato da mesh2u3d
+                # Cerca e rimpiazza le chiamate di traslazione/centratura geometrica
                 html_code = re.sub(
-                    r'geometry\.computeBoundingBox\(\);\s*const\s+box\s*=\s*geometry\.boundingBox;[^}]*geometry\.translate\([^)]+\);',
-                    target_js_block,
+                    r'geometry\.computeBoundingBox\(\);\s*(?:const|let)\s+box\s*=\s*geometry\.boundingBox;[^}]*geometry\.(?:center|translate)\([^)]*\);',
+                    translation_replacement,
                     html_code,
                     flags=re.DOTALL
                 )
+                
+                # Se non trova esattamente quel blocco, cerchiamo almeno geometry.translate o geometry.center isolati
+                html_code = re.sub(r'geometry\.center\(\);', '/* geometry.center disabled */', html_code)
 
-                # Assicuriamoci che i controlli orbitali abbiano il target al centro del modello traslato 
-                # e la rotazione verticale sbloccata a 360 gradi.
-                controls_fix = """
-                controls.target.copy(newCenter);
+                # Aggiorniamo il target dei controlli orbitali sul centro del modello traslato e sblocchiamo la rotazione a 360°
+                controls_replacement = """
+                controls.target.copy(updatedCenter);
                 controls.maxPolarAngle = Math.PI;
                 controls.minDistance = 0.1;
                 controls.maxDistance = maxDim * 10;
@@ -227,7 +227,7 @@ def handle_share_action(
                 
                 html_code = re.sub(
                     r'controls\.target\.set\([^)]+\);',
-                    controls_fix,
+                    controls_replacement,
                     html_code
                 )
 
