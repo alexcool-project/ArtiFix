@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import html
 import os
+import re
 import tempfile
 from pathlib import Path
 
@@ -186,54 +187,51 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing definitivo via JS iniettato nell'HTML ---
+            # --- Post-processing robusto del file HTML generato ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
-                # Script JS iniettato per riposizionare la mesh sul piano z=0 (angolo inferiore) 
-                # e garantire rotazione libera a 360° senza limiti sui controlli orbitali.
-                injection_script = """
-                <script>
-                window.addEventListener('DOMContentLoaded', () => {
-                    setTimeout(() => {
-                        if (typeof scene !== 'undefined' && typeof controls !== 'undefined') {
-                            // Trova la mesh del modello
-                            let targetMesh = null;
-                            scene.traverse((child) => {
-                                if (child.isMesh && !child.isGridHelper && !child.isAxesHelper) {
-                                    targetMesh = child;
-                                }
-                            });
-                            
-                            if (targetMesh && targetMesh.geometry) {
-                                targetMesh.geometry.computeBoundingBox();
-                                const box = targetMesh.geometry.computeBoundingBox() || targetMesh.geometry.boundingBox;
-                                if (box) {
-                                    // Sposta i vertici in modo che l'angolo minimo sia esattamente a (0,0,0)
-                                    const min = box.min;
-                                    targetMesh.geometry.translate(-min.x, -min.y, -min.z);
-                                    targetMesh.geometry.computeBoundingBox();
-                                    
-                                    // Aggiorna il centro per i controlli orbitali
-                                    const newBox = targetMesh.geometry.boundingBox;
-                                    const center = newBox.getCenter(new THREE.Vector3());
-                                    controls.target.copy(center);
-                                    controls.maxPolarAngle = Math.PI; // Sblocca la rotazione verticale completa a 360°
-                                    controls.minDistance = 0.1;
-                                    controls.maxDistance = 10000;
-                                    controls.update();
-                                }
-                            }
-                        }
-                    }, 500);
-                });
-                </script>
-                </body>
+                # Sostituiamo la logica di centratura originale di mesh2u3d con il posizionamento 
+                # del vertice minimo (box.min) esattamente sull'origine (0,0,0) del piano z=0.
+                target_js_block = """
+                geometry.computeBoundingBox();
+                const box = geometry.boundingBox;
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+
+                // Allinea il vertice inferiore/esterno del modello all'origine (0,0,0)
+                geometry.translate(-box.min.x, -box.min.y, -box.min.z);
+                geometry.computeBoundingBox();
+                const newBox = geometry.boundingBox;
+                const newCenter = newBox.getCenter(new THREE.Vector3());
                 """
                 
-                if "</body>" in html_code:
-                    html_code = html_code.replace("</body>", injection_script)
-                    html_path.write_text(html_code, encoding="utf-8")
+                # Cerchiamo blocchi simili di calcolo bounding box/centratura nel codice JS generato da mesh2u3d
+                html_code = re.sub(
+                    r'geometry\.computeBoundingBox\(\);\s*const\s+box\s*=\s*geometry\.boundingBox;[^}]*geometry\.translate\([^)]+\);',
+                    target_js_block,
+                    html_code,
+                    flags=re.DOTALL
+                )
+
+                # Assicuriamoci che i controlli orbitali abbiano il target al centro del modello traslato 
+                # e la rotazione verticale sbloccata a 360 gradi.
+                controls_fix = """
+                controls.target.copy(newCenter);
+                controls.maxPolarAngle = Math.PI;
+                controls.minDistance = 0.1;
+                controls.maxDistance = maxDim * 10;
+                controls.update();
+                """
+                
+                html_code = re.sub(
+                    r'controls\.target\.set\([^)]+\);',
+                    controls_fix,
+                    html_code
+                )
+
+                html_path.write_text(html_code, encoding="utf-8")
 
             # Step 3 — Pubblica su GitHub Pages
             status.text(t("share_status_publishing"))
