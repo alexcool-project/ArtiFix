@@ -187,25 +187,23 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing definitivo per allineare gli assi al vertice del modello su z=0 ---
+            # --- Post-processing per ancorare il vertice del modello e gli assi direttamente sul piano z=0 ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
-                # Sostituiamo la centratura standard di mesh2u3d con il posizionamento dell'angolo minimo su (0,0,0)
                 translation_replacement = """
                 geometry.computeBoundingBox();
                 const box = geometry.boundingBox;
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
 
-                // Sposta la geometria affinché il vertice d'angolo (box.min) coincida con l'origine (0,0,0) sul piano z=0
+                // Ancoraggio perfetto: il vertice minimo del modello poggia esattamente su (0,0,0) del piano griglia
                 geometry.translate(-box.min.x, -box.min.y, -box.min.z);
                 geometry.computeBoundingBox();
                 const updatedBox = geometry.boundingBox;
                 const updatedCenter = updatedBox.getCenter(new THREE.Vector3());
                 """
                 
-                # Cerca e rimpiazza le chiamate di traslazione/centratura geometrica
                 html_code = re.sub(
                     r'geometry\.computeBoundingBox\(\);\s*(?:const|let)\s+box\s*=\s*geometry\.boundingBox;[^}]*geometry\.(?:center|translate)\([^)]*\);',
                     translation_replacement,
@@ -213,10 +211,8 @@ def handle_share_action(
                     flags=re.DOTALL
                 )
                 
-                # Se non trova esattamente quel blocco, cerchiamo almeno geometry.translate o geometry.center isolati
                 html_code = re.sub(r'geometry\.center\(\);', '/* geometry.center disabled */', html_code)
 
-                # Aggiorniamo il target dei controlli orbitali sul centro del modello traslato e sblocchiamo la rotazione a 360°
                 controls_replacement = """
                 controls.target.copy(updatedCenter);
                 controls.maxPolarAngle = Math.PI;
