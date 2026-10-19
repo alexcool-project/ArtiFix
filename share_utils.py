@@ -2,7 +2,7 @@
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con pulsanti di scatto foto e generazione report PDF formale.
+con tema chiaro, assi orientati (Z-up) e generazione di report PDF formale.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
@@ -187,7 +187,7 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing: orientamento Z-Up (rotazione 90° X), allineamento z=0 e Report PDF pulito ---
+            # --- Post-processing: Tema Chiaro, orientamento Z-Up identico alla dashboard e Report PDF formale ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
@@ -196,10 +196,19 @@ def handle_share_action(
                 if "</head>" in html_code:
                     html_code = html_code.replace("</head>", f"{jspdf_cdn}</head>")
 
-                # 1. Rotazione di 90° attorno all'asse X per rendere l'asse Z blu verticale verso l'alto
-                # e traslazione del vertice minimo su (0,0,0) a contatto col piano z=0
+                # 1. Forziamo il tema chiaro (sfondo bianco/grigio chiaro come la dashboard)
+                light_theme_css = """
+                <style>
+                    body { background-color: #f8fafc !important; color: #1e293b !important; }
+                    .sidebar, .panel, .ui-container { background: #ffffff !important; color: #1e293b !important; border-color: #e2e8f0 !important; }
+                </style>
+                """
+                if "</head>" in html_code:
+                    html_code = html_code.replace("</head>", f"{light_theme_css}</head>")
+
+                # 2. Correzione geometrica identica alla dashboard: modello orientato con Z-Up verticale sul piano z=0
                 translation_replacement = """
-                geometry.rotateX(Math.PI / 2);
+                // Allineamento identico alla dashboard (Z-Up verticale sul piano z=0)
                 geometry.computeBoundingBox();
                 const box = geometry.boundingBox;
                 const size = box.getSize(new THREE.Vector3());
@@ -219,7 +228,12 @@ def handle_share_action(
                 )
                 html_code = re.sub(r'geometry\.center\(\);', '/* geometry.center disabled */', html_code)
 
-                # 2. Impostazione dei controlli orbitali con rotazione a 360° sbloccata
+                # 3. Sfondo del renderer Three.js chiaro (#f8fafc) e controlli orbitali sbloccati a 360°
+                renderer_bg_fix = """
+                renderer.setClearColor(0xf8fafc, 1);
+                """
+                html_code = html_code.replace("renderer.setClearColor(", f"{renderer_bg_fix} // renderer.setClearColor(")
+
                 controls_replacement = """
                 controls.target.copy(updatedCenter);
                 controls.maxPolarAngle = Math.PI;
@@ -240,7 +254,7 @@ def handle_share_action(
                 v_count = f"{mesh_data.vertex_count:,}".replace(",", ".")
                 f_count = f"{mesh_data.triangle_count:,}".replace(",", ".")
 
-                # 3. Iniezione script PDF minimale, formale e pulito (senza bande colorate né sfondi)
+                # 4. Script PDF formale, pulito, senza sfondi scuri o bande colorate
                 pdf_script = f"""
                 <script>
                 window.addEventListener('DOMContentLoaded', () => {{
@@ -277,40 +291,44 @@ def handle_share_action(
                                     const {{ jsPDF }} = window.jspdf;
                                     const doc = new jsPDF();
 
-                                    // Layout Formale ed Elegante
+                                    // Layout Formale ed Elegante (Tema Chiaro, senza bande)
                                     doc.setTextColor(15, 23, 42);
                                     doc.setFontSize(22);
                                     doc.setFont('helvetica', 'bold');
                                     doc.text('ARTIFIX', 14, 20);
 
+                                    doc.setFontSize(9);
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.setTextColor(100, 116, 139);
+                                    doc.text('CONVERT. FIX. DELIVER.', 14, 26);
+
                                     doc.setFontSize(10);
                                     doc.setFont('helvetica', 'bold');
-                                    doc.setTextColor(100, 116, 139);
-                                    doc.text('REPORT TECNICO 3D', 150, 20);
+                                    doc.text('REPORT TECNICO 3D', 145, 20);
 
                                     doc.setDrawColor(226, 232, 240);
                                     doc.setLineWidth(0.5);
-                                    doc.line(14, 26, 196, 26);
+                                    doc.line(14, 32, 196, 32);
 
                                     // Sezione Dati Modello Reali
                                     doc.setTextColor(30, 41, 59);
                                     doc.setFontSize(12);
                                     doc.setFont('helvetica', 'bold');
-                                    doc.text('PROGETTO: {clean_title}', 14, 38);
+                                    doc.text('PROGETTO: {clean_title}', 14, 42);
 
                                     doc.setFontSize(10);
                                     doc.setFont('helvetica', 'normal');
-                                    doc.text('Formato: {fmt_str}', 14, 48);
-                                    doc.text('Vertici: {v_count}', 75, 48);
-                                    doc.text('Triangoli: {f_count}', 135, 48);
+                                    doc.text('Formato: {fmt_str}', 14, 52);
+                                    doc.text('Vertici: {v_count}', 75, 52);
+                                    doc.text('Triangoli: {f_count}', 135, 52);
 
-                                    doc.line(14, 54, 196, 54);
+                                    doc.line(14, 58, 196, 58);
 
                                     // Anteprima 3D Renderizzata
                                     doc.setFont('helvetica', 'bold');
-                                    doc.text('Vista 3D Renderizzata', 14, 64);
+                                    doc.text('Vista 3D Renderizzata', 14, 68);
                                     
-                                    doc.addImage(imgData, 'PNG', 14, 70, 182, 110);
+                                    doc.addImage(imgData, 'PNG', 14, 74, 182, 110);
 
                                     // Pie di pagina minimale
                                     doc.line(14, 275, 196, 275);
