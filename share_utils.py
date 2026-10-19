@@ -1,14 +1,15 @@
 import streamlit as st
 import base64
 import os
+import requests
 
 def render_share_section(uploaded_file, t, lang="it"):
     st.markdown("---")
     
     is_en = (lang == "en")
-    title_text = "Share 3D Model" if is_en else "Condividi il modello 3D"
+    title_text = "Share Public 3D Link" if is_en else "Condividi Link Pubblico 3D"
     name_label = "Project Name (visible to client)" if is_en else "Nome del progetto (visibile al cliente)"
-    btn_label = "🚀 Genera Viewer 3D ArtiFix" if is_en else "🚀 Genera Viewer 3D ArtiFix"
+    btn_label = "🌐 Genera Link Web Pubblico (HTTPS)" if is_en else "🌐 Genera Link Web Pubblico (HTTPS)"
     
     st.markdown(f"### {title_text}")
     
@@ -258,11 +259,19 @@ def render_share_section(uploaded_file, t, lang="it"):
 </html>
 """
         
-        st.success("Viewer HTML generato con successo!")
-        st.download_button(
-            label="📥 Scarica Viewer 3D ArtiFix (HTML Autonomo)",
-            data=html_content,
-            file_name=f"{project_name}_viewer.html",
-            mime="text/html",
-            use_container_width=True
-        )
+        with st.spinner("Caricamento del viewer su cloud pubblico in corso..."):
+            try:
+                response = requests.post(
+                    'https://0x0.st',
+                    files={'file': (f"{project_name}_viewer.html", html_content.encode('utf-8'), 'text/html')}
+                )
+                if response.status_code == 200:
+                    public_url = response.text.strip()
+                    st.success("Link pubblico generato con successo!")
+                    st.markdown(f"🔗 **URL Pubblico Condivisibile:**")
+                    st.code(public_url, language="text")
+                    st.markdown(f'<a href="{public_url}" target="_blank" style="display:block; text-align:center; background:#0284c7; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold; margin-top:10px;">🌐 Apri Link Pubblico nel Browser</a>', unsafe_allow_html=True)
+                else:
+                    st.error("Errore durante il caricamento sul server pubblico.")
+            except Exception as e:
+                st.error(f"Errore di connessione: {str(e)}")
