@@ -1,277 +1,281 @@
-import streamlit as st
-import base64
-import os
-import requests
-
-def render_share_section(uploaded_file, t, lang="it"):
-    st.markdown("---")
-    
-    is_en = (lang == "en")
-    title_text = "Share Public 3D Link" if is_en else "Condividi Link Pubblico 3D"
-    name_label = "Project Name (visible to client)" if is_en else "Nome del progetto (visibile al cliente)"
-    btn_label = "🌐 Genera Link Web Pubblico (HTTPS)" if is_en else "🌐 Genera Link Web Pubblico (HTTPS)"
-    
-    st.markdown(f"### {title_text}")
-    
-    project_name = st.text_input(
-        name_label,
-        value=os.path.splitext(uploaded_file.name)[0] if uploaded_file else "Modello_3D",
-        key="input_project_name_share"
-    )
-    
-    if st.button(btn_label, type="primary", use_container_width=True, key="btn_generate_share_link"):
-        file_bytes = uploaded_file.getvalue()
-        file_ext = os.path.splitext(uploaded_file.name)[1].lower().replace('.', '')
-        encoded_data = base64.b64encode(file_bytes).decode('utf-8')
-        file_size_mb = len(file_bytes) / (1024 * 1024)
-        
-        html_content = f"""<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArtiFix 3D Viewer - {project_name}</title>
-    <style>
-        body, html {{
-            margin: 0; padding: 0; width: 100vw; height: 100vh;
-            overflow: hidden; background-color: #0b0f19; font-family: system-ui, -apple-system, sans-serif;
-            color: #f8fafc;
-        }}
-        #canvas-container {{ width: 100vw; height: 100vh; display: block; }}
-        
-        .artifix-brand {{
-            position: absolute; top: 20px; left: 20px; display: flex; align-items: center; gap: 12px;
-            background: rgba(15, 23, 42, 0.85); padding: 10px 16px; border-radius: 12px;
-            border: 1px solid rgba(148, 163, 184, 0.2); backdrop-filter: blur(8px); z-index: 10;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }}
-        .brand-logo {{ font-weight: 800; font-size: 16px; letter-spacing: 0.5px; color: #38bdf8; text-decoration: none; display: flex; align-items: center; gap: 8px; }}
-        .brand-logo:hover {{ color: #7dd3fc; }}
-        .model-badge {{ font-size: 12px; color: #94a3b8; border-left: 1px solid rgba(148, 163, 184, 0.3); padding-left: 12px; }}
-
-        .ui-panel {{
-            position: absolute; top: 20px; right: 20px; background: rgba(15, 23, 42, 0.85);
-            padding: 16px; border-radius: 12px; color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px); z-index: 10; display: flex; flex-direction: column; gap: 12px; width: 220px;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-        }}
-        .ui-panel label {{ font-size: 11px; color: #94a3b8; font-weight: bold; letter-spacing: 0.5px; }}
-        .ui-panel input[type="range"] {{ width: 100%; cursor: pointer; accent-color: #38bdf8; }}
-        .btn-group {{ display: flex; gap: 6px; }}
-        .ui-btn {{ background: #1e293b; color: #f8fafc; border: 1px solid #334155; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; flex: 1; text-align: center; transition: all 0.2s; }}
-        .ui-btn:hover {{ background: #334155; }}
-        .ui-btn.active {{ background: #0284c7; border-color: #38bdf8; }}
-        .action-btn {{ width: 100%; background: #0284c7; color: #fff; border: none; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 4px; transition: background 0.2s; }}
-        .action-btn:hover {{ background: #0369a1; }}
-
-        #info-bar {{
-            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.85); color: #94a3b8; padding: 8px 18px; border-radius: 20px;
-            font-size: 12px; z-index: 10; border: 1px solid rgba(148, 163, 184, 0.2); backdrop-filter: blur(8px);
-        }}
-
-        #modal-overlay {{
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7);
-            display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(6px);
-        }}
-        .modal-content {{
-            background: #0f172a; padding: 25px; border-radius: 14px; width: 350px; color: #f8fafc;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 1px solid #334155;
-        }}
-        .modal-content h3 {{ margin-top: 0; color: #38bdf8; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 10px; }}
-        .modal-row {{ display: flex; justify-content: space-between; margin: 10px 0; font-size: 13px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }}
-        .modal-row span:last-child {{ color: #cbd5e1; font-weight: bold; }}
-        .close-modal {{ background: #334155; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }}
-        .close-modal:hover {{ background: #475569; }}
-    </style>
-    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-    <script type="importmap">
-      {{
-        "imports": {{
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }}
-      }}
-    </script>
-</head>
-<body>
-    <div id="canvas-container"></div>
-    
-    <div class="artifix-brand">
-        <a href="https://artifix.it" target="_blank" class="brand-logo" title="Visita ArtiFix.it">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-            ArtiFix
-        </a>
-        <div class="model-badge">{project_name}</div>
-    </div>
-
-    <div class="ui-panel">
-        <label>OPACITÀ</label>
-        <input type="range" id="opacityRange" min="0.1" max="1" step="0.05" value="1">
-        
-        <label>VISUALIZZAZIONE</label>
-        <div class="btn-group">
-            <button class="ui-btn active" id="btnSmooth">Smooth</button>
-            <button class="ui-btn" id="btnWire">Wireframe</button>
-        </div>
-
-        <label>STRUMENTI</label>
-        <button class="action-btn" id="btnPhoto">📸 Scatta Foto</button>
-        <button class="action-btn" id="btnInfo" style="background: #1e293b; border: 1px solid #334155;">ℹ️ Proprietà File</button>
-    </div>
-
-    <div id="info-bar">ArtiFix 3D Viewer | Z-up System</div>
-
-    <div id="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h3>Proprietà Modello 3D</h3>
-            <div class="modal-row"><span>Nome File:</span><span>{project_name}.{file_ext}</span></div>
-            <div class="modal-row"><span>Formato:</span><span>{file_ext.upper()}</span></div>
-            <div class="modal-row"><span>Dimensione:</span><span>{file_size_mb:.2f} MB</span></div>
-            <div class="modal-row"><span>Vertici:</span><span id="lblVerts">-</span></div>
-            <div class="modal-row"><span>Facce:</span><span id="lblFaces">-</span></div>
-            <button class="close-modal" id="btnCloseModal">Chiudi</button>
-        </div>
-    </div>
-
-    <script type="module">
-        import * as THREE from 'three';
-        import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
-        import {{ STLLoader }} from 'three/addons/loaders/STLLoader.js';
-
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0b0f19);
-
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 5000);
-        camera.up.set(0, 0, 1);
-
-        const renderer = new THREE.WebGLRenderer({{ antialias: true, alpha: true, preserveDrawingBuffer: true }});
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
-
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.screenSpacePanning = true;
-
-        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        dirLight.position.set(300, 300, 500);
-        scene.add(dirLight);
-
-        const base64Data = "{encoded_data}";
-        const binaryString = atob(base64Data);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {{ bytes[i] = binaryString.charCodeAt(i); }}
-
-        const loader = new STLLoader();
-        const geometry = loader.parse(bytes.buffer);
-        geometry.computeVertexNormals();
-        geometry.computeBoundingBox();
-        
-        const box = geometry.boundingBox;
-        const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-
-        geometry.translate(-center.x, -center.y, -box.min.z);
-
-        const material = new THREE.MeshStandardMaterial({{
-            color: 0x38bdf8,
-            roughness: 0.25,
-            metalness: 0.1,
-            side: THREE.DoubleSide
-        }});
-
-        const mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
-
-        if (geometry.index) {{
-            document.getElementById('lblFaces').innerText = geometry.index.count / 3;
-        }} else if (geometry.attributes.position) {{
-            document.getElementById('lblFaces').innerText = geometry.attributes.position.count / 3;
-        }}
-        if (geometry.attributes.position) {{
-            document.getElementById('lblVerts').innerText = geometry.attributes.position.count;
-        }}
-
-        const axisLength = maxDim * 0.7;
-        const gridSize = maxDim * 2.5;
-        scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xef4444, axisLength*0.1, axisLength*0.06));
-        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x22c55e, axisLength*0.1, axisLength*0.06));
-        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x3b82f6, axisLength*0.1, axisLength*0.06));
-
-        const grid = new THREE.GridHelper(gridSize, 20, 0x475569, 0x1e293b);
-        grid.rotation.x = Math.PI / 2;
-        scene.add(grid);
-
-        controls.target.set(0, 0, size.z / 2);
-        camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
-        controls.update();
-
-        document.getElementById('opacityRange').addEventListener('input', (e) => {{
-            material.transparent = e.target.value < 1;
-            material.opacity = parseFloat(e.target.value);
-        }});
-
-        document.getElementById('btnSmooth').addEventListener('click', () => {{
-            material.wireframe = false;
-            document.getElementById('btnSmooth').classList.add('active');
-            document.getElementById('btnWire').classList.remove('active');
-        }});
-
-        document.getElementById('btnWire').addEventListener('click', () => {{
-            material.wireframe = true;
-            document.getElementById('btnWire').classList.add('active');
-            document.getElementById('btnSmooth').classList.remove('active');
-        }});
-
-        document.getElementById('btnPhoto').addEventListener('click', () => {{
-            renderer.render(scene, camera);
-            const dataURL = renderer.domElement.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.download = '{project_name}_screenshot.png';
-            link.href = dataURL;
-            link.click();
-        }});
-
-        const modal = document.getElementById('modal-overlay');
-        document.getElementById('btnInfo').addEventListener('click', () => {{ modal.style.display = 'flex'; }});
-        document.getElementById('btnCloseModal').addEventListener('click', () => {{ modal.style.display = 'none'; }});
-
-        window.addEventListener('resize', () => {{
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }});
-
-        function animate() {{
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }}
-        animate();
-    </script>
-</body>
-</html>
 """
-        
-        with st.spinner("Caricamento del viewer su cloud pubblico in corso..."):
-            try:
-                response = requests.post(
-                    'https://0x0.st',
-                    files={'file': (f"{project_name}_viewer.html", html_content.encode('utf-8'), 'text/html')}
+Utility per la condivisione di viewer HTML 3D su GitHub Pages.
+
+Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
+con pulsanti "📸 Scatta foto" e "💾 Scarica HTML".
+
+Espone:
+  - render_share_section(uploaded_file, t, lang): pulsante + nota + form
+  - handle_share_action(...): elabora file e pubblica viewer
+
+Usato da 'Viewer 3D' in app.py.
+"""
+from __future__ import annotations
+
+import html
+import os
+import tempfile
+from pathlib import Path
+
+import streamlit as st
+
+
+def render_share_info_tooltip(t) -> None:
+    """Mostra la nota informativa (i) con spiegazione della condivisione."""
+    with st.expander(t("share_info_tooltip"), expanded=False):
+        st.markdown(f"### {t('share_info_title')}")
+        st.markdown(t("share_info_body"))
+        st.markdown("---")
+        st.markdown(t("share_info_features"))
+        st.markdown("---")
+        st.markdown(t("share_info_use_cases"))
+
+
+def _render_copy_button(url: str, label: str, t) -> None:
+    """Renderizza un pulsante 'Copia link' con feedback visivo tradotto."""
+    safe_url = html.escape(url, quote=True)
+    clean_label = label.replace("📋 ", "").replace(" 📋", "").strip()
+    display_label = f"📋 {clean_label}" if clean_label else "📋 Copia link"
+
+    copied_text = t("share_copy_success")
+    error_text = t("share_copy_error")
+
+    copy_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }}
+        .copy-btn {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 24px;
+            background: #1f77b4;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }}
+        .copy-btn:hover {{ background: #155a8a; }}
+        .copy-btn:active {{ transform: scale(0.98); }}
+        .copy-btn.copied {{ background: #2ecc71; }}
+    </style>
+    </head>
+    <body>
+    <button class="copy-btn" id="copyBtn" onclick="copyLink()">
+        <span id="btnText">{display_label}</span>
+    </button>
+
+    <script>
+        function copyLink() {{
+            const url = "{safe_url}";
+            const btn = document.getElementById('copyBtn');
+            const txt = document.getElementById('btnText');
+
+            if (navigator.clipboard && window.isSecureContext) {{
+                navigator.clipboard.writeText(url).then(() => {{
+                    showSuccess();
+                }}).catch(err => {{
+                    fallbackCopy(url);
+                }});
+            }} else {{
+                fallbackCopy(url);
+            }}
+
+            function fallbackCopy(text) {{
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try {{
+                    document.execCommand('copy');
+                    showSuccess();
+                }} catch (err) {{
+                    txt.textContent = '{error_text}';
+                }}
+                document.body.removeChild(ta);
+            }}
+
+            function showSuccess() {{
+                btn.classList.add('copied');
+                txt.textContent = '{copied_text}';
+                setTimeout(() => {{
+                    btn.classList.remove('copied');
+                    txt.textContent = '{display_label}';
+                }}, 2500);
+            }}
+        }}
+    </script>
+    </body>
+    </html>
+    """
+
+    st.components.v1.html(copy_html, height=60)
+
+
+def handle_share_action(
+    uploaded_file,
+    project_title: str,
+    generate_qr: bool,
+    t,
+    lang: str = "it",
+) -> None:
+    """
+    Genera il viewer HTML e lo pubblica su GitHub Pages.
+
+    Parameters
+    ----------
+    uploaded_file : file caricato
+    project_title : titolo del progetto
+    generate_qr : se generare QR code
+    t : funzione di traduzione
+    lang : lingua ("it" o "en")
+    """
+    try:
+        from mesh2u3d.io.mesh_reader import MeshReader
+        from mesh2u3d.html.writer import mesh_to_html
+        from mesh2u3d.share import share_html_viewer
+    except ImportError as e:
+        st.error(f"❌ Libreria `mesh2u3d` non disponibile: {e}")
+        st.info("💡 Controlla `requirements.txt`.")
+        return
+
+    progress = st.progress(0)
+    status = st.empty()
+
+    try:
+        # Step 1 — Leggi mesh
+        status.text(t("share_status_loading"))
+        progress.progress(20)
+
+        file_ext = os.path.splitext(uploaded_file.name)[1].lower()
+        with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as tmp:
+            tmp.write(uploaded_file.getvalue())
+            tmp_path = tmp.name
+
+        try:
+            mesh_data = MeshReader.read(tmp_path)
+            status.text(
+                t("share_status_processing").format(
+                    v=mesh_data.vertex_count, f=mesh_data.triangle_count
                 )
-                if response.status_code == 200:
-                    public_url = response.text.strip()
-                    st.success("Link pubblico generato con successo!")
-                    st.markdown(f"🔗 **URL Pubblico Condivisibile:**")
-                    st.code(public_url, language="text")
-                    st.markdown(f'<a href="{public_url}" target="_blank" style="display:block; text-align:center; background:#0284c7; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold; margin-top:10px;">🌐 Apri Link Pubblico nel Browser</a>', unsafe_allow_html=True)
-                else:
-                    st.error("Errore durante il caricamento sul server pubblico.")
-            except Exception as e:
-                st.error(f"Errore di connessione: {str(e)}")
+            )
+            progress.progress(50)
+
+            # Step 2 — Genera viewer HTML
+            html_path = Path(tempfile.gettempdir()) / f"{mesh_data.name}.html"
+            mesh_to_html(
+                mesh_data,
+                html_path,
+                title=project_title or mesh_data.name,
+                source_format=file_ext.replace(".", "").upper(),
+                lang=lang,
+            )
+
+            # Step 3 — Pubblica su GitHub Pages
+            status.text(t("share_status_publishing"))
+            progress.progress(75)
+
+            result = share_html_viewer(
+                html_path,
+                title=project_title or mesh_data.name,
+                generate_qr=generate_qr,
+            )
+            progress.progress(100)
+            status.text(t("share_status_done"))
+
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+
+        # --- Mostra risultato ---
+        st.success(t("share_success"))
+        st.warning(t("share_warning_propagation"))
+        st.markdown("---")
+        st.subheader(t("share_result_title"))
+        st.markdown(f"**{t('share_result_url')}**")
+        st.code(result["url"], language=None)
+        _render_copy_button(result["url"], t("share_copy_link"), t)
+
+        if result.get("qr_path"):
+            st.markdown("---")
+            st.subheader(t("share_qr_title"))
+            st.image(result["qr_path"], width=250, caption=t("share_qr_caption"))
+            with open(result["qr_path"], "rb") as f:
+                st.download_button(
+                    t("share_download_qr"),
+                    data=f.read(),
+                    file_name=f"{result['viewer_id']}_qr.png",
+                    mime="image/png",
+                    use_container_width=True,
+                )
+
+        st.info(t("share_info_id").format(id=result["viewer_id"]))
+
+    except Exception as e:
+        progress.empty()
+        status.empty()
+        st.error(t("share_error").format(error=str(e)))
+        with st.expander("🔍 Dettagli errore", expanded=False):
+            st.exception(e)
+
+
+def render_share_section(uploaded_file, t, lang: str = "it") -> None:
+    """
+    Renderizza la sezione di condivisione sotto il viewer.
+
+    Parameters
+    ----------
+    uploaded_file : file caricato dall'utente
+    t : funzione di traduzione
+    lang : lingua corrente ("it" o "en")
+    """
+    st.markdown("---")
+    st.markdown(f"### {t('share_button')}")
+    render_share_info_tooltip(t)
+
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        base_name = os.path.splitext(uploaded_file.name)[0]
+        project_title = st.text_input(
+            t("share_project_title"),
+            value=base_name,
+            key="share_project_title",
+        )
+    with col2:
+        generate_qr = st.checkbox(
+            t("share_generate_qr"),
+            value=True,
+            key="share_generate_qr",
+        )
+
+    # --- Pulsante unico: genera viewer HTML ---
+    if st.button(
+        t("share_generate_button"),
+        type="primary",
+        use_container_width=True,
+        key="share_generate_button",
+    ):
+        handle_share_action(
+            uploaded_file,
+            project_title,
+            generate_qr,
+            t,
+            lang=lang,
+        )
