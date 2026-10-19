@@ -2,7 +2,7 @@
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con tema chiaro, orientamento Z-up dinamico via JavaScript e report PDF formale.
+con tema chiaro identico alla dashboard, orientamento Z-up e report PDF formale.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
@@ -186,7 +186,7 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing: Iniezione script runtime per Tema Chiaro, Assi Z-Up e PDF ---
+            # --- Post-processing: Tema chiaro dashboard, orientamento corretto Z-up e PDF ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
@@ -200,47 +200,59 @@ def handle_share_action(
                 v_count = f"{mesh_data.vertex_count:,}".replace(",", ".")
                 f_count = f"{mesh_data.triangle_count:,}".replace(",", ".")
 
-                # Script runtime universale che trasforma il viewer in tema chiaro, raddrizza gli assi (Z-up) e gestisce il PDF
+                # Script runtime per forzare tema chiaro, posizionamento esatto sul piano Z=0 e generazione PDF
                 runtime_script = f"""
                 <style>
-                    /* Forzatura immediata tema chiaro identico alla dashboard */
-                    body, html {{
+                    /* Tema chiaro identico alla dashboard */
+                    body, html, .viewer-container {{
                         background-color: #f8fafc !important;
                         color: #1e293b !important;
-                    }}
-                    .viewer-container, canvas {{
-                        background-color: #f8fafc !important;
                     }}
                 </style>
                 <script>
                 window.addEventListener('DOMContentLoaded', () => {{
                     setTimeout(() => {{
-                        // 1. Correzione Tema Chiaro e Renderer Three.js
+                        // 1. Imposta sfondo chiaro sul renderer 3D
                         if (typeof renderer !== 'undefined') {{
                             renderer.setClearColor(0xf8fafc, 1);
                         }}
+
+                        // 2. Allineamento geometrico pulito sul piano z=0 con Z-up verticale
                         if (typeof scene !== 'undefined') {{
                             scene.traverse((child) => {{
-                                if (child.isMesh) {{
-                                    // Orientamento assi e modello identico alla dashboard (Z-up verticale)
-                                    child.geometry.rotateX(Math.PI / 2);
+                                if (child.isMesh && !child.userData.aligned) {{
+                                    child.userData.aligned = true;
+                                    
+                                    // Centratura e posizionamento alla base (z=0)
                                     child.geometry.computeBoundingBox();
                                     const box = child.geometry.boundingBox;
-                                    child.geometry.translate(-box.min.x, -box.min.y, -box.min.z);
-                                    child.geometry.computeBoundingBox();
+                                    const center = box.getCenter(new THREE.Vector3());
+                                    const size = box.getSize(new THREE.Vector3());
                                     
-                                    const updateBox = child.geometry.boundingBox;
-                                    const center = updateBox.getCenter(new THREE.Vector3());
+                                    // Sposta l'origine al centro della base sul piano z=0
+                                    child.geometry.translate(-center.x, -center.y, -box.min.z);
+                                    child.geometry.computeBoundingBox();
+
+                                    const updatedBox = child.geometry.boundingBox;
+                                    const updatedCenter = updatedBox.getCenter(new THREE.Vector3());
+                                    const maxDim = Math.max(size.x, size.y, size.z);
+
                                     if (typeof controls !== 'undefined') {{
-                                        controls.target.copy(center);
+                                        controls.target.copy(updatedCenter);
                                         controls.maxPolarAngle = Math.PI;
+                                        controls.minDistance = 0.5;
+                                        controls.maxDistance = maxDim * 15;
                                         controls.update();
+                                    }}
+                                    if (typeof camera !== 'undefined') {{
+                                        camera.position.set(maxDim * 1.5, maxDim * 1.5, maxDim * 1.5);
+                                        camera.lookAt(updatedCenter);
                                     }}
                                 }}
                             }});
                         }}
 
-                        // 2. Sostituzione pulsante per download Report PDF formale ed elegante
+                        // 3. Configurazione pulsante per download Report PDF formale ed elegante
                         const buttons = document.querySelectorAll('button, a');
                         buttons.forEach(el => {{
                             if (el.innerText && (el.innerText.includes('HTML') || el.innerText.includes('Scarica') || el.innerText.includes('PDF') || el.innerText.includes('foto'))) {{
