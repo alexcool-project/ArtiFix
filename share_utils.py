@@ -2,7 +2,7 @@
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con pulsante per la generazione del report PDF formale e loghi ufficiali ArtiFix.
+con pulsante per la generazione del report PDF.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
@@ -136,14 +136,6 @@ def handle_share_action(
 ) -> None:
     """
     Genera il viewer HTML e lo pubblica su GitHub Pages.
-
-    Parameters
-    ----------
-    uploaded_file : file caricato
-    project_title : titolo del progetto
-    generate_qr : se generare QR code
-    t : funzione di traduzione
-    lang : lingua ("it" o "en")
     """
     try:
         from mesh2u3d.io.mesh_reader import MeshReader
@@ -155,4 +147,220 @@ def handle_share_action(
         return
 
     progress = st.progress(0)
-    status
+    status = st.empty()
+
+    try:
+        status.text(t("share_status_loading"))
+        progress.progress(20)
+
+        file_ext = os.path.splitext(uploaded_file.name)[1].lower()
+        with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as tmp:
+            tmp.write(uploaded_file.getvalue())
+            tmp_path = tmp.name
+
+        try:
+            mesh_data = MeshReader.read(tmp_path)
+            status.text(
+                t("share_status_processing").format(
+                    v=mesh_data.vertex_count, f=mesh_data.triangle_count
+                )
+            )
+            progress.progress(50)
+
+            html_path = Path(tempfile.gettempdir()) / f"{mesh_data.name}.html"
+            mesh_to_html(
+                mesh_data,
+                html_path,
+                title=project_title or mesh_data.name,
+                source_format=file_ext.replace(".", "").upper(),
+                lang=lang,
+            )
+
+            if html_path.exists():
+                html_code = html_path.read_text(encoding="utf-8")
+                
+                jspdf_cdn = '<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>'
+                if "</head>" in html_code:
+                    html_code = html_code.replace("</head>", f"{jspdf_cdn}</head>")
+
+                clean_title = (project_title or mesh_data.name).replace("'", "\\'")
+                fmt_str = file_ext.replace(".", "").upper()
+                v_count = f"{mesh_data.vertex_count:,}".replace(",", ".")
+                f_count = f"{mesh_data.triangle_count:,}".replace(",", ".")
+
+                pdf_script = f"""
+                <script>
+                window.addEventListener('DOMContentLoaded', () => {{
+                    setTimeout(() => {{
+                        const buttons = document.querySelectorAll('button, a');
+                        buttons.forEach(el => {{
+                            if (el.innerText && (el.innerText.includes('HTML') || el.innerText.includes('Scarica') || el.innerText.includes('PDF') || el.innerText.includes('foto'))) {{
+                                el.innerHTML = '📄 Scarica PDF';
+                                el.title = 'Scarica Report Tecnico PDF ArtiFix';
+                                
+                                const newBtn = el.cloneNode(true);
+                                el.parentNode.replaceChild(newBtn, el);
+                                
+                                newBtn.addEventListener('click', (e) => {{
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    if (typeof window.jspdf === 'undefined') {{
+                                        alert('Generatore PDF in caricamento, riprova tra un istante.');
+                                        return;
+                                    }}
+
+                                    if (typeof renderer !== 'undefined' && typeof scene !== 'undefined' && typeof camera !== 'undefined') {{
+                                        renderer.render(scene, camera);
+                                    }}
+
+                                    const canvas = document.querySelector('canvas');
+                                    if (!canvas) {{
+                                        alert('Canvas 3D non trovato.');
+                                        return;
+                                    }}
+
+                                    const imgData = canvas.toDataURL('image/png');
+                                    const {{ jsPDF }} = window.jspdf;
+                                    const doc = new jsPDF();
+
+                                    doc.setTextColor(15, 23, 42);
+                                    doc.setFontSize(22);
+                                    doc.setFont('helvetica', 'bold');
+                                    doc.text('ARTIFIX', 14, 20);
+
+                                    doc.setFontSize(9);
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.setTextColor(100, 116, 139);
+                                    doc.text('CONVERT. FIX. DELIVER.', 14, 26);
+
+                                    doc.setFontSize(10);
+                                    doc.setFont('helvetica', 'bold');
+                                    doc.text('REPORT TECNICO 3D', 145, 20);
+
+                                    doc.setDrawColor(226, 232, 240);
+                                    doc.setLineWidth(0.5);
+                                    doc.line(14, 32, 196, 32);
+
+                                    doc.setTextColor(30, 41, 59);
+                                    doc.setFontSize(12);
+                                    doc.setFont('helvetica', 'bold');
+                                    doc.text('PROGETTO: {clean_title}', 14, 42);
+
+                                    doc.setFontSize(10);
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.text('Formato: {fmt_str}', 14, 52);
+                                    doc.text('Vertici: {v_count}', 75, 52);
+                                    doc.text('Triangoli: {f_count}', 135, 52);
+
+                                    doc.line(14, 58, 196, 58);
+
+                                    doc.setFont('helvetica', 'bold');
+                                    doc.text('Vista 3D Renderizzata', 14, 68);
+                                    
+                                    doc.addImage(imgData, 'PNG', 14, 74, 182, 110);
+
+                                    doc.line(14, 275, 196, 275);
+                                    doc.setFontSize(8);
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.setTextColor(148, 163, 184);
+                                    doc.text('Documento generato automaticamente via ArtiFix 3D Viewer | www.artifix.it', 14, 282);
+
+                                    doc.save('ArtiFix_Report_{clean_title}.pdf');
+                                }});
+                            }}
+                        }});
+                    }}, 1000);
+                }});
+                </script>
+                </body>
+                """
+
+                if "</body>" in html_code:
+                    html_code = html_code.replace("</body>", pdf_script)
+                    html_path.write_text(html_code, encoding="utf-8")
+
+            status.text(t("share_status_publishing"))
+            progress.progress(75)
+
+            result = share_html_viewer(
+                html_path,
+                title=project_title or mesh_data.name,
+                generate_qr=generate_qr,
+            )
+            progress.progress(100)
+            status.text(t("share_status_done"))
+
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+
+        st.success(t("share_success"))
+        st.warning(t("share_warning_propagation"))
+        st.markdown("---")
+        st.subheader(t("share_result_title"))
+        st.markdown(f"**{t('share_result_url')}**")
+        st.code(result["url"], language=None)
+        _render_copy_button(result["url"], t("share_copy_link"), t)
+
+        if result.get("qr_path"):
+            st.markdown("---")
+            st.subheader(t("share_qr_title"))
+            st.image(result["qr_path"], width=250, caption=t("share_qr_caption"))
+            with open(result["qr_path"], "rb") as f:
+                st.download_button(
+                    t("share_download_qr"),
+                    data=f.read(),
+                    file_name=f"{result['viewer_id']}_qr.png",
+                    mime="image/png",
+                    use_container_width=True,
+                )
+
+        st.info(t("share_info_id").format(id=result["viewer_id"]))
+
+    except Exception as e:
+        progress.empty()
+        status.empty()
+        st.error(t("share_error").format(error=str(e)))
+        with st.expander("🔍 Dettagli errore", expanded=False):
+            st.exception(e)
+
+
+def render_share_section(uploaded_file, t, lang: str = "it") -> None:
+    """
+    Renderizza la sezione di condivisione sotto il viewer.
+    """
+    st.markdown("---")
+    st.markdown(f"### {t('share_button')}")
+    render_share_info_tooltip(t)
+
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        base_name = os.path.splitext(uploaded_file.name)[0]
+        project_title = st.text_input(
+            t("share_project_title"),
+            value=base_name,
+            key="share_project_title",
+        )
+    with col2:
+        generate_qr = st.checkbox(
+            t("share_generate_qr"),
+            value=True,
+            key="share_generate_qr",
+        )
+
+    if st.button(
+        t("share_generate_button"),
+        type="primary",
+        use_container_width=True,
+        key="share_generate_button",
+    ):
+        handle_share_action(
+            uploaded_file,
+            project_title,
+            generate_qr,
+            t,
+            lang=lang,
+        )
