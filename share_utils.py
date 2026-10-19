@@ -186,6 +186,28 @@ def handle_share_action(
                 lang=lang,
             )
 
+            # --- Correzione per allineare gli assi sul piano della griglia (z=0) ---
+            if html_path.exists():
+                html_code = html_path.read_text(encoding="utf-8")
+                # Iniettiamo uno script JS prima della chiusura del body per posizionare gli assi a z=0
+                fix_script = """
+                <script>
+                    window.addEventListener('DOMContentLoaded', () => {
+                        setTimeout(() => {
+                            scene.traverse((child) => {
+                                if (child.isAxesHelper || (child.type === 'Group' && child.children.some(c => c.isLine || c.type === 'ArrowHelper'))) {
+                                    child.position.z = 0;
+                                }
+                            });
+                        }, 500);
+                    });
+                </script>
+                </body>
+                """
+                if "</body>" in html_code:
+                    html_code = html_code.replace("</body>", fix_script)
+                    html_path.write_text(html_code, encoding="utf-8")
+
             # Step 3 — Pubblica su GitHub Pages
             status.text(t("share_status_publishing"))
             progress.progress(75)
