@@ -2,7 +2,7 @@
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con pulsanti "📸 Scatta foto" e generazione di report PDF.
+con pulsanti "📸 Scatta foto" e generazione di report PDF professionale.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
@@ -187,7 +187,7 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing: allineamento a z=0, sblocco 360° e conversione pulsante HTML in Report PDF ---
+            # --- Post-processing: allineamento a z=0, sblocco 360° e report PDF con dati reali e logo ArtiFix ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
@@ -232,100 +232,106 @@ def handle_share_action(
                     html_code
                 )
 
-                # 3. Script per trasformare il pulsante "Scarica HTML" in "Scarica Report PDF"
-                pdf_script = """
+                # 3. Script per generare il PDF con dati corretti e logo ArtiFix
+                pdf_script = f"""
                 <script>
-                window.addEventListener('DOMContentLoaded', () => {
-                    setTimeout(() => {
+                window.addEventListener('DOMContentLoaded', () => {{
+                    setTimeout(() => {{
                         const buttons = document.querySelectorAll('button, a');
                         let downloadBtn = null;
-                        buttons.forEach(el => {
-                            if (el.innerText && (el.innerText.includes('HTML') || el.innerText.includes('Scarica'))) {
+                        buttons.forEach(el => {{
+                            if (el.innerText && (el.innerText.includes('HTML') || el.innerText.includes('Scarica') || el.innerText.includes('PDF'))) {{
                                 downloadBtn = el;
-                            }
+                            }}
                         });
 
-                        if (downloadBtn) {
+                        if (downloadBtn) {{
                             downloadBtn.innerHTML = '📄 Scarica PDF';
-                            downloadBtn.title = 'Scarica Report PDF Professionale';
+                            downloadBtn.title = 'Scarica Report PDF Professionale ArtiFix';
                             
                             const newBtn = downloadBtn.cloneNode(true);
                             downloadBtn.parentNode.replaceChild(newBtn, downloadBtn);
                             
-                            newBtn.addEventListener('click', (e) => {
+                            newBtn.addEventListener('click', (e) => {{
                                 e.preventDefault();
                                 e.stopPropagation();
                                 
-                                if (typeof window.jspdf === 'undefined') {
+                                if (typeof window.jspdf === 'undefined') {{
                                     alert('Generatore PDF in caricamento, riprova tra un istante.');
                                     return;
-                                }
+                                }}
 
-                                if (typeof renderer !== 'undefined' && typeof scene !== 'undefined' && typeof camera !== 'undefined') {
+                                if (typeof renderer !== 'undefined' && typeof scene !== 'undefined' && typeof camera !== 'undefined') {{
                                     renderer.render(scene, camera);
-                                }
+                                }}
 
                                 const canvas = document.querySelector('canvas');
-                                if (!canvas) {
+                                if (!canvas) {{
                                     alert('Canvas 3D non trovato.');
                                     return;
-                                }
+                                }}
 
                                 const imgData = canvas.toDataURL('image/png');
                                 
-                                const filename = document.querySelector('.info-value, td, span')?.innerText || 'Modello_3D';
-                                const vertices = document.querySelector('#lbl-vertices, [id*="vert"]')?.innerText || '-';
-                                const triangles = document.querySelector('#lbl-triangles, [id*="tri"]')?.innerText || '-';
-                                const format = document.querySelector('#lbl-format, [id*="format"]')?.innerText || 'STL';
+                                // Estrazione dati reali dal DOM del viewer
+                                const filename = document.querySelector('#lbl-file, .info-value, td, span')?.innerText || "{project_title}";
+                                const vertices = document.getElementById('lblVerts')?.innerText || document.querySelector('[id*="vert"]')?.innerText || "{mesh_data.vertex_count}";
+                                const triangles = document.getElementById('lblFaces')?.innerText || document.querySelector('[id*="face"], [id*="tri"]')?.innerText || "{mesh_data.triangle_count}";
+                                const format = document.querySelector('#lbl-format, [id*="format"]')?.innerText || "{file_ext.replace('.', '').upper()}";
 
-                                const { jsPDF } = window.jspdf;
+                                const {{ jsPDF }} = window.jspdf;
                                 const doc = new jsPDF();
 
-                                // Header Stile Aziendale
+                                // Intestazione professionale ArtiFix
                                 doc.setFillColor(15, 23, 42);
-                                doc.rect(0, 0, 210, 35, 'F');
+                                doc.rect(0, 0, 210, 38, 'F');
                                 
+                                // Brand ArtiFix
                                 doc.setTextColor(56, 189, 248);
-                                doc.setFontSize(20);
+                                doc.setFontSize(22);
                                 doc.setFont('helvetica', 'bold');
-                                doc.text('ArtiFix', 14, 22);
+                                doc.text('ARTIFIX', 14, 24);
 
                                 doc.setTextColor(255, 255, 255);
-                                doc.setFontSize(10);
+                                doc.setFontSize(9);
                                 doc.setFont('helvetica', 'normal');
-                                doc.text('REPORT TECNICO MODELLO 3D', 130, 22);
+                                doc.text('CONVERT. FIX. DELIVER.', 14, 30);
 
-                                // Sezione Dati
+                                doc.setFontSize(11);
+                                doc.text('REPORT TECNICO 3D', 135, 24);
+
+                                // Sezione Dati Modello
                                 doc.setTextColor(30, 41, 59);
-                                doc.setFontSize(13);
+                                doc.setFontSize(14);
                                 doc.setFont('helvetica', 'bold');
-                                doc.text('Informazioni Modello', 14, 48);
+                                doc.text('Informazioni Modello', 14, 50);
 
                                 doc.setFontSize(10);
                                 doc.setFont('helvetica', 'normal');
-                                doc.text(`Formato: ${format}`, 14, 56);
-                                doc.text(`Vertici: ${vertices}`, 80, 56);
-                                doc.text(`Triangoli: ${triangles}`, 145, 56);
+                                doc.text(`Nome Progetto: {project_title}`, 14, 60);
+                                doc.text(`Formato: ${{format}}`, 14, 68);
+                                doc.text(`Vertici: ${{vertices}}`, 80, 68);
+                                doc.text(`Triangoli: ${{triangles}}`, 145, 68);
 
                                 doc.setDrawColor(203, 213, 225);
-                                doc.line(14, 64, 196, 64);
+                                doc.line(14, 75, 196, 75);
 
-                                // Sezione Screenshot
+                                // Sezione Vista 3D (Screenshot)
                                 doc.setFont('helvetica', 'bold');
-                                doc.text('Vista 3D', 14, 74);
+                                doc.text('Anteprima Vista 3D', 14, 85);
                                 
-                                doc.addImage(imgData, 'PNG', 25, 80, 160, 100);
+                                doc.addImage(imgData, 'PNG', 15, 90, 180, 110);
 
                                 // Footer
                                 doc.setFontSize(9);
                                 doc.setTextColor(100, 116, 139);
                                 doc.text('Generato con ArtiFix 3D Viewer | artifix.it', 14, 285);
 
-                                doc.save('ArtiFix_Report_Tecnico.pdf');
-                            });
-                        }
-                    }, 800);
-                });
+                                doc.save('ArtiFix_Report_{project_title}.pdf');
+                            }});
+                        }}
+                    }}, 800);
+                }});
                 </script>
                 </body>
                 """
