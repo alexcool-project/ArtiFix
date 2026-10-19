@@ -2,7 +2,7 @@
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con pulsanti di scatto foto e generazione report PDF.
+con pulsanti di scatto foto e generazione report PDF formale.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
@@ -187,17 +187,19 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing: allineamento a z=0, sblocco 360° e sostituzione PDF definitiva ---
+            # --- Post-processing: orientamento Z-Up (rotazione 90° X), allineamento z=0 e Report PDF pulito ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
-                # Includiamo jsPDF via CDN nell'head
+                # Includiamo jsPDF via CDN
                 jspdf_cdn = '<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>'
                 if "</head>" in html_code:
                     html_code = html_code.replace("</head>", f"{jspdf_cdn}</head>")
 
-                # 1. Posizionamento geometrico: vertice d'angolo su (0,0,0) a z=0
+                # 1. Rotazione di 90° attorno all'asse X per rendere l'asse Z blu verticale verso l'alto
+                # e traslazione del vertice minimo su (0,0,0) a contatto col piano z=0
                 translation_replacement = """
+                geometry.rotateX(Math.PI / 2);
                 geometry.computeBoundingBox();
                 const box = geometry.boundingBox;
                 const size = box.getSize(new THREE.Vector3());
@@ -217,7 +219,7 @@ def handle_share_action(
                 )
                 html_code = re.sub(r'geometry\.center\(\);', '/* geometry.center disabled */', html_code)
 
-                # 2. Controlli orbitali con rotazione a 360°
+                # 2. Impostazione dei controlli orbitali con rotazione a 360° sbloccata
                 controls_replacement = """
                 controls.target.copy(updatedCenter);
                 controls.maxPolarAngle = Math.PI;
@@ -232,98 +234,97 @@ def handle_share_action(
                     html_code
                 )
 
-                # 3. Script definitivo per forzare il download del PDF ignorando qualsiasi altra azione HTML
-                pdf_script = """
+                # Dati reali formattati
+                clean_title = (project_title or mesh_data.name).replace("'", "\\'")
+                fmt_str = file_ext.replace(".", "").upper()
+                v_count = f"{mesh_data.vertex_count:,}".replace(",", ".")
+                f_count = f"{mesh_data.triangle_count:,}".replace(",", ".")
+
+                # 3. Iniezione script PDF minimale, formale e pulito (senza bande colorate né sfondi)
+                pdf_script = f"""
                 <script>
-                window.addEventListener('DOMContentLoaded', () => {
-                    setTimeout(() => {
+                window.addEventListener('DOMContentLoaded', () => {{
+                    setTimeout(() => {{
                         const buttons = document.querySelectorAll('button, a');
-                        buttons.forEach(el => {
-                            if (el.innerText && (el.innerText.includes('HTML') || el.innerText.includes('Scarica') || el.innerText.includes('PDF'))) {
+                        buttons.forEach(el => {{
+                            if (el.innerText && (el.innerText.includes('HTML') || el.innerText.includes('Scarica') || el.innerText.includes('PDF'))) {{
                                 el.innerHTML = '📄 Scarica PDF';
-                                el.title = 'Scarica Report PDF Professionale ArtiFix';
+                                el.title = 'Scarica Report Tecnico PDF ArtiFix';
                                 
-                                // Rimuoviamo tutti i vecchi event listeners clonando il nodo
                                 const newBtn = el.cloneNode(true);
                                 el.parentNode.replaceChild(newBtn, el);
                                 
-                                newBtn.addEventListener('click', (e) => {
+                                newBtn.addEventListener('click', (e) => {{
                                     e.preventDefault();
                                     e.stopPropagation();
                                     
-                                    if (typeof window.jspdf === 'undefined') {
+                                    if (typeof window.jspdf === 'undefined') {{
                                         alert('Generatore PDF in caricamento, riprova tra un istante.');
                                         return;
-                                    }
+                                    }}
 
-                                    if (typeof renderer !== 'undefined' && typeof scene !== 'undefined' && typeof camera !== 'undefined') {
+                                    if (typeof renderer !== 'undefined' && typeof scene !== 'undefined' && typeof camera !== 'undefined') {{
                                         renderer.render(scene, camera);
-                                    }
+                                    }}
 
                                     const canvas = document.querySelector('canvas');
-                                    if (!canvas) {
+                                    if (!canvas) {{
                                         alert('Canvas 3D non trovato.');
                                         return;
-                                    }
+                                    }}
 
                                     const imgData = canvas.toDataURL('image/png');
-                                    
-                                    const vertices = document.getElementById('lblVerts')?.innerText || document.querySelector('[id*="vert"]')?.innerText || "-";
-                                    const triangles = document.getElementById('lblFaces')?.innerText || document.querySelector('[id*="face"], [id*="tri"]')?.innerText || "-";
-                                    const format = document.querySelector('#lbl-format, [id*="format"]')?.innerText || "STL";
-
-                                    const { jsPDF } = window.jspdf;
+                                    const {{ jsPDF }} = window.jspdf;
                                     const doc = new jsPDF();
 
-                                    // Intestazione professionale ArtiFix
-                                    doc.setFillColor(15, 23, 42);
-                                    doc.rect(0, 0, 210, 38, 'F');
-                                    
-                                    doc.setTextColor(56, 189, 248);
+                                    // Layout Formale ed Elegante
+                                    doc.setTextColor(15, 23, 42);
                                     doc.setFontSize(22);
                                     doc.setFont('helvetica', 'bold');
-                                    doc.text('ARTIFIX', 14, 24);
+                                    doc.text('ARTIFIX', 14, 20);
 
-                                    doc.setTextColor(255, 255, 255);
-                                    doc.setFontSize(9);
-                                    doc.setFont('helvetica', 'normal');
-                                    doc.text('CONVERT. FIX. DELIVER.', 14, 30);
-
-                                    doc.setFontSize(11);
-                                    doc.text('REPORT TECNICO 3D', 135, 24);
-
-                                    // Sezione Dati Modello
-                                    doc.setTextColor(30, 41, 59);
-                                    doc.setFontSize(14);
+                                    doc.setFontSize(10);
                                     doc.setFont('helvetica', 'bold');
-                                    doc.text('Informazioni Modello', 14, 50);
+                                    doc.setTextColor(100, 116, 139);
+                                    doc.text('REPORT TECNICO 3D', 150, 20);
+
+                                    doc.setDrawColor(226, 232, 240);
+                                    doc.setLineWidth(0.5);
+                                    doc.line(14, 26, 196, 26);
+
+                                    // Sezione Dati Modello Reali
+                                    doc.setTextColor(30, 41, 59);
+                                    doc.setFontSize(12);
+                                    doc.setFont('helvetica', 'bold');
+                                    doc.text('PROGETTO: {clean_title}', 14, 38);
 
                                     doc.setFontSize(10);
                                     doc.setFont('helvetica', 'normal');
-                                    doc.text('Formato: ' + format, 14, 60);
-                                    doc.text('Vertici: ' + vertices, 80, 60);
-                                    doc.text('Triangoli: ' + triangles, 145, 60);
+                                    doc.text('Formato: {fmt_str}', 14, 48);
+                                    doc.text('Vertici: {v_count}', 75, 48);
+                                    doc.text('Triangoli: {f_count}', 135, 48);
 
-                                    doc.setDrawColor(203, 213, 225);
-                                    doc.line(14, 68, 196, 68);
+                                    doc.line(14, 54, 196, 54);
 
-                                    // Sezione Vista 3D (Screenshot)
+                                    // Anteprima 3D Renderizzata
                                     doc.setFont('helvetica', 'bold');
-                                    doc.text('Anteprima Vista 3D', 14, 78);
+                                    doc.text('Vista 3D Renderizzata', 14, 64);
                                     
-                                    doc.addImage(imgData, 'PNG', 15, 84, 180, 110);
+                                    doc.addImage(imgData, 'PNG', 14, 70, 182, 110);
 
-                                    // Footer
-                                    doc.setFontSize(9);
-                                    doc.setTextColor(100, 116, 139);
-                                    doc.text('Generato con ArtiFix 3D Viewer | artifix.it', 14, 285);
+                                    // Pie di pagina minimale
+                                    doc.line(14, 275, 196, 275);
+                                    doc.setFontSize(8);
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.setTextColor(148, 163, 184);
+                                    doc.text('Documento generato automaticamente via ArtiFix 3D Viewer | www.artifix.it', 14, 282);
 
-                                    doc.save('ArtiFix_Report_Tecnico.pdf');
-                                });
-                            }
-                        });
-                    }, 800);
-                });
+                                    doc.save('ArtiFix_Report_{clean_title}.pdf');
+                                }});
+                            }}
+                        }});
+                    }}, 800);
+                }});
                 </script>
                 </body>
                 """
