@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import html
 import os
-import re
 import tempfile
 from pathlib import Path
 
@@ -187,25 +186,54 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing millimetrico: sposta l'origine (0,0,0) sull'angolo del modello a z=0 ---
+            # --- Post-processing definitivo via JS iniettato nell'HTML ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
-                # Sostituisce la traslazione di centratura con l'allineamento del vertice minimo (box.min) su (0,0,0)
-                html_code = re.sub(
-                    r'geometry\.translate\s*\([^)]+\);',
-                    'geometry.computeBoundingBox(); const box = geometry.boundingBox; geometry.translate(-box.min.x, -box.min.y, -box.min.z); geometry.computeBoundingBox();',
-                    html_code
-                )
+                # Script JS iniettato per riposizionare la mesh sul piano z=0 (angolo inferiore) 
+                # e garantire rotazione libera a 360° senza limiti sui controlli orbitali.
+                injection_script = """
+                <script>
+                window.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(() => {
+                        if (typeof scene !== 'undefined' && typeof controls !== 'undefined') {
+                            // Trova la mesh del modello
+                            let targetMesh = null;
+                            scene.traverse((child) => {
+                                if (child.isMesh && !child.isGridHelper && !child.isAxesHelper) {
+                                    targetMesh = child;
+                                }
+                            });
+                            
+                            if (targetMesh && targetMesh.geometry) {
+                                targetMesh.geometry.computeBoundingBox();
+                                const box = targetMesh.geometry.computeBoundingBox() || targetMesh.geometry.boundingBox;
+                                if (box) {
+                                    // Sposta i vertici in modo che l'angolo minimo sia esattamente a (0,0,0)
+                                    const min = box.min;
+                                    targetMesh.geometry.translate(-min.x, -min.y, -min.z);
+                                    targetMesh.geometry.computeBoundingBox();
+                                    
+                                    // Aggiorna il centro per i controlli orbitali
+                                    const newBox = targetMesh.geometry.boundingBox;
+                                    const center = newBox.getCenter(new THREE.Vector3());
+                                    controls.target.copy(center);
+                                    controls.maxPolarAngle = Math.PI; // Sblocca la rotazione verticale completa a 360°
+                                    controls.minDistance = 0.1;
+                                    controls.maxDistance = 10000;
+                                    controls.update();
+                                }
+                            }
+                        }
+                    }, 500);
+                });
+                </script>
+                </body>
+                """
                 
-                # Aggiorna il target dei controlli sul centro geometrico del modello traslato
-                html_code = re.sub(
-                    r'controls\.target\.set\s*\([^)]+\);',
-                    'const newBox = geometry.boundingBox; const center = newBox.getCenter(new THREE.Vector3()); controls.target.copy(center);',
-                    html_code
-                )
-
-                html_path.write_text(html_code, encoding="utf-8")
+                if "</body>" in html_code:
+                    html_code = html_code.replace("</body>", injection_script)
+                    html_path.write_text(html_code, encoding="utf-8")
 
             # Step 3 — Pubblica su GitHub Pages
             status.text(t("share_status_publishing"))
