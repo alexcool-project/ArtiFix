@@ -2,7 +2,7 @@
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con tema chiaro, assi orientati (Z-up) e generazione di report PDF formale.
+con tema chiaro, orientamento Z-up dinamico via JavaScript e report PDF formale.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import html
 import os
-import re
 import tempfile
 from pathlib import Path
 
@@ -187,7 +186,7 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing: Tema Chiaro, orientamento Z-Up identico alla dashboard e Report PDF formale ---
+            # --- Post-processing: Iniezione script runtime per Tema Chiaro, Assi Z-Up e PDF ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
@@ -196,72 +195,55 @@ def handle_share_action(
                 if "</head>" in html_code:
                     html_code = html_code.replace("</head>", f"{jspdf_cdn}</head>")
 
-                # 1. Forziamo il tema chiaro (sfondo bianco/grigio chiaro come la dashboard)
-                light_theme_css = """
-                <style>
-                    body { background-color: #f8fafc !important; color: #1e293b !important; }
-                    .sidebar, .panel, .ui-container { background: #ffffff !important; color: #1e293b !important; border-color: #e2e8f0 !important; }
-                </style>
-                """
-                if "</head>" in html_code:
-                    html_code = html_code.replace("</head>", f"{light_theme_css}</head>")
-
-                # 2. Correzione geometrica identica alla dashboard: modello orientato con Z-Up verticale sul piano z=0
-                translation_replacement = """
-                // Allineamento identico alla dashboard (Z-Up verticale sul piano z=0)
-                geometry.computeBoundingBox();
-                const box = geometry.boundingBox;
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-
-                geometry.translate(-box.min.x, -box.min.y, -box.min.z);
-                geometry.computeBoundingBox();
-                const updatedBox = geometry.boundingBox;
-                const updatedCenter = updatedBox.getCenter(new THREE.Vector3());
-                """
-                
-                html_code = re.sub(
-                    r'geometry\.computeBoundingBox\(\);\s*(?:const|let)\s+box\s*=\s*geometry\.boundingBox;[^}]*geometry\.(?:center|translate)\([^)]*\);',
-                    translation_replacement,
-                    html_code,
-                    flags=re.DOTALL
-                )
-                html_code = re.sub(r'geometry\.center\(\);', '/* geometry.center disabled */', html_code)
-
-                # 3. Sfondo del renderer Three.js chiaro (#f8fafc) e controlli orbitali sbloccati a 360°
-                renderer_bg_fix = """
-                renderer.setClearColor(0xf8fafc, 1);
-                """
-                html_code = html_code.replace("renderer.setClearColor(", f"{renderer_bg_fix} // renderer.setClearColor(")
-
-                controls_replacement = """
-                controls.target.copy(updatedCenter);
-                controls.maxPolarAngle = Math.PI;
-                controls.minDistance = 0.1;
-                controls.maxDistance = maxDim * 10;
-                controls.update();
-                """
-                
-                html_code = re.sub(
-                    r'controls\.target\.set\([^)]+\);',
-                    controls_replacement,
-                    html_code
-                )
-
-                # Dati reali formattati
                 clean_title = (project_title or mesh_data.name).replace("'", "\\'")
                 fmt_str = file_ext.replace(".", "").upper()
                 v_count = f"{mesh_data.vertex_count:,}".replace(",", ".")
                 f_count = f"{mesh_data.triangle_count:,}".replace(",", ".")
 
-                # 4. Script PDF formale, pulito, senza sfondi scuri o bande colorate
-                pdf_script = f"""
+                # Script runtime universale che trasforma il viewer in tema chiaro, raddrizza gli assi (Z-up) e gestisce il PDF
+                runtime_script = f"""
+                <style>
+                    /* Forzatura immediata tema chiaro identico alla dashboard */
+                    body, html {{
+                        background-color: #f8fafc !important;
+                        color: #1e293b !important;
+                    }}
+                    .viewer-container, canvas {{
+                        background-color: #f8fafc !important;
+                    }}
+                </style>
                 <script>
                 window.addEventListener('DOMContentLoaded', () => {{
                     setTimeout(() => {{
+                        // 1. Correzione Tema Chiaro e Renderer Three.js
+                        if (typeof renderer !== 'undefined') {{
+                            renderer.setClearColor(0xf8fafc, 1);
+                        }}
+                        if (typeof scene !== 'undefined') {{
+                            scene.traverse((child) => {{
+                                if (child.isMesh) {{
+                                    // Orientamento assi e modello identico alla dashboard (Z-up verticale)
+                                    child.geometry.rotateX(Math.PI / 2);
+                                    child.geometry.computeBoundingBox();
+                                    const box = child.geometry.boundingBox;
+                                    child.geometry.translate(-box.min.x, -box.min.y, -box.min.z);
+                                    child.geometry.computeBoundingBox();
+                                    
+                                    const updateBox = child.geometry.boundingBox;
+                                    const center = updateBox.getCenter(new THREE.Vector3());
+                                    if (typeof controls !== 'undefined') {{
+                                        controls.target.copy(center);
+                                        controls.maxPolarAngle = Math.PI;
+                                        controls.update();
+                                    }}
+                                }}
+                            }});
+                        }}
+
+                        // 2. Sostituzione pulsante per download Report PDF formale ed elegante
                         const buttons = document.querySelectorAll('button, a');
                         buttons.forEach(el => {{
-                            if (el.innerText && (el.innerText.includes('HTML') || el.innerText.includes('Scarica') || el.innerText.includes('PDF'))) {{
+                            if (el.innerText && (el.innerText.includes('HTML') || el.innerText.includes('Scarica') || el.innerText.includes('PDF') || el.innerText.includes('foto'))) {{
                                 el.innerHTML = '📄 Scarica PDF';
                                 el.title = 'Scarica Report Tecnico PDF ArtiFix';
                                 
@@ -341,14 +323,14 @@ def handle_share_action(
                                 }});
                             }}
                         }});
-                    }}, 800);
+                    }}, 1000);
                 }});
                 </script>
                 </body>
                 """
 
                 if "</body>" in html_code:
-                    html_code = html_code.replace("</body>", pdf_script)
+                    html_code = html_code.replace("</body>", runtime_script)
                     html_path.write_text(html_code, encoding="utf-8")
 
             # Step 3 — Pubblica su GitHub Pages
