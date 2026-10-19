@@ -1,77 +1,109 @@
-import streamlit as st
 import base64
 import os
 
-def render_share_section(uploaded_file, t, lang="it"):
-    st.markdown("---")
-    
-    is_en = (lang == "en")
-    title_text = "Share 3D Model" if is_en else "Condividi il modello 3D"
-    name_label = "Project Name" if is_en else "Nome del progetto"
-    btn_label = "Genera Link di Condivisione" if is_en else "Genera Link di Condivisione"
-    
-    st.markdown(f"### {title_text}")
-    
-    project_name = st.text_input(
-        name_label,
-        value=os.path.splitext(uploaded_file.name)[0] if uploaded_file else "Modello_3D",
-        key="input_project_name_share"
-    )
-    
-    if st.button(btn_label, type="primary", use_container_width=True, key="btn_generate_share_link"):
-        file_bytes = uploaded_file.getvalue()
-        file_ext = os.path.splitext(uploaded_file.name)[1].lower().replace('.', '')
-        b64_data = base64.b64encode(file_bytes).decode('utf-8')
-        file_size_mb = len(file_bytes) / (1024 * 1024)
-        
-        html_content = f"""<!DOCTYPE html>
-<html>
+def generate_standalone_viewer_html(file_path: str, model_name: str) -> str:
+    """
+    Legge un file 3D (es. STL) e genera una stringa HTML autonoma contenente 
+    il viewer interattivo Three.js, l'identità visiva ArtiFix e il modello incorporato in Base64.
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File non trovato: {file_path}")
+
+    # Leggi il file binario e convertilo in Base64 per l'embedding nativo nell'HTML
+    with open(file_path, "rb") as f:
+        file_bytes = f.read()
+        encoded_data = base64.b64encode(file_bytes).decode("utf-8")
+
+    file_size_mb = len(file_bytes) / (1024 * 1024)
+    file_ext = os.path.splitext(file_path)[1].lower().replace('.', '')
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="it">
 <head>
-    <meta charset="utf-8">
-    <title>{project_name} - 3D Viewer</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtiFix 3D Viewer - {model_name}</title>
     <style>
-        body {{ margin: 0; overflow: hidden; background: #1a1a1a; font-family: Arial, sans-serif; }}
+        body, html {{
+            margin: 0; padding: 0; width: 100vw; height: 100vh;
+            overflow: hidden; background-color: #0b0f19; font-family: system-ui, -apple-system, sans-serif;
+            color: #f8fafc;
+        }}
         #canvas-container {{ width: 100vw; height: 100vh; display: block; }}
+        
+        /* Brand Header & Watermark ArtiFix */
+        .artifix-brand {{
+            position: absolute; top: 20px; left: 20px; display: flex; align-items: center; gap: 12px;
+            background: rgba(15, 23, 42, 0.85); padding: 10px 16px; border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.2); backdrop-filter: blur(8px); z-index: 10;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }}
+        .brand-logo {{ font-weight: 800; font-size: 16px; letter-spacing: 0.5px; color: #38bdf8; text-decoration: none; display: flex; align-items: center; gap: 8px; }}
+        .brand-logo:hover {{ color: #7dd3fc; }}
+        .model-badge {{ font-size: 12px; color: #94a3b8; border-left: 1px solid rgba(148, 163, 184, 0.3); padding-left: 12px; }}
+
+        /* UI Control Panel */
         .ui-panel {{
-            position: absolute; top: 20px; right: 20px; background: rgba(30, 30, 30, 0.9);
-            padding: 15px; border-radius: 10px; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            backdrop-filter: blur(6px); z-index: 10; display: flex; flex-direction: column; gap: 12px; width: 220px;
+            position: absolute; top: 20px; right: 20px; background: rgba(15, 23, 42, 0.85);
+            padding: 16px; border-radius: 12px; color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px); z-index: 10; display: flex; flex-direction: column; gap: 12px; width: 220px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
         }}
-        .ui-panel label {{ font-size: 11px; color: #aaa; font-weight: bold; letter-spacing: 0.5px; }}
-        .ui-panel input[type="range"] {{ width: 100%; cursor: pointer; accent-color: #1f77b4; }}
+        .ui-panel label {{ font-size: 11px; color: #94a3b8; font-weight: bold; letter-spacing: 0.5px; }}
+        .ui-panel input[type="range"] {{ width: 100%; cursor: pointer; accent-color: #38bdf8; }}
         .btn-group {{ display: flex; gap: 6px; }}
-        .ui-btn {{ background: #333; color: #fff; border: 1px solid #555; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; flex: 1; text-align: center; transition: background 0.2s; }}
-        .ui-btn:hover {{ background: #444; }}
-        .ui-btn.active {{ background: #1f77b4; border-color: #1f77b4; }}
-        .action-btn {{ width: 100%; background: #1f77b4; color: #fff; border: none; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 4px; }}
-        .action-btn:hover {{ background: #155a8a; }}
+        .ui-btn {{ background: #1e293b; color: #f8fafc; border: 1px solid #334155; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; flex: 1; text-align: center; transition: all 0.2s; }}
+        .ui-btn:hover {{ background: #334155; }}
+        .ui-btn.active {{ background: #0284c7; border-color: #38bdf8; }}
+        .action-btn {{ width: 100%; background: #0284c7; color: #fff; border: none; padding: 9px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 4px; transition: background 0.2s; }}
+        .action-btn:hover {{ background: #0369a1; }}
+
+        /* Info Bar in basso */
         #info-bar {{
-            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.75); color: #fff; padding: 8px 18px; border-radius: 20px;
-            font-size: 12px; z-index: 10; border: 1px solid rgba(255,255,255,0.1);
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85); color: #94a3b8; padding: 8px 18px; border-radius: 20px;
+            font-size: 12px; z-index: 10; border: 1px solid rgba(148, 163, 184, 0.2); backdrop-filter: blur(8px);
         }}
+
+        /* Modale Proprietà File */
         #modal-overlay {{
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6);
-            display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px);
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7);
+            display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(6px);
         }}
         .modal-content {{
-            background: #242424; padding: 25px; border-radius: 12px; width: 350px; color: #fff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #444;
+            background: #0f172a; padding: 25px; border-radius: 14px; width: 350px; color: #f8fafc;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 1px solid #334155;
         }}
-        .modal-content h3 {{ margin-top: 0; color: #1f77b4; font-size: 18px; }}
-        .modal-row {{ display: flex; justify-content: space-between; margin: 10px 0; font-size: 13px; border-bottom: 1px solid #333; padding-bottom: 6px; }}
-        .modal-row span:last-child {{ color: #ccc; font-weight: bold; }}
-        .close-modal {{ background: #444; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }}
-        .close-modal:hover {{ background: #555; }}
+        .modal-content h3 {{ margin-top: 0; color: #38bdf8; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 10px; }}
+        .modal-row {{ display: flex; justify-content: space-between; margin: 10px 0; font-size: 13px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }}
+        .modal-row span:last-child {{ color: #cbd5e1; font-weight: bold; }}
+        .close-modal {{ background: #334155; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }}
+        .close-modal:hover {{ background: #475569; }}
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <!-- Import di Three.js e loader tramite CDN ufficiale -->
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {{
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }}
+    </script>
 </head>
 <body>
     <div id="canvas-container"></div>
-    <div id="info-bar">{project_name} | Z-up View</div>
     
+    <!-- Header con Brand ArtiFix e Cubo interattivo -->
+    <div class="artifix-brand">
+        <a href="https://artifix.it" target="_blank" class="brand-logo" title="Visita ArtiFix.it">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            ArtiFix
+        </a>
+        <div class="model-badge">{model_name}</div>
+    </div>
+
+    <!-- Pannello UI laterale -->
     <div class="ui-panel">
         <label>OPACITÀ</label>
         <input type="range" id="opacityRange" min="0.1" max="1" step="0.05" value="1">
@@ -84,13 +116,16 @@ def render_share_section(uploaded_file, t, lang="it"):
 
         <label>STRUMENTI</label>
         <button class="action-btn" id="btnPhoto">📸 Scatta Foto</button>
-        <button class="action-btn" id="btnInfo" style="background: #333; border: 1px solid #555;">ℹ️ Proprietà File</button>
+        <button class="action-btn" id="btnInfo" style="background: #1e293b; border: 1px solid #334155;">ℹ️ Proprietà File</button>
     </div>
 
+    <div id="info-bar">ArtiFix 3D Viewer | Z-up System</div>
+
+    <!-- Modale Proprietà -->
     <div id="modal-overlay" style="display: none;">
         <div class="modal-content">
-            <h3>Proprietà Modello</h3>
-            <div class="modal-row"><span>Nome File:</span><span>{project_name}.{file_ext}</span></div>
+            <h3>Proprietà Modello 3D</h3>
+            <div class="modal-row"><span>Nome File:</span><span>{model_name}.{file_ext}</span></div>
             <div class="modal-row"><span>Formato:</span><span>{file_ext.upper()}</span></div>
             <div class="modal-row"><span>Dimensione:</span><span>{file_size_mb:.2f} MB</span></div>
             <div class="modal-row"><span>Vertici:</span><span id="lblVerts">-</span></div>
@@ -99,39 +134,48 @@ def render_share_section(uploaded_file, t, lang="it"):
         </div>
     </div>
 
-    <script>
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x1a1a1a);
+    <script type="module">
+        import * as THREE from 'three';
+        import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
+        import {{ STLLoader }} from 'three/addons/loaders/STLLoader.js';
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50000);
+        const container = document.getElementById('canvas-container');
+        
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0b0f19);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 5000);
         camera.up.set(0, 0, 1);
 
-        const renderer = new THREE.WebGLRenderer({{ antialias: true, preserveDrawingBuffer: true }});
-        renderer.setPixelRatio(window.devicePixelRatio);
+        const renderer = new THREE.WebGLRenderer({{ antialias: true, alpha: true, preserveDrawingBuffer: true }});
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.screenSpacePanning = true;
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(15, -15, 30);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(300, 300, 500);
         scene.add(dirLight);
 
-        const b64Data = "{b64_data}";
-        const binaryString = atob(b64Data);
+        // Decodifica del modello in Base64 incorporato nel file HTML
+        const base64Data = "{encoded_data}";
+        const binaryString = atob(base64Data);
         const len = binaryString.length;
         const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {{ bytes[i] = binaryString.charCodeAt(i); }}
+        for (let i = 0; i < len; i++) {{
+            bytes[i] = binaryString.charCodeAt(i);
+        }}
 
-        const loader = new THREE.STLLoader();
+        const loader = new STLLoader();
         const geometry = loader.parse(bytes.buffer);
         geometry.computeVertexNormals();
         geometry.computeBoundingBox();
+        
         const box = geometry.boundingBox;
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
@@ -139,10 +183,17 @@ def render_share_section(uploaded_file, t, lang="it"):
 
         geometry.translate(-center.x, -center.y, -box.min.z);
 
-        const material = new THREE.MeshStandardMaterial({{ color: 0x1f77b4, roughness: 0.4, metalness: 0.1, side: THREE.DoubleSide }});
+        const material = new THREE.MeshStandardMaterial({{
+            color: 0x38bdf8,
+            roughness: 0.25,
+            metalness: 0.1,
+            side: THREE.DoubleSide
+        }});
+
         const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
 
+        // Statistiche Vertici e Facce
         if (geometry.index) {{
             document.getElementById('lblFaces').innerText = geometry.index.count / 3;
         }} else if (geometry.attributes.position) {{
@@ -152,14 +203,14 @@ def render_share_section(uploaded_file, t, lang="it"):
             document.getElementById('lblVerts').innerText = geometry.attributes.position.count;
         }}
 
+        // Griglia e Assi Z-up allineati
         const axisLength = maxDim * 0.7;
         const gridSize = maxDim * 2.5;
+        scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xef4444, axisLength*0.1, axisLength*0.06));
+        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x22c55e, axisLength*0.1, axisLength*0.06));
+        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x3b82f6, axisLength*0.1, axisLength*0.06));
 
-        scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), axisLength, 0xff4444, axisLength*0.1, axisLength*0.06));
-        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), axisLength, 0x44ff44, axisLength*0.1, axisLength*0.06));
-        scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), axisLength, 0x4444ff, axisLength*0.1, axisLength*0.06));
-
-        const grid = new THREE.GridHelper(gridSize, 20, 0x555555, 0x333333);
+        const grid = new THREE.GridHelper(gridSize, 20, 0x475569, 0x1e293b);
         grid.rotation.x = Math.PI / 2;
         scene.add(grid);
 
@@ -167,6 +218,7 @@ def render_share_section(uploaded_file, t, lang="it"):
         camera.position.set(maxDim * 1.5, -maxDim * 1.5, maxDim * 1.2);
         controls.update();
 
+        // Gestione Interattività UI
         document.getElementById('opacityRange').addEventListener('input', (e) => {{
             material.transparent = e.target.value < 1;
             material.opacity = parseFloat(e.target.value);
@@ -188,7 +240,7 @@ def render_share_section(uploaded_file, t, lang="it"):
             renderer.render(scene, camera);
             const dataURL = renderer.domElement.toDataURL('image/png');
             const link = document.createElement('a');
-            link.download = '{project_name}_screenshot.png';
+            link.download = '{model_name}_screenshot.png';
             link.href = dataURL;
             link.click();
         }});
@@ -197,23 +249,20 @@ def render_share_section(uploaded_file, t, lang="it"):
         document.getElementById('btnInfo').addEventListener('click', () => {{ modal.style.display = 'flex'; }});
         document.getElementById('btnCloseModal').addEventListener('click', () => {{ modal.style.display = 'none'; }});
 
+        window.addEventListener('resize', () => {{
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }});
+
         function animate() {{
             requestAnimationFrame(animate);
             controls.update();
             renderer.render(scene, camera);
         }}
         animate();
-
-        window.addEventListener('resize', () => {{
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }});
     </script>
 </body>
-</html>"""
-        
-        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-        data_url = f"data:text/html;base64,{b64_html}"
-        
-        st.markdown(f'<a href="{data_url}" target="_blank" style="display:block; text-align:center; background:#1f77b4; color:white; padding:10px; border-radius:5px; text-decoration:none; font-weight:bold;">🔗 Apri Link Condivisibile</a>', unsafe_allow_html=True)
+</html>
+"""
+    return html_content
