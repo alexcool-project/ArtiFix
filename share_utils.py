@@ -2,7 +2,7 @@
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con pulsanti "📸 Scatta foto" e "💾 Scarica HTML".
+con pulsanti "📸 Scatta foto" e generazione di report PDF.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
@@ -187,17 +187,22 @@ def handle_share_action(
                 lang=lang,
             )
 
-            # --- Post-processing per ancorare il vertice del modello e gli assi direttamente sul piano z=0 ---
+            # --- Post-processing: allineamento a z=0, sblocco 360° e conversione pulsante HTML in Report PDF ---
             if html_path.exists():
                 html_code = html_path.read_text(encoding="utf-8")
                 
+                # Includiamo jsPDF via CDN nell'head
+                jspdf_cdn = '<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>'
+                if "</head>" in html_code:
+                    html_code = html_code.replace("</head>", f"{jspdf_cdn}</head>")
+
+                # 1. Posizionamento geometrico: vertice d'angolo su (0,0,0) a z=0
                 translation_replacement = """
                 geometry.computeBoundingBox();
                 const box = geometry.boundingBox;
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
 
-                // Ancoraggio perfetto: il vertice minimo del modello poggia esattamente su (0,0,0) del piano griglia
                 geometry.translate(-box.min.x, -box.min.y, -box.min.z);
                 geometry.computeBoundingBox();
                 const updatedBox = geometry.boundingBox;
@@ -210,9 +215,9 @@ def handle_share_action(
                     html_code,
                     flags=re.DOTALL
                 )
-                
                 html_code = re.sub(r'geometry\.center\(\);', '/* geometry.center disabled */', html_code)
 
+                # 2. Controlli orbitali con rotazione a 360°
                 controls_replacement = """
                 controls.target.copy(updatedCenter);
                 controls.maxPolarAngle = Math.PI;
@@ -227,7 +232,107 @@ def handle_share_action(
                     html_code
                 )
 
-                html_path.write_text(html_code, encoding="utf-8")
+                # 3. Script per trasformare il pulsante "Scarica HTML" in "Scarica Report PDF"
+                pdf_script = """
+                <script>
+                window.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(() => {
+                        const buttons = document.querySelectorAll('button, a');
+                        let downloadBtn = null;
+                        buttons.forEach(el => {
+                            if (el.innerText && (el.innerText.includes('HTML') || el.innerText.includes('Scarica'))) {
+                                downloadBtn = el;
+                            }
+                        });
+
+                        if (downloadBtn) {
+                            downloadBtn.innerHTML = '📄 Scarica PDF';
+                            downloadBtn.title = 'Scarica Report PDF Professionale';
+                            
+                            const newBtn = downloadBtn.cloneNode(true);
+                            downloadBtn.parentNode.replaceChild(newBtn, downloadBtn);
+                            
+                            newBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                if (typeof window.jspdf === 'undefined') {
+                                    alert('Generatore PDF in caricamento, riprova tra un istante.');
+                                    return;
+                                }
+
+                                if (typeof renderer !== 'undefined' && typeof scene !== 'undefined' && typeof camera !== 'undefined') {
+                                    renderer.render(scene, camera);
+                                }
+
+                                const canvas = document.querySelector('canvas');
+                                if (!canvas) {
+                                    alert('Canvas 3D non trovato.');
+                                    return;
+                                }
+
+                                const imgData = canvas.toDataURL('image/png');
+                                
+                                const filename = document.querySelector('.info-value, td, span')?.innerText || 'Modello_3D';
+                                const vertices = document.querySelector('#lbl-vertices, [id*="vert"]')?.innerText || '-';
+                                const triangles = document.querySelector('#lbl-triangles, [id*="tri"]')?.innerText || '-';
+                                const format = document.querySelector('#lbl-format, [id*="format"]')?.innerText || 'STL';
+
+                                const { jsPDF } = window.jspdf;
+                                const doc = new jsPDF();
+
+                                // Header Stile Aziendale
+                                doc.setFillColor(15, 23, 42);
+                                doc.rect(0, 0, 210, 35, 'F');
+                                
+                                doc.setTextColor(56, 189, 248);
+                                doc.setFontSize(20);
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('ArtiFix', 14, 22);
+
+                                doc.setTextColor(255, 255, 255);
+                                doc.setFontSize(10);
+                                doc.setFont('helvetica', 'normal');
+                                doc.text('REPORT TECNICO MODELLO 3D', 130, 22);
+
+                                // Sezione Dati
+                                doc.setTextColor(30, 41, 59);
+                                doc.setFontSize(13);
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Informazioni Modello', 14, 48);
+
+                                doc.setFontSize(10);
+                                doc.setFont('helvetica', 'normal');
+                                doc.text(`Formato: ${format}`, 14, 56);
+                                doc.text(`Vertici: ${vertices}`, 80, 56);
+                                doc.text(`Triangoli: ${triangles}`, 145, 56);
+
+                                doc.setDrawColor(203, 213, 225);
+                                doc.line(14, 64, 196, 64);
+
+                                // Sezione Screenshot
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Vista 3D', 14, 74);
+                                
+                                doc.addImage(imgData, 'PNG', 25, 80, 160, 100);
+
+                                // Footer
+                                doc.setFontSize(9);
+                                doc.setTextColor(100, 116, 139);
+                                doc.text('Generato con ArtiFix 3D Viewer | artifix.it', 14, 285);
+
+                                doc.save('ArtiFix_Report_Tecnico.pdf');
+                            });
+                        }
+                    }, 800);
+                });
+                </script>
+                </body>
+                """
+
+                if "</body>" in html_code:
+                    html_code = html_code.replace("</body>", pdf_script)
+                    html_path.write_text(html_code, encoding="utf-8")
 
             # Step 3 — Pubblica su GitHub Pages
             status.text(t("share_status_publishing"))
