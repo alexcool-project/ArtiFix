@@ -1,12 +1,12 @@
 """
-Utility per la condivisione e generazione di viewer HTML 3D autonomi.
+Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con pulsante per la generazione del report PDF e download diretto.
+con pulsante per la generazione del report PDF.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
-  - handle_share_action(...): elabora file e scarica il viewer HTML
+  - handle_share_action(...): elabora file e pubblica viewer
 
 Usato da 'Viewer 3D' in app.py.
 """
@@ -21,7 +21,7 @@ import streamlit as st
 
 
 def render_share_info_tooltip(t) -> None:
-    """Mostra la nota informativa (i) con spiegazione del download HTML."""
+    """Mostra la nota informativa (i) con spiegazione della condivisione."""
     with st.expander(t("share_info_tooltip"), expanded=False):
         st.markdown(f"### {t('share_info_title')}")
         st.markdown(t("share_info_body"))
@@ -29,6 +29,102 @@ def render_share_info_tooltip(t) -> None:
         st.markdown(t("share_info_features"))
         st.markdown("---")
         st.markdown(t("share_info_use_cases"))
+
+
+def _render_copy_button(url: str, label: str, t) -> None:
+    """Renderizza un pulsante 'Copia link' con feedback visivo tradotto."""
+    safe_url = html.escape(url, quote=True)
+    clean_label = label.replace("📋 ", "").replace(" 📋", "").strip()
+    display_label = f"📋 {clean_label}" if clean_label else "📋 Copia link"
+
+    copied_text = t("share_copy_success")
+    error_text = t("share_copy_error")
+
+    copy_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }}
+        .copy-btn {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 24px;
+            background: #1f77b4;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }}
+        .copy-btn:hover {{ background: #155a8a; }}
+        .copy-btn:active {{ transform: scale(0.98); }}
+        .copy-btn.copied {{ background: #2ecc71; }}
+    </style>
+    </head>
+    <body>
+    <button class="copy-btn" id="copyBtn" onclick="copyLink()">
+        <span id="btnText">{display_label}</span>
+    </button>
+
+    <script>
+        function copyLink() {{
+            const url = "{safe_url}";
+            const btn = document.getElementById('copyBtn');
+            const txt = document.getElementById('btnText');
+
+            if (navigator.clipboard && window.isSecureContext) {{
+                navigator.clipboard.writeText(url).then(() => {{
+                    showSuccess();
+                }}).catch(err => {{
+                    fallbackCopy(url);
+                }});
+            }} else {{
+                fallbackCopy(url);
+            }}
+
+            function fallbackCopy(text) {{
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try {{
+                    document.execCommand('copy');
+                    showSuccess();
+                }} catch (err) {{
+                    txt.textContent = '{error_text}';
+                }}
+                document.body.removeChild(ta);
+            }}
+
+            function showSuccess() {{
+                btn.classList.add('copied');
+                txt.textContent = '{copied_text}';
+                setTimeout(() => {{
+                    btn.classList.remove('copied');
+                    txt.textContent = '{display_label}';
+                }}, 2500);
+            }}
+        }}
+    </script>
+    </body>
+    </html>
+    """
+
+    st.components.v1.html(copy_html, height=60)
 
 
 def handle_share_action(
@@ -39,11 +135,12 @@ def handle_share_action(
     lang: str = "it",
 ) -> None:
     """
-    Genera il viewer HTML autonomo e lo rende disponibile per il download diretto.
+    Genera il viewer HTML e lo pubblica online.
     """
     try:
         from mesh2u3d.io.mesh_reader import MeshReader
         from mesh2u3d.html.writer import mesh_to_html
+        from mesh2u3d.share import share_html_viewer
     except ImportError as e:
         st.error(f"❌ Libreria `mesh2u3d` non disponibile: {e}")
         st.info("💡 Controlla `requirements.txt`.")
@@ -182,6 +279,14 @@ def handle_share_action(
                     html_code = html_code.replace("</body>", pdf_script)
                     html_path.write_text(html_code, encoding="utf-8")
 
+            status.text(t("share_status_publishing"))
+            progress.progress(75)
+
+            result = share_html_viewer(
+                html_path,
+                title=project_title or mesh_data.name,
+                generate_qr=generate_qr,
+            )
             progress.progress(100)
             status.text(t("share_status_done"))
 
@@ -191,20 +296,28 @@ def handle_share_action(
             except OSError:
                 pass
 
-        st.success("🎉 Viewer 3D HTML generato con successo!")
-        st.info("💡 Il file include il visualizzatore interattivo e il pulsante integrato per scaricare il report tecnico in PDF.")
-        
-        with open(html_path, "rb") as f:
-            html_bytes = f.read()
+        st.success(t("share_success"))
+        st.warning(t("share_warning_propagation"))
+        st.markdown("---")
+        st.subheader(t("share_result_title"))
+        st.markdown(f"**{t('share_result_url')}**")
+        st.code(result["url"], language=None)
+        _render_copy_button(result["url"], t("share_copy_link"), t)
 
-        st.download_button(
-            label="📥 Scarica Viewer 3D Interattivo (.html)",
-            data=html_bytes,
-            file_name=f"ArtiFix_Viewer_{project_title or 'model'}.html",
-            mime="text/html",
-            use_container_width=True,
-            type="primary"
-        )
+        if result.get("qr_path"):
+            st.markdown("---")
+            st.subheader(t("share_qr_title"))
+            st.image(result["qr_path"], width=250, caption=t("share_qr_caption"))
+            with open(result["qr_path"], "rb") as f:
+                st.download_button(
+                    t("share_download_qr"),
+                    data=f.read(),
+                    file_name=f"{result['viewer_id']}_qr.png",
+                    mime="image/png",
+                    use_container_width=True,
+                )
+
+        st.info(t("share_info_id").format(id=result["viewer_id"]))
 
     except Exception as e:
         progress.empty()
@@ -216,19 +329,25 @@ def handle_share_action(
 
 def render_share_section(uploaded_file, t, lang: str = "it") -> None:
     """
-    Renderizza la sezione di condivisione/download sotto il viewer.
+    Renderizza la sezione di condivisione sotto il viewer.
     """
     st.markdown("---")
     st.markdown(f"### {t('share_button')}")
     render_share_info_tooltip(t)
 
-    col1, _ = st.columns([3, 1])
+    col1, col2 = st.columns([3, 1])
     with col1:
         base_name = os.path.splitext(uploaded_file.name)[0]
         project_title = st.text_input(
             t("share_project_title"),
             value=base_name,
             key="share_project_title",
+        )
+    with col2:
+        generate_qr = st.checkbox(
+            t("share_generate_qr"),
+            value=True,
+            key="share_generate_qr",
         )
 
     if st.button(
@@ -240,7 +359,7 @@ def render_share_section(uploaded_file, t, lang: str = "it") -> None:
         handle_share_action(
             uploaded_file,
             project_title,
-            False,
+            generate_qr,
             t,
             lang=lang,
         )
