@@ -287,7 +287,6 @@ def handle_share_action(
                 title=project_title or mesh_data.name,
                 generate_qr=generate_qr,
             )
-
             progress.progress(100)
             status.text(t("share_status_done"))
 
