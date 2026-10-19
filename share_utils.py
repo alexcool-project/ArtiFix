@@ -2,8 +2,7 @@
 Utility per la condivisione di viewer HTML 3D su GitHub Pages.
 
 Usa la libreria `mesh2u3d` per generare viewer HTML 3D autonomi (three.js)
-con pulsante per la generazione del report PDF, log di debug avanzati 
-e protezione anti-404 (.nojekyll).
+con pulsante per la generazione del report PDF.
 
 Espone:
   - render_share_section(uploaded_file, t, lang): pulsante + nota + form
@@ -136,7 +135,7 @@ def handle_share_action(
     lang: str = "it",
 ) -> None:
     """
-    Genera il viewer HTML e lo pubblica su GitHub Pages con log di debug e .nojekyll.
+    Genera il viewer HTML e lo pubblica su GitHub Pages.
     """
     try:
         from mesh2u3d.io.mesh_reader import MeshReader
@@ -288,19 +287,6 @@ def handle_share_action(
                 title=project_title or mesh_data.name,
                 generate_qr=generate_qr,
             )
-            
-            # --- AGGIUNTA AUTOMATICA DI .NOJEKYLL ---
-            try:
-                target_dir = Path(html_path).parent
-                nojekyll_file = target_dir / ".nojekyll"
-                nojekyll_file.touch(exist_ok=True)
-            except Exception as e:
-                print(f"Impossibile creare .nojekyll: {e}")
-            # ----------------------------------------
-
-            print("--- DEBUG SHARE RESULT ---")
-            print(result)
-            st.write("🔍 **Debug Risultato Condivisione:**", result)
 
             progress.progress(100)
             status.text(t("share_status_done"))
